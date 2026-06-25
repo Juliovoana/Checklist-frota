@@ -186,6 +186,19 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 .stab{flex:1;padding:11px 0;font-size:12px;font-weight:500;text-align:center;cursor:pointer;color:var(--tx2);border:none;border-bottom:2px solid transparent;background:none;display:flex;align-items:center;justify-content:center;gap:5px}
 .stab.on{color:var(--nv);border-bottom-color:var(--nv);background:var(--sf)}
 .subscreen{display:none}.subscreen.on{display:block}
+.os-card{background:var(--sf);border-bottom:1px solid var(--bd);padding:13px 16px;display:flex;flex-direction:column;gap:6px}
+.os-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.os-num{font-size:13px;font-weight:700;color:var(--nv)}
+.os-data{font-size:12px;color:var(--tx3)}
+.os-veic{font-size:14px;font-weight:600;color:var(--tx)}
+.os-serv{font-size:13px;color:var(--tx2)}
+.os-meta{display:flex;gap:12px;font-size:12px;color:var(--tx2);flex-wrap:wrap}
+.os-valor{font-weight:600;color:var(--tx)}
+.os-status{font-size:11px;padding:2px 9px;border-radius:10px;font-weight:600;white-space:nowrap}
+.os-aberta{background:#fef9c3;color:#854d0e}
+.os-andamento{background:#dbeafe;color:#1e40af}
+.os-concluida{background:#dcfce7;color:#166534}
+.os-cancelada{background:var(--bg);color:var(--tx3)}
 .fiic{width:36px;height:36px;border-radius:8px;background:var(--nvl);display:flex;align-items:center;justify-content:center;color:var(--nv);font-size:17px;flex-shrink:0}
 .fipl{font-size:14px;font-weight:600;color:var(--tx)}.fisb{font-size:12px;color:var(--tx2);margin-top:1px}
 .sbar{padding:10px 16px;background:var(--sf);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
@@ -240,6 +253,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
     <button class="tab on"  onclick="goTab('cl',this)"><i class="ti ti-clipboard-list"></i> Novo</button>
     <button class="tab"     onclick="goTab('rec',this)"><i class="ti ti-search"></i> Recuperar</button>
     <button class="tab"     onclick="goTab('fr',this)"><i class="ti ti-bus"></i> Frota</button>
+    <button class="tab"     onclick="goTab('os',this)"><i class="ti ti-file-invoice"></i> OS</button>
     <button class="tab"     onclick="goTab('cfg',this)"><i class="ti ti-settings"></i> Config</button>
   </div>
 
@@ -267,6 +281,11 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
         </button>
         <input class="inp" type="date" id="dt" style="flex:.85;width:auto">
       </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <input class="inp" type="number" inputmode="numeric" id="km" placeholder="KM atual do veículo" style="flex:1" oninput="validarKm()">
+        <span id="km-ultimo" style="font-size:11px;color:var(--tx3);white-space:nowrap;min-width:90px;text-align:right"></span>
+      </div>
+      <div id="km-alerta" style="display:none;margin-top:7px;padding:8px 10px;border-radius:var(--rs);font-size:12px;line-height:1.4"></div>
     </div>
     <div class="ctr">
       <div class="cn"><div class="cnn" style="color:var(--ok)" id="cok">0</div><div class="cnl">OK</div></div>
@@ -414,6 +433,71 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
           <div id="admin-itens-list"><div class="empty"><i class="ti ti-list-check"></i>Carregando...</div></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── ORDENS DE SERVIÇO ── -->
+  <div id="s-os" class="screen">
+    <div id="os-login" class="card">
+      <div class="lbl">Área protegida</div>
+      <p style="font-size:12px;color:var(--tx2);margin-bottom:10px">Digite a senha de administração para ver e lançar Ordens de Serviço.</p>
+      <div style="display:flex;gap:8px">
+        <input class="inp" type="password" id="os-senha" placeholder="Senha" style="flex:1" onkeydown="if(event.key==='Enter')entrarOS()">
+        <button class="btn-buscar" onclick="entrarOS()"><i class="ti ti-login"></i> Entrar</button>
+      </div>
+      <div id="os-erro" style="display:none;color:var(--nk);font-size:12px;margin-top:8px"></div>
+    </div>
+
+    <div id="os-painel" style="display:none">
+      <div class="sbar">
+        <span style="font-size:12px;color:var(--tx2)" id="os-status">Carregando...</span>
+        <button class="sbtn" onclick="carregarOS()"><i class="ti ti-refresh"></i> Atualizar</button>
+      </div>
+      <div class="card" style="padding:14px 16px">
+        <button class="btn-buscar" style="width:100%;justify-content:center" onclick="abrirFormOS()"><i class="ti ti-plus"></i> Nova Ordem de Serviço</button>
+      </div>
+
+      <div id="form-os" style="display:none" class="card">
+        <div class="lbl" id="fos-titulo">Nova OS</div>
+
+        <div class="man-grid" style="margin-bottom:8px">
+          <div class="man-field">
+            <label>Veículo (placa)</label>
+            <select class="inp" id="fos-veiculo"></select>
+          </div>
+          <div class="man-field"><label>Data</label><input class="inp" type="date" id="fos-data"></div>
+        </div>
+
+        <div class="man-grid" style="margin-bottom:8px">
+          <div class="man-field"><label>KM</label><input class="inp" type="number" inputmode="numeric" id="fos-km" placeholder="Ex: 85000"></div>
+          <div class="man-field"><label>Valor (R$)</label><input class="inp" type="number" inputmode="decimal" step="0.01" id="fos-valor" placeholder="Ex: 380.00"></div>
+        </div>
+
+        <div class="man-field" style="margin-bottom:8px"><label>Fornecedor</label><input class="inp" id="fos-fornecedor" placeholder="Ex: Oficina Silva"></div>
+        <div class="man-field" style="margin-bottom:8px"><label>Serviço</label><input class="inp" id="fos-servico" placeholder="Ex: Troca de óleo"></div>
+
+        <div class="man-grid" style="margin-bottom:8px">
+          <div class="man-field"><label>Responsável</label><input class="inp" id="fos-responsavel" placeholder="Nome"></div>
+          <div class="man-field">
+            <label>Status</label>
+            <select class="inp" id="fos-status">
+              <option value="Aberta">Aberta</option>
+              <option value="Em andamento">Em andamento</option>
+              <option value="Concluída">Concluída</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="man-field" style="margin-bottom:10px"><label>Observação</label><textarea class="man-obs" id="fos-obs" placeholder="Detalhes do serviço, peças, garantia..."></textarea></div>
+
+        <div style="display:flex;gap:8px">
+          <button class="btn-buscar" style="flex:1;justify-content:center" onclick="salvarOSApp()"><i class="ti ti-device-floppy"></i> Salvar</button>
+          <button class="sbtn" onclick="fecharFormOS()" style="border:1px solid var(--bd);border-radius:var(--rs);padding:0 14px">Cancelar</button>
+        </div>
+      </div>
+
+      <div id="os-list"><div class="empty"><i class="ti ti-file-invoice"></i>Nenhuma OS cadastrada</div></div>
     </div>
   </div>
 
@@ -571,6 +655,7 @@ function goTab(id,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
   document.getElementById('s-'+id).classList.add('on'); btn.classList.add('on');
+  if(id==='os') verificarSessaoOS();
 }
 
 /* ── BUSCA VEÍCULO ── */
@@ -659,6 +744,71 @@ function selecionarV(placa){
   document.getElementById('vc').className='vc on';
   mostrarManutencao(v.placa, v.tipo);
   buildCL(v.tipo);
+  document.getElementById('km').value='';
+  document.getElementById('km-alerta').style.display='none';
+  buscarUltimoKm(v.placa);
+}
+
+/* ── KM do veículo — busca último valor e valida ──────────── */
+let ultimoKmConhecido = null;
+
+async function buscarUltimoKm(placa){
+  const badge = document.getElementById('km-ultimo');
+  badge.textContent = '';
+  ultimoKmConhecido = null;
+  if(!cfg.url || !navigator.onLine) return;
+  try{
+    const r = await fetch(cfg.url+'?action=getUltimoKm&placa='+encodeURIComponent(placa));
+    const d = await r.json();
+    if(d.encontrado && d.km!=null){
+      ultimoKmConhecido = Number(d.km);
+      badge.textContent = 'Último: '+ultimoKmConhecido.toLocaleString('pt-BR')+' km';
+    } else {
+      badge.textContent = 'Sem KM anterior';
+    }
+  }catch(e){ /* segue sem referência */ }
+}
+
+function validarKm(){
+  const input = document.getElementById('km');
+  const alertaEl = document.getElementById('km-alerta');
+  const valor = input.value.trim();
+  alertaEl.style.display='none';
+  input.style.borderColor='var(--bd)';
+
+  if(!valor || ultimoKmConhecido==null) return;
+  const km = Number(valor);
+  if(isNaN(km)) return;
+
+  if(km < ultimoKmConhecido){
+    input.style.borderColor='var(--nk)';
+    alertaEl.style.display='block';
+    alertaEl.style.background='#fee2e2'; alertaEl.style.color='#991b1b'; alertaEl.style.border='1px solid #fca5a5';
+    alertaEl.innerHTML='<i class="ti ti-alert-triangle"></i> KM não pode ser menor que o último registrado ('+ultimoKmConhecido.toLocaleString('pt-BR')+' km).';
+    return;
+  }
+
+  const diff = km - ultimoKmConhecido;
+  if(diff > 500){
+    input.style.borderColor='#f59e0b';
+    alertaEl.style.display='block';
+    alertaEl.style.background='#fef9c3'; alertaEl.style.color='#854d0e'; alertaEl.style.border='1px solid #fde047';
+    alertaEl.innerHTML='<i class="ti ti-alert-triangle"></i> Diferença de '+diff.toLocaleString('pt-BR')+' km desde o último registro. Verifique se não houve erro de digitação.';
+  }
+
+  // Atualiza o status de vencimento por KM na seção de manutenção
+  if(vSel && document.getElementById('man-itens').innerHTML.trim()){
+    renderManItens(vSel.placa);
+  }
+}
+
+function kmValido(){
+  const valor = document.getElementById('km').value.trim();
+  if(!valor) return true; // KM é opcional — não bloqueia se vazio
+  const km = Number(valor);
+  if(isNaN(km)) return true;
+  if(ultimoKmConhecido!=null && km < ultimoKmConhecido) return false;
+  return true;
 }
 
 function limpar(){
@@ -667,6 +817,10 @@ function limpar(){
   document.getElementById('vc').className='vc';
   document.getElementById('man-section').style.display='none';
   document.getElementById('clbody').innerHTML='<div class="empty"><i class="ti ti-bus"></i>Busque e selecione um veículo para iniciar</div>';
+  document.getElementById('km').value='';
+  document.getElementById('km-ultimo').textContent='';
+  document.getElementById('km-alerta').style.display='none';
+  ultimoKmConhecido=null;
   updCnt(); modoEdicao=false; checklistRecuperado=null;
 }
 
@@ -824,10 +978,12 @@ function salvar(){
   if(!vSel){ toast('Selecione um veículo'); return; }
   const motorista = document.getElementById('mot').value.trim();
   if(!motorista){ toast('Informe o nome do motorista antes de salvar'); document.getElementById('mot').focus(); return; }
+  if(!kmValido()){ toast('KM informado é menor que o último registrado — verifique'); document.getElementById('km').focus(); return; }
   const saves=JSON.parse(localStorage.getItem(SK)||'[]');
   const reg={id:Date.now(),placa:vSel.placa,modelo:vSel.modelo,tipo:vSel.tipo,
     motorista:motorista,
     usuario:usuarioGoogle||'',
+    km:document.getElementById('km').value.trim()||'',
     data:document.getElementById('dt').value,
     hora:new Date().toTimeString().slice(0,5),
     itens:JSON.parse(JSON.stringify(est)), manutencao:getPayloadManutencao(), sincronizado:false};
@@ -841,6 +997,7 @@ async function enviar(){
   if(!vSel){ toast('Selecione um veículo'); return; }
   const motorista = document.getElementById('mot').value.trim();
   if(!motorista){ toast('Informe o nome do motorista antes de enviar'); document.getElementById('mot').focus(); return; }
+  if(!kmValido()){ toast('KM informado é menor que o último registrado — verifique'); document.getElementById('km').focus(); return; }
   if(!navigator.onLine){ salvar(); toast('Offline — salvo para envio posterior'); return; }
   if(!cfg.url){ toast('Configure o Apps Script na aba Config'); return; }
   const btn=document.getElementById('benv');
@@ -852,6 +1009,7 @@ async function enviar(){
     placa:vSel.placa, modelo:vSel.modelo, tipo:vSel.tipo,
     motorista:motorista,
     usuario:usuarioGoogle||'',
+    km:document.getElementById('km').value.trim()||'',
     data:document.getElementById('dt').value,
     hora:new Date().toTimeString().slice(0,5),
     abaChecklists:cfg.tabCk||'Checklists',
@@ -988,6 +1146,9 @@ function editarCK(ck){
   document.getElementById('vc').className='vc on';
   document.getElementById('mot').value=ck.motorista||'';
   document.getElementById('dt').value=ck.data||'';
+  document.getElementById('km').value=ck.km||'';
+  document.getElementById('km-alerta').style.display='none';
+  buscarUltimoKm(v.placa);
   document.getElementById('benv').innerHTML='<i class="ti ti-cloud-upload"></i> Atualizar';
   buildCL(ck.tipo, ck.itens);
   toast('Checklist carregado — edite e clique em Atualizar');
@@ -1002,7 +1163,7 @@ function mostrarResumo(reg, body){
   let h=`<div class="res"><div class="rsh">
     <div>
       <div class="rst"><i class="ti ti-circle-check" style="color:#16a34a"></i>${reg.sincronizado?'Enviado ao Google Sheets':'Salvo offline'}</div>
-      <div class="rss">${reg.placa} · ${reg.modelo} · ${reg.data} · ${reg.motorista||'—'}</div>
+      <div class="rss">${reg.placa} · ${reg.modelo} · ${reg.data} · ${reg.motorista||'—'}${reg.km?' · '+Number(reg.km).toLocaleString('pt-BR')+' km':''}</div>
     </div>
     <span class="rbdg ${reg.sincronizado?'rbok':'rbof'}">${reg.sincronizado?'✓ Sheets':'📱 Local'}</span>
   </div>`;
@@ -1206,6 +1367,186 @@ async function entrarAdmin(){
 function sairAdmin(){
   adminSenha=''; sessionStorage.removeItem(ADMIN_K);
   verificarSessaoAdmin();
+}
+
+/* ════════════════ ORDENS DE SERVIÇO ════════════════ */
+let osCache = [];
+let editandoOSLinha = null;
+let editandoOSNumero = null;
+
+async function entrarOS(){
+  // Se já existe sessão admin ativa (ex: usada na aba Frota), reaproveita
+  if(adminSenha){
+    document.getElementById('os-login').style.display='none';
+    document.getElementById('os-painel').style.display='block';
+    carregarOS();
+    return;
+  }
+  const senha = document.getElementById('os-senha').value.trim();
+  const erroEl = document.getElementById('os-erro');
+  erroEl.style.display='none';
+  if(!senha){ erroEl.textContent='Digite a senha.'; erroEl.style.display='block'; return; }
+  if(!cfg.url){ erroEl.textContent='Configure a URL do Apps Script primeiro.'; erroEl.style.display='block'; return; }
+  if(!navigator.onLine){ erroEl.textContent='Sem internet — não é possível validar a senha.'; erroEl.style.display='block'; return; }
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'validarSenhaAdmin', senha})});
+    const d = await r.json();
+    if(d.ok){
+      adminSenha = senha;
+      sessionStorage.setItem(ADMIN_K, senha);
+      document.getElementById('os-senha').value='';
+      pedirNomeOperador(()=>{
+        document.getElementById('os-login').style.display='none';
+        document.getElementById('os-painel').style.display='block';
+        carregarOS();
+        toast('✓ Acesso liberado');
+      });
+    } else {
+      erroEl.textContent = d.erro || 'Senha incorreta.';
+      erroEl.style.display='block';
+    }
+  }catch(e){
+    erroEl.textContent='Erro de conexão ao validar senha.';
+    erroEl.style.display='block';
+  }
+}
+
+function verificarSessaoOS(){
+  if(adminSenha){
+    document.getElementById('os-login').style.display='none';
+    document.getElementById('os-painel').style.display='block';
+    carregarOS();
+  } else {
+    document.getElementById('os-login').style.display='block';
+    document.getElementById('os-painel').style.display='none';
+  }
+}
+
+async function carregarOS(){
+  const status = document.getElementById('os-status');
+  const list = document.getElementById('os-list');
+  if(!cfg.url || !navigator.onLine){ status.textContent='Sem conexão'; return; }
+  status.innerHTML='<span class="spin" style="border-top-color:var(--nv);border-color:var(--bd)"></span> Carregando...';
+  try{
+    const r = await fetch(cfg.url+'?action=getOrdensServico');
+    const d = await r.json();
+    osCache = d.ordens || [];
+    status.textContent = osCache.length+' ordem(ns) de serviço';
+    renderOS();
+  }catch(e){
+    status.textContent='Erro ao carregar';
+    list.innerHTML='<div class="empty"><i class="ti ti-alert-triangle"></i>Erro ao carregar OS</div>';
+  }
+}
+
+const STATUS_CLASS = {'Aberta':'os-aberta','Em andamento':'os-andamento','Concluída':'os-concluida','Cancelada':'os-cancelada'};
+
+function renderOS(){
+  const list = document.getElementById('os-list');
+  if(!osCache.length){ list.innerHTML='<div class="empty"><i class="ti ti-file-invoice"></i>Nenhuma OS cadastrada</div>'; return; }
+  list.innerHTML='';
+  osCache.forEach(os=>{
+    const valorFmt = os.valor ? 'R$ '+Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
+    const div=document.createElement('div'); div.className='os-card';
+    div.innerHTML=`
+      <div class="os-hdr">
+        <div>
+          <span class="os-num">OS Nº ${os.numero}</span>
+          <span class="os-data"> · ${os.data}</span>
+          <div class="os-veic">${os.veiculo}</div>
+        </div>
+        <span class="os-status ${STATUS_CLASS[os.status]||'os-aberta'}">${os.status}</span>
+      </div>
+      <div class="os-serv">${os.servico}${os.fornecedor?' · '+os.fornecedor:''}</div>
+      <div class="os-meta">
+        ${os.km?`<span><i class="ti ti-gauge"></i> ${Number(os.km).toLocaleString('pt-BR')} km</span>`:''}
+        <span class="os-valor">${valorFmt}</span>
+        ${os.responsavel?`<span><i class="ti ti-user"></i> ${os.responsavel}</span>`:''}
+      </div>
+      ${os.observacao?`<div style="font-size:12px;color:var(--tx2)">${os.observacao}</div>`:''}
+      <div style="display:flex;justify-content:flex-end;margin-top:2px">
+        <button class="fi-btn" title="Editar" onclick='editarOSApp(${JSON.stringify(os).replace(/'/g,"&apos;")})'><i class="ti ti-edit"></i></button>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function abrirFormOS(){
+  editandoOSLinha=null; editandoOSNumero=null;
+  document.getElementById('fos-titulo').textContent='Nova OS';
+  preencherSelectVeiculosOS();
+  document.getElementById('fos-data').value=new Date().toISOString().slice(0,10);
+  document.getElementById('fos-km').value='';
+  document.getElementById('fos-valor').value='';
+  document.getElementById('fos-fornecedor').value='';
+  document.getElementById('fos-servico').value='';
+  document.getElementById('fos-responsavel').value=usuarioGoogle||'';
+  document.getElementById('fos-status').value='Aberta';
+  document.getElementById('fos-obs').value='';
+  document.getElementById('form-os').style.display='block';
+  document.getElementById('form-os').scrollIntoView({behavior:'smooth'});
+}
+
+function preencherSelectVeiculosOS(selecionado){
+  const sel = document.getElementById('fos-veiculo');
+  sel.innerHTML = frota.map(v=>`<option value="${v.placa}">${v.placa} — ${v.modelo}</option>`).join('');
+  if(selecionado) sel.value = selecionado;
+}
+
+function editarOSApp(os){
+  editandoOSLinha = os.linha;
+  editandoOSNumero = os.numero;
+  document.getElementById('fos-titulo').textContent='Editar OS Nº '+os.numero;
+  preencherSelectVeiculosOS(os.veiculo);
+  // Converte data dd/MM/yyyy -> yyyy-MM-dd para o input date
+  const m = String(os.data).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  document.getElementById('fos-data').value = m ? `${m[3]}-${m[2]}-${m[1]}` : os.data;
+  document.getElementById('fos-km').value=os.km||'';
+  document.getElementById('fos-valor').value=os.valor||'';
+  document.getElementById('fos-fornecedor').value=os.fornecedor||'';
+  document.getElementById('fos-servico').value=os.servico||'';
+  document.getElementById('fos-responsavel').value=os.responsavel||'';
+  document.getElementById('fos-status').value=os.status||'Aberta';
+  document.getElementById('fos-obs').value=os.observacao||'';
+  document.getElementById('form-os').style.display='block';
+  document.getElementById('form-os').scrollIntoView({behavior:'smooth'});
+}
+
+function fecharFormOS(){ document.getElementById('form-os').style.display='none'; }
+
+async function salvarOSApp(){
+  const veiculo     = document.getElementById('fos-veiculo').value;
+  const dataInput   = document.getElementById('fos-data').value;
+  const servico     = document.getElementById('fos-servico').value.trim();
+  if(!veiculo || !servico){ toast('Preencha veículo e serviço'); return; }
+
+  // Converte yyyy-MM-dd -> dd/MM/yyyy para gravar no padrão da planilha
+  const [ano,mes,dia] = dataInput.split('-');
+  const dataFmt = dia ? `${dia}/${mes}/${ano}` : dataInput;
+
+  const payload = {
+    action:'salvarOS', senha:adminSenha, usuario:usuarioGoogle,
+    veiculo, data:dataFmt,
+    km:document.getElementById('fos-km').value.trim(),
+    fornecedor:document.getElementById('fos-fornecedor').value.trim(),
+    servico,
+    valor:document.getElementById('fos-valor').value.trim(),
+    responsavel:document.getElementById('fos-responsavel').value.trim(),
+    observacao:document.getElementById('fos-obs').value.trim(),
+    status:document.getElementById('fos-status').value
+  };
+  if(editandoOSLinha){ payload.linha = editandoOSLinha; payload.numero = editandoOSNumero; }
+
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload)});
+    const d = await r.json();
+    if(d.ok){
+      toast(d.acao==='criado' ? '✓ OS Nº '+d.numero+' criada' : '✓ OS atualizada');
+      fecharFormOS();
+      carregarOS();
+    } else { toast(d.erro || 'Erro ao salvar'); }
+  }catch(e){ toast('Erro de conexão'); }
 }
 
 /* ── CRUD VEÍCULOS ── */
@@ -1489,6 +1830,8 @@ function renderManItens(placa) {
     if (stat === 'alert') alertas++;
     else if (stat === 'ok') ok++;
 
+    const motivoVencido = motivoVencimentoMan(est, hoje);
+
     const div = document.createElement('div');
     div.className = 'man-item';
     div.innerHTML = `
@@ -1498,10 +1841,7 @@ function renderManItens(placa) {
           ${stat==='ok'?'✓ Em dia':stat==='alert'?'⚠ Vencido':'Não registrado'}
         </span>
       </div>
-      ${stat==='alert' ? `<div class="man-alert-bar"><i class="ti ti-alert-triangle"></i>
-        ${est.dataProx ? 'Vencimento: '+est.dataProx : ''}
-        ${est.kmProx   ? ' | Próx. KM: '+Number(est.kmProx).toLocaleString('pt-BR') : ''}
-      </div>` : ''}
+      ${stat==='alert' ? `<div class="man-alert-bar"><i class="ti ti-alert-triangle"></i> ${motivoVencido}</div>` : ''}
       <div class="man-grid">
         <div class="man-field">
           <label>Data da última troca</label>
@@ -1546,11 +1886,38 @@ function renderManItens(placa) {
 
 function calcStatusMan(est, tipo, hoje) {
   if (!est.dataUlt && !est.kmUlt) return 'pendente';
+
+  // Vencido por data prevista
   if (est.dataProx) {
     const dp = new Date(est.dataProx + 'T00:00:00');
     if (dp < hoje) return 'alert';
   }
+
+  // Vencido por quilometragem — compara o KM atual do veículo
+  // (informado neste checklist ou o último conhecido) com o
+  // próximo KM previsto para esta manutenção
+  if (est.kmProx) {
+    const kmAtual = Number(document.getElementById('km')?.value) || ultimoKmConhecido;
+    if (kmAtual != null && kmAtual >= Number(est.kmProx)) return 'alert';
+  }
+
   return 'ok';
+}
+
+// Monta a mensagem explicando se o vencimento é por data, por KM, ou ambos
+function motivoVencimentoMan(est, hoje){
+  const motivos = [];
+  if(est.dataProx){
+    const dp = new Date(est.dataProx + 'T00:00:00');
+    if(dp < hoje) motivos.push('venceu em '+est.dataProx);
+  }
+  if(est.kmProx){
+    const kmAtual = Number(document.getElementById('km')?.value) || ultimoKmConhecido;
+    if(kmAtual != null && kmAtual >= Number(est.kmProx)){
+      motivos.push('KM atual ('+kmAtual.toLocaleString('pt-BR')+') passou do previsto ('+Number(est.kmProx).toLocaleString('pt-BR')+')');
+    }
+  }
+  return motivos.length ? motivos.join(' e ') : 'Verifique a manutenção';
 }
 
 function updMan(tipo, campo, valor) {
