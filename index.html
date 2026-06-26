@@ -200,6 +200,15 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 .os-andamento{background:#dbeafe;color:#1e40af}
 .os-concluida{background:#dcfce7;color:#166534}
 .os-cancelada{background:var(--bg);color:var(--tx3)}
+.prod-row{display:flex;gap:6px;align-items:center}
+.prod-row input{height:32px;font-size:13px;padding:0 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf);color:var(--tx);font-family:var(--fn)}
+.prod-nome{flex:1;min-width:0}
+.prod-qtd{width:54px;text-align:center}
+.prod-valor{width:78px}
+.prod-sub{width:74px;text-align:right;font-size:12px;color:var(--tx2);white-space:nowrap}
+.prod-rm{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:15px;padding:2px;flex-shrink:0}
+.prod-rm:hover{color:var(--nk)}
+.prod-os-item{display:flex;justify-content:space-between;font-size:12px;color:var(--tx2);padding:3px 0}
 .fiic{width:36px;height:36px;border-radius:8px;background:var(--nvl);display:flex;align-items:center;justify-content:center;color:var(--nv);font-size:17px;flex-shrink:0}
 .fipl{font-size:14px;font-weight:600;color:var(--tx)}.fisb{font-size:12px;color:var(--tx2);margin-top:1px}
 .sbar{padding:10px 16px;background:var(--sf);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
@@ -482,11 +491,26 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 
         <div class="man-grid" style="margin-bottom:8px">
           <div class="man-field"><label>KM</label><input class="inp" type="number" inputmode="numeric" id="fos-km" placeholder="Ex: 85000"></div>
-          <div class="man-field"><label>Valor (R$)</label><input class="inp" type="number" inputmode="decimal" step="0.01" id="fos-valor" placeholder="Ex: 380.00"></div>
+          <div class="man-field"><label>Mão de obra (R$)</label><input class="inp" type="number" inputmode="decimal" step="0.01" id="fos-valor" placeholder="Ex: 150.00" oninput="recalcularTotalOS()"></div>
         </div>
 
         <div class="man-field" style="margin-bottom:8px"><label>Fornecedor</label><input class="inp" id="fos-fornecedor" placeholder="Ex: Oficina Silva"></div>
-        <div class="man-field" style="margin-bottom:8px"><label>Serviço</label><input class="inp" id="fos-servico" placeholder="Ex: Troca de óleo"></div>
+        <div class="man-field" style="margin-bottom:10px"><label>Serviço</label><input class="inp" id="fos-servico" placeholder="Ex: Troca de óleo"></div>
+
+        <!-- Produtos / peças utilizados -->
+        <div style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <label style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em">Produtos / peças utilizados</label>
+            <button onclick="adicionarLinhaProdutoOS()" style="background:none;border:none;color:var(--nv);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px">
+              <i class="ti ti-plus"></i> Adicionar
+            </button>
+          </div>
+          <div id="fos-produtos-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:var(--rs);border:1px solid var(--bd)">
+            <span style="font-size:12px;color:var(--tx2)">Total da OS (peças + mão de obra)</span>
+            <span id="fos-total" style="font-size:15px;font-weight:700;color:var(--nv)">R$ 0,00</span>
+          </div>
+        </div>
 
         <div class="man-grid" style="margin-bottom:8px">
           <div class="man-field"><label>Responsável</label><input class="inp" id="fos-responsavel" placeholder="Nome"></div>
@@ -501,7 +525,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
           </div>
         </div>
 
-        <div class="man-field" style="margin-bottom:10px"><label>Observação</label><textarea class="man-obs" id="fos-obs" placeholder="Detalhes do serviço, peças, garantia..."></textarea></div>
+        <div class="man-field" style="margin-bottom:10px"><label>Observação</label><textarea class="man-obs" id="fos-obs" placeholder="Detalhes do serviço, garantia..."></textarea></div>
 
         <div style="display:flex;gap:8px">
           <button class="btn-buscar" style="flex:1;justify-content:center" onclick="salvarOSApp()"><i class="ti ti-device-floppy"></i> Salvar</button>
@@ -543,6 +567,45 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
       <i class="tbi ti" id="tbic"></i>
       <div><div class="tbt" id="tbtit"></div><div class="tbd" id="tbdet"></div></div>
     </div>
+    <!-- Dados da Empresa (logo + cadastro) — área protegida -->
+    <div style="padding:14px 16px;border-top:1px solid var(--bd);margin-top:8px">
+      <div class="lbl" style="display:flex;align-items:center;gap:6px"><i class="ti ti-building"></i> Dados da Empresa</div>
+      <p style="font-size:12px;color:var(--tx2);margin:6px 0 10px">Logo e dados cadastrais exibidos no PDF das Ordens de Serviço.</p>
+
+      <div id="emp-login">
+        <div style="display:flex;gap:8px">
+          <input class="inp" type="password" id="emp-senha" placeholder="Senha de administração" style="flex:1" onkeydown="if(event.key==='Enter')entrarEmpresa()">
+          <button class="btn-buscar" onclick="entrarEmpresa()"><i class="ti ti-login"></i> Entrar</button>
+        </div>
+        <div id="emp-erro" style="display:none;color:var(--nk);font-size:12px;margin-top:8px"></div>
+      </div>
+
+      <div id="emp-painel" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div id="emp-logo-preview" style="width:64px;height:64px;border-radius:10px;background:var(--bg);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+            <i class="ti ti-photo" style="color:var(--tx3);font-size:24px"></i>
+          </div>
+          <div style="flex:1">
+            <button class="sbtn" onclick="document.getElementById('emp-logo-input').click()" style="border:1px solid var(--bd);border-radius:var(--rs);padding:7px 12px">
+              <i class="ti ti-upload"></i> Enviar logo
+            </button>
+            <div style="font-size:11px;color:var(--tx3);margin-top:4px">PNG ou JPG, fundo transparente recomendado</div>
+          </div>
+          <input type="file" accept="image/*" id="emp-logo-input" style="display:none" onchange="prepararLogoEmpresa(event)">
+        </div>
+
+        <div class="man-field" style="margin-bottom:8px"><label>Razão Social</label><input class="inp" id="emp-razao" placeholder="Nome da empresa"></div>
+        <div class="man-grid" style="margin-bottom:8px">
+          <div class="man-field"><label>CNPJ</label><input class="inp" id="emp-cnpj" placeholder="00.000.000/0000-00"></div>
+          <div class="man-field"><label>Telefone</label><input class="inp" id="emp-telefone" placeholder="(00) 00000-0000"></div>
+        </div>
+        <div class="man-field" style="margin-bottom:8px"><label>Endereço</label><input class="inp" id="emp-endereco" placeholder="Rua, número, cidade"></div>
+        <div class="man-field" style="margin-bottom:10px"><label>E-mail</label><input class="inp" id="emp-email" placeholder="contato@empresa.com"></div>
+
+        <button class="btn-buscar" style="width:100%;justify-content:center" onclick="salvarDadosEmpresaApp()"><i class="ti ti-device-floppy"></i> Salvar dados da empresa</button>
+      </div>
+    </div>
+
     <div style="padding:14px 16px;border-top:1px solid var(--bd);margin-top:8px">
       <div class="lbl">Estrutura da planilha</div>
       <div class="cfgbox"><strong style="color:var(--tx);display:block;margin-bottom:2px">Aba "Veiculos"</strong>
@@ -632,6 +695,7 @@ function init(){
   renderFrota(); updSub(); checkOnline();
   detectarUsuarioGoogle();
   carregarMotoristaFixo();
+  dadosEmpresaCache = JSON.parse(localStorage.getItem('cv_empresa')||'{}');
 
   // Primeira abertura do dispositivo: ainda não há config própria
   // salva, então busca a frota real da planilha padrão automaticamente
@@ -668,6 +732,7 @@ function goTab(id,btn){
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
   document.getElementById('s-'+id).classList.add('on'); btn.classList.add('on');
   if(id==='os') verificarSessaoOS();
+  if(id==='cfg') verificarSessaoEmpresa();
 }
 
 /* ── BUSCA VEÍCULO ── */
@@ -1140,6 +1205,25 @@ function linkFallback(link){
   return a;
 }
 
+// Carrega uma imagem de URL externa (ex: logo no Drive) e converte
+// para base64, formato exigido pelo jsPDF para inserir imagens
+function carregarImagemBase64(url){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>{
+      try{
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+        canvas.getContext('2d').drawImage(img,0,0);
+        resolve(canvas.toDataURL('image/png'));
+      }catch(e){ resolve(null); } // falha de CORS ou similar — segue sem logo
+    };
+    img.onerror = ()=> resolve(null);
+    img.src = url;
+  });
+}
+
 function editarCK(ck){
   checklistRecuperado=ck; modoEdicao=true;
   // Encontra o veículo na frota
@@ -1466,7 +1550,7 @@ function renderOS(){
         <div>
           <span class="os-num">OS Nº ${os.numero}</span>
           <span class="os-data"> · ${os.data}</span>
-          <div class="os-veic">${os.veiculo}</div>
+          <div class="os-veic">${os.veiculo}${os.modelo?' — '+os.modelo:''}</div>
         </div>
         <span class="os-status ${STATUS_CLASS[os.status]||'os-aberta'}">${os.status}</span>
       </div>
@@ -1476,6 +1560,9 @@ function renderOS(){
         <span class="os-valor">${valorFmt}</span>
         ${os.responsavel?`<span><i class="ti ti-user"></i> ${os.responsavel}</span>`:''}
       </div>
+      ${os.produtos && os.produtos.length ? `<div style="margin-top:2px">
+        ${os.produtos.map(p=>`<div class="prod-os-item"><span>${p.quantidade}x ${p.produto}</span><span>R$ ${Number(p.subtotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>`).join('')}
+      </div>` : ''}
       ${os.observacao?`<div style="font-size:12px;color:var(--tx2)">${os.observacao}</div>`:''}
       <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:2px">
         <button class="fi-btn" title="Baixar PDF" onclick='gerarPdfOS(${JSON.stringify(os).replace(/'/g,"&apos;")},"download")'><i class="ti ti-file-type-pdf"></i></button>
@@ -1498,16 +1585,43 @@ async function gerarPdfOS(os, modo){
   const cinza = [90,100,120];
   let y = 20;
 
+  // Dados da empresa — usa cache local (funciona mesmo offline)
+  const empresa = dadosEmpresaCache.RazaoSocial ? dadosEmpresaCache : JSON.parse(localStorage.getItem('cv_empresa')||'{}');
+  const temCabecalhoEmpresa = empresa.RazaoSocial || empresa.LogoLink;
+  const alturaTopo = temCabecalhoEmpresa ? 34 : 28;
+
   // Cabeçalho
   doc.setFillColor(...azul);
-  doc.rect(0,0,210,28,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(16); doc.setFont(undefined,'bold');
-  doc.text('ORDEM DE SERVIÇO', 14, 17);
-  doc.setFontSize(11); doc.setFont(undefined,'normal');
-  doc.text('Nº '+os.numero, 196, 17, {align:'right'});
+  doc.rect(0,0,210,alturaTopo,'F');
 
-  y = 38;
+  // Logo, se cadastrado — carregado como base64 para inserir no PDF
+  let logoOk = false;
+  if(empresa.LogoLink){
+    try{
+      const logoData = await carregarImagemBase64(driveThumbUrl(empresa.LogoLink));
+      if(logoData){ doc.addImage(logoData, 14, 5, 18, 18); logoOk = true; }
+    }catch(e){ /* segue sem logo se falhar */ }
+  }
+
+  const xTitulo = logoOk ? 38 : 14;
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(15); doc.setFont(undefined,'bold');
+  doc.text(empresa.RazaoSocial || 'ORDEM DE SERVIÇO', xTitulo, 13);
+  doc.setFontSize(9); doc.setFont(undefined,'normal');
+  if(empresa.RazaoSocial){
+    const linhaContato = [empresa.CNPJ, empresa.Telefone, empresa.Email].filter(Boolean).join(' · ');
+    if(linhaContato) doc.text(linhaContato, xTitulo, 19);
+    if(empresa.Endereco) doc.text(empresa.Endereco, xTitulo, 24);
+  }
+
+  doc.setFontSize(13); doc.setFont(undefined,'bold');
+  doc.text('OS Nº '+os.numero, 196, temCabecalhoEmpresa?13:17, {align:'right'});
+  if(temCabecalhoEmpresa){
+    doc.setFontSize(9); doc.setFont(undefined,'normal');
+    doc.text('Ordem de Serviço', 196, 19, {align:'right'});
+  }
+
+  y = alturaTopo + 10;
   doc.setTextColor(20,20,20);
 
   function linha(label, valor, x=14, largura=182){
@@ -1530,14 +1644,62 @@ async function gerarPdfOS(os, modo){
   }
 
   duasColunas('Data', os.data, 'Status', os.status);
-  duasColunas('Veículo', os.veiculo, 'KM', os.km?Number(os.km).toLocaleString('pt-BR')+' km':'—');
+  duasColunas('Veículo', os.veiculo+(os.modelo?' — '+os.modelo:''), 'KM', os.km?Number(os.km).toLocaleString('pt-BR')+' km':'—');
   duasColunas('Fornecedor', os.fornecedor, 'Responsável', os.responsavel);
 
   doc.setDrawColor(220,220,220);
   doc.line(14, y, 196, y); y += 8;
 
   linha('Serviço', os.servico);
-  linha('Valor', os.valor ? 'R$ '+Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—');
+
+  // Tabela de produtos/peças utilizados, se houver
+  const produtos = os.produtos || [];
+  const totalProdutos = produtos.reduce((s,p)=> s + (Number(p.subtotal)||(Number(p.quantidade)||0)*(Number(p.valorUnitario)||0)), 0);
+  const maoDeObra = Math.max(0, (Number(os.valor)||0) - totalProdutos);
+
+  if(produtos.length){
+    doc.setFontSize(9); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+    doc.text('PRODUTOS / PEÇAS UTILIZADOS', 14, y);
+    y += 6;
+
+    // Cabeçalho da tabela
+    doc.setFillColor(245,246,250);
+    doc.rect(14, y-4, 182, 7, 'F');
+    doc.setFontSize(8.5); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+    doc.text('Produto', 16, y);
+    doc.text('Qtd', 130, y, {align:'right'});
+    doc.text('Vlr. Unit.', 162, y, {align:'right'});
+    doc.text('Subtotal', 194, y, {align:'right'});
+    y += 6;
+
+    doc.setFont(undefined,'normal'); doc.setTextColor(20,20,20); doc.setFontSize(9.5);
+    produtos.forEach(p=>{
+      const sub = Number(p.subtotal)||(Number(p.quantidade)||0)*(Number(p.valorUnitario)||0);
+      doc.text(String(p.produto||'—'), 16, y);
+      doc.text(String(p.quantidade||0), 130, y, {align:'right'});
+      doc.text('R$ '+Number(p.valorUnitario||0).toLocaleString('pt-BR',{minimumFractionDigits:2}), 162, y, {align:'right'});
+      doc.text('R$ '+sub.toLocaleString('pt-BR',{minimumFractionDigits:2}), 194, y, {align:'right'});
+      y += 6;
+    });
+    y += 2;
+    doc.setDrawColor(220,220,220);
+    doc.line(14, y, 196, y); y += 7;
+
+    doc.setFontSize(10); doc.setTextColor(...cinza);
+    doc.text('Subtotal peças:', 140, y); doc.text('R$ '+totalProdutos.toLocaleString('pt-BR',{minimumFractionDigits:2}), 194, y, {align:'right'});
+    y += 6;
+    doc.text('Mão de obra:', 140, y); doc.text('R$ '+maoDeObra.toLocaleString('pt-BR',{minimumFractionDigits:2}), 194, y, {align:'right'});
+    y += 8;
+  }
+
+  doc.setFillColor(...azul);
+  doc.rect(120, y-5, 76, 10, 'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(11); doc.setFont(undefined,'bold');
+  doc.text('TOTAL:', 140, y+1.5);
+  doc.text('R$ '+(os.valor?Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}):'0,00'), 194, y+1.5, {align:'right'});
+  y += 14;
+  doc.setFont(undefined,'normal'); doc.setTextColor(20,20,20);
+
   if(os.observacao) linha('Observação', os.observacao);
 
   y += 10;
@@ -1577,6 +1739,112 @@ async function gerarPdfOS(os, modo){
   if(modo==='share') toast('Compartilhamento não suportado neste navegador — PDF baixado');
 }
 
+/* ════════════════ DADOS DA EMPRESA ════════════════ */
+let dadosEmpresaCache = {};
+let logoBase64Pendente = null;
+
+function verificarSessaoEmpresa(){
+  if(adminSenha){
+    document.getElementById('emp-login').style.display='none';
+    document.getElementById('emp-painel').style.display='block';
+    carregarDadosEmpresa();
+  } else {
+    document.getElementById('emp-login').style.display='block';
+    document.getElementById('emp-painel').style.display='none';
+  }
+}
+
+async function entrarEmpresa(){
+  if(adminSenha){
+    document.getElementById('emp-login').style.display='none';
+    document.getElementById('emp-painel').style.display='block';
+    carregarDadosEmpresa();
+    return;
+  }
+  const senha = document.getElementById('emp-senha').value.trim();
+  const erroEl = document.getElementById('emp-erro');
+  erroEl.style.display='none';
+  if(!senha){ erroEl.textContent='Digite a senha.'; erroEl.style.display='block'; return; }
+  if(!cfg.url){ erroEl.textContent='Configure a URL do Apps Script primeiro.'; erroEl.style.display='block'; return; }
+  if(!navigator.onLine){ erroEl.textContent='Sem internet — não é possível validar a senha.'; erroEl.style.display='block'; return; }
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'validarSenhaAdmin', senha})});
+    const d = await r.json();
+    if(d.ok){
+      adminSenha = senha;
+      sessionStorage.setItem(ADMIN_K, senha);
+      document.getElementById('emp-senha').value='';
+      pedirNomeOperador(()=>{
+        document.getElementById('emp-login').style.display='none';
+        document.getElementById('emp-painel').style.display='block';
+        carregarDadosEmpresa();
+        toast('✓ Acesso liberado');
+      });
+    } else {
+      erroEl.textContent = d.erro || 'Senha incorreta.';
+      erroEl.style.display='block';
+    }
+  }catch(e){
+    erroEl.textContent='Erro de conexão ao validar senha.';
+    erroEl.style.display='block';
+  }
+}
+
+async function carregarDadosEmpresa(){
+  if(!cfg.url || !navigator.onLine) return;
+  try{
+    const r = await fetch(cfg.url+'?action=getDadosEmpresa');
+    const d = await r.json();
+    dadosEmpresaCache = d.dados || {};
+    document.getElementById('emp-razao').value    = dadosEmpresaCache.RazaoSocial || '';
+    document.getElementById('emp-cnpj').value     = dadosEmpresaCache.CNPJ        || '';
+    document.getElementById('emp-telefone').value = dadosEmpresaCache.Telefone    || '';
+    document.getElementById('emp-endereco').value = dadosEmpresaCache.Endereco    || '';
+    document.getElementById('emp-email').value    = dadosEmpresaCache.Email       || '';
+    if(dadosEmpresaCache.LogoLink){
+      const thumbUrl = driveThumbUrl(dadosEmpresaCache.LogoLink);
+      document.getElementById('emp-logo-preview').innerHTML = `<img src="${thumbUrl}" style="width:100%;height:100%;object-fit:contain">`;
+    }
+    // Cacheia localmente para uso no PDF mesmo offline
+    localStorage.setItem('cv_empresa', JSON.stringify(dadosEmpresaCache));
+  }catch(e){ /* mantém formulário vazio */ }
+}
+
+function prepararLogoEmpresa(e){
+  const f = e.target.files[0]; if(!f) return;
+  comprimirImagem(f, 400, 0.85, blob=>{
+    const r = new FileReader();
+    r.onload = ev=>{
+      logoBase64Pendente = ev.target.result;
+      document.getElementById('emp-logo-preview').innerHTML = `<img src="${logoBase64Pendente}" style="width:100%;height:100%;object-fit:contain">`;
+    };
+    r.readAsDataURL(blob);
+  });
+}
+
+async function salvarDadosEmpresaApp(){
+  const payload = {
+    action:'salvarDadosEmpresa', senha:adminSenha, usuario:usuarioGoogle,
+    razaoSocial: document.getElementById('emp-razao').value.trim(),
+    cnpj:        document.getElementById('emp-cnpj').value.trim(),
+    telefone:    document.getElementById('emp-telefone').value.trim(),
+    endereco:    document.getElementById('emp-endereco').value.trim(),
+    email:       document.getElementById('emp-email').value.trim()
+  };
+  if(logoBase64Pendente) payload.logoBase64 = logoBase64Pendente;
+
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload)});
+    const d = await r.json();
+    if(d.ok){
+      toast('✓ Dados da empresa salvos');
+      logoBase64Pendente = null;
+      carregarDadosEmpresa();
+    } else { toast(d.erro || 'Erro ao salvar'); }
+  }catch(e){ toast('Erro de conexão'); }
+}
+
 let veiculoSelOS = null;
 
 function abrirFormOS(){
@@ -1591,8 +1859,55 @@ function abrirFormOS(){
   document.getElementById('fos-responsavel').value=usuarioGoogle||'';
   document.getElementById('fos-status').value='Aberta';
   document.getElementById('fos-obs').value='';
+  produtosOSAtual = [];
+  renderProdutosOS();
   document.getElementById('form-os').style.display='block';
   document.getElementById('form-os').scrollIntoView({behavior:'smooth'});
+}
+
+/* ── Produtos / peças utilizados na OS ────────────────────── */
+let produtosOSAtual = [];
+
+function adicionarLinhaProdutoOS(produto, quantidade, valorUnitario){
+  produtosOSAtual.push({
+    produto: produto || '', quantidade: quantidade!=null ? quantidade : 1, valorUnitario: valorUnitario || ''
+  });
+  renderProdutosOS();
+}
+
+function removerLinhaProdutoOS(idx){
+  produtosOSAtual.splice(idx, 1);
+  renderProdutosOS();
+}
+
+function atualizarProdutoOS(idx, campo, valor){
+  if(!produtosOSAtual[idx]) return;
+  produtosOSAtual[idx][campo] = valor;
+  recalcularTotalOS();
+}
+
+function renderProdutosOS(){
+  const list = document.getElementById('fos-produtos-list');
+  list.innerHTML = produtosOSAtual.map((p, idx) => `
+    <div class="prod-row">
+      <input class="prod-nome" placeholder="Nome do produto/peça" value="${(p.produto||'').replace(/"/g,'&quot;')}"
+        oninput="atualizarProdutoOS(${idx},'produto',this.value)">
+      <input class="prod-qtd" type="number" min="0" step="1" placeholder="Qtd" value="${p.quantidade!=null?p.quantidade:''}"
+        oninput="atualizarProdutoOS(${idx},'quantidade',this.value)">
+      <input class="prod-valor" type="number" min="0" step="0.01" placeholder="Vlr unit." value="${p.valorUnitario!=null?p.valorUnitario:''}"
+        oninput="atualizarProdutoOS(${idx},'valorUnitario',this.value)">
+      <span class="prod-sub">R$ ${((Number(p.quantidade)||0)*(Number(p.valorUnitario)||0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+      <button class="prod-rm" onclick="removerLinhaProdutoOS(${idx})" title="Remover"><i class="ti ti-x"></i></button>
+    </div>`).join('');
+  recalcularTotalOS();
+}
+
+function recalcularTotalOS(){
+  const totalProdutos = produtosOSAtual.reduce((s,p)=> s + (Number(p.quantidade)||0)*(Number(p.valorUnitario)||0), 0);
+  const maoDeObra = Number(document.getElementById('fos-valor').value) || 0;
+  const total = totalProdutos + maoDeObra;
+  document.getElementById('fos-total').textContent = 'R$ '+total.toLocaleString('pt-BR',{minimumFractionDigits:2});
+  return total;
 }
 
 /* ── Busca de veículo na OS (mesmo padrão do checklist) ── */
@@ -1638,21 +1953,31 @@ function editarOSApp(os){
   const v = frota.find(x=>x.placa===os.veiculo);
   if(v) selecionarVeiculoOS(v.placa);
   else {
-    // Veículo pode ter sido desativado depois — mantém o valor mesmo assim
-    document.getElementById('fos-busca').value = os.veiculo;
-    veiculoSelOS = {placa: os.veiculo, modelo:'', tipo:'', ano:''};
+    // Veículo pode ter sido desativado depois — mantém placa e modelo salvos na própria OS
+    document.getElementById('fos-busca').value = os.veiculo+(os.modelo?' — '+os.modelo:'');
+    veiculoSelOS = {placa: os.veiculo, modelo: os.modelo||'', tipo:'', ano:''};
     document.getElementById('fos-vc').className='vc';
   }
   // Converte data dd/MM/yyyy -> yyyy-MM-dd para o input date
   const m = String(os.data).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   document.getElementById('fos-data').value = m ? `${m[3]}-${m[2]}-${m[1]}` : os.data;
   document.getElementById('fos-km').value=os.km||'';
-  document.getElementById('fos-valor').value=os.valor||'';
   document.getElementById('fos-fornecedor').value=os.fornecedor||'';
   document.getElementById('fos-servico').value=os.servico||'';
   document.getElementById('fos-responsavel').value=os.responsavel||'';
   document.getElementById('fos-status').value=os.status||'Aberta';
   document.getElementById('fos-obs').value=os.observacao||'';
+
+  // Carrega produtos já registrados e calcula a mão de obra original
+  // (valor total salvo − soma dos produtos = mão de obra)
+  produtosOSAtual = (os.produtos || []).map(p => ({
+    produto: p.produto, quantidade: p.quantidade, valorUnitario: p.valorUnitario
+  }));
+  const totalProdutosSalvos = produtosOSAtual.reduce((s,p)=> s + (Number(p.quantidade)||0)*(Number(p.valorUnitario)||0), 0);
+  const maoDeObraOriginal = Math.max(0, (Number(os.valor)||0) - totalProdutosSalvos);
+  document.getElementById('fos-valor').value = maoDeObraOriginal || '';
+  renderProdutosOS();
+
   document.getElementById('form-os').style.display='block';
   document.getElementById('form-os').scrollIntoView({behavior:'smooth'});
 }
@@ -1670,16 +1995,21 @@ async function salvarOSApp(){
   const [ano,mes,dia] = dataInput.split('-');
   const dataFmt = dia ? `${dia}/${mes}/${ano}` : dataInput;
 
+  // Filtra produtos preenchidos e calcula o total (peças + mão de obra)
+  const produtosValidos = produtosOSAtual.filter(p => p.produto && p.produto.trim());
+  const totalCalculado = recalcularTotalOS();
+
   const payload = {
     action:'salvarOS', senha:adminSenha, usuario:usuarioGoogle,
-    veiculo, data:dataFmt,
+    veiculo, modelo: veiculoSelOS ? (veiculoSelOS.modelo||'') : '', data:dataFmt,
     km:document.getElementById('fos-km').value.trim(),
     fornecedor:document.getElementById('fos-fornecedor').value.trim(),
     servico,
-    valor:document.getElementById('fos-valor').value.trim(),
+    valor: totalCalculado.toFixed(2),
     responsavel:document.getElementById('fos-responsavel').value.trim(),
     observacao:document.getElementById('fos-obs').value.trim(),
-    status:document.getElementById('fos-status').value
+    status:document.getElementById('fos-status').value,
+    produtos: produtosValidos
   };
   if(editandoOSLinha){ payload.linha = editandoOSLinha; payload.numero = editandoOSNumero; }
 
@@ -1693,6 +2023,7 @@ async function salvarOSApp(){
     } else { toast(d.erro || 'Erro ao salvar'); }
   }catch(e){ toast('Erro de conexão'); }
 }
+
 
 /* ── CRUD VEÍCULOS ── */
 let veiculosAdminCache = [];
