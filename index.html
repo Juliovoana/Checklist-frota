@@ -8,6 +8,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%231a3a5c%22/%3E%3Crect%20x%3D%2210%22%20y%3D%2222%22%20width%3D%2240%22%20height%3D%2220%22%20rx%3D%224%22%20fill%3D%22%23ffffff%22/%3E%3Crect%20x%3D%2210%22%20y%3D%2222%22%20width%3D%2240%22%20height%3D%229%22%20rx%3D%223%22%20fill%3D%22%23e8eef5%22/%3E%3Crect%20x%3D%2215%22%20y%3D%2224%22%20width%3D%228%22%20height%3D%226%22%20rx%3D%221.5%22%20fill%3D%22%231a3a5c%22%20opacity%3D%220.85%22/%3E%3Crect%20x%3D%2227%22%20y%3D%2224%22%20width%3D%228%22%20height%3D%226%22%20rx%3D%221.5%22%20fill%3D%22%231a3a5c%22%20opacity%3D%220.85%22/%3E%3Crect%20x%3D%2244%22%20y%3D%2224%22%20width%3D%226%22%20height%3D%226%22%20rx%3D%221.5%22%20fill%3D%22%23fbbf24%22/%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2244%22%20r%3D%226%22%20fill%3D%22%231a3a5c%22/%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2244%22%20r%3D%222.4%22%20fill%3D%22%23ffffff%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2244%22%20r%3D%226%22%20fill%3D%22%231a3a5c%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2244%22%20r%3D%222.4%22%20fill%3D%22%23ffffff%22/%3E%3Crect%20x%3D%229%22%20y%3D%2238%22%20width%3D%222.5%22%20height%3D%225%22%20rx%3D%221%22%20fill%3D%22%23ffffff%22/%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2214%22%20r%3D%228%22%20fill%3D%22%2316a34a%22/%3E%3Cpath%20d%3D%22M46.3%2014.2%20L48.7%2016.6%20L53.7%2011%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E">
 <title>Checklist Frota</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --bg:#f5f6fa;--sf:#fff;--bd:#e2e5ec;--bdl:#f0f2f7;
@@ -460,11 +461,22 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
       <div id="form-os" style="display:none" class="card">
         <div class="lbl" id="fos-titulo">Nova OS</div>
 
-        <div class="man-grid" style="margin-bottom:8px">
-          <div class="man-field">
-            <label>Veículo (placa)</label>
-            <select class="inp" id="fos-veiculo"></select>
+        <div class="man-field" style="margin-bottom:8px">
+          <label>Veículo (placa ou modelo)</label>
+          <div class="sw">
+            <i class="ti ti-search sic"></i>
+            <input class="inp" id="fos-busca" placeholder="Digite placa ou modelo..." autocomplete="off"
+              oninput="filtrarOS()" onfocus="abrirDDOS()" onblur="setTimeout(fecharDDOS,200)">
+            <div class="dd" id="ddos"></div>
           </div>
+          <div class="vc" id="fos-vc" style="margin-top:8px">
+            <div class="vcic" id="fos-vcic"><i class="ti ti-bus"></i></div>
+            <div style="flex:1"><div class="vcn" id="fos-vcn"></div><div class="vcs" id="fos-vcs"></div><span class="pill" id="fos-vcp"></span></div>
+            <button class="vccl" onclick="limparVeiculoOS()"><i class="ti ti-x"></i></button>
+          </div>
+        </div>
+
+        <div class="man-grid" style="margin-bottom:8px">
           <div class="man-field"><label>Data</label><input class="inp" type="date" id="fos-data"></div>
         </div>
 
@@ -1465,17 +1477,112 @@ function renderOS(){
         ${os.responsavel?`<span><i class="ti ti-user"></i> ${os.responsavel}</span>`:''}
       </div>
       ${os.observacao?`<div style="font-size:12px;color:var(--tx2)">${os.observacao}</div>`:''}
-      <div style="display:flex;justify-content:flex-end;margin-top:2px">
+      <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:2px">
+        <button class="fi-btn" title="Baixar PDF" onclick='gerarPdfOS(${JSON.stringify(os).replace(/'/g,"&apos;")},"download")'><i class="ti ti-file-type-pdf"></i></button>
+        <button class="fi-btn" title="Compartilhar / Enviar" onclick='gerarPdfOS(${JSON.stringify(os).replace(/'/g,"&apos;")},"share")'><i class="ti ti-share"></i></button>
         <button class="fi-btn" title="Editar" onclick='editarOSApp(${JSON.stringify(os).replace(/'/g,"&apos;")})'><i class="ti ti-edit"></i></button>
       </div>`;
     list.appendChild(div);
   });
 }
 
+/* ── Geração de PDF da Ordem de Serviço ──────────────────────
+   modo: "download" salva o arquivo no dispositivo
+         "share"    abre o menu nativo de compartilhamento
+                     (WhatsApp, e-mail, etc) quando suportado     */
+async function gerarPdfOS(os, modo){
+  if(typeof jspdf === 'undefined'){ toast('Biblioteca de PDF não carregou — verifique a internet'); return; }
+  const { jsPDF } = jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const azul = [26,58,92];
+  const cinza = [90,100,120];
+  let y = 20;
+
+  // Cabeçalho
+  doc.setFillColor(...azul);
+  doc.rect(0,0,210,28,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(16); doc.setFont(undefined,'bold');
+  doc.text('ORDEM DE SERVIÇO', 14, 17);
+  doc.setFontSize(11); doc.setFont(undefined,'normal');
+  doc.text('Nº '+os.numero, 196, 17, {align:'right'});
+
+  y = 38;
+  doc.setTextColor(20,20,20);
+
+  function linha(label, valor, x=14, largura=182){
+    doc.setFontSize(9); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+    doc.text(label.toUpperCase(), x, y);
+    y += 5;
+    doc.setFontSize(12); doc.setTextColor(20,20,20); doc.setFont(undefined,'normal');
+    const linhas = doc.splitTextToSize(String(valor||'—'), largura);
+    doc.text(linhas, x, y);
+    y += (linhas.length * 6) + 4;
+  }
+
+  function duasColunas(l1,v1,l2,v2){
+    const yIni = y;
+    linha(l1, v1, 14, 86);
+    const yFim1 = y;
+    y = yIni;
+    linha(l2, v2, 110, 86);
+    y = Math.max(y, yFim1);
+  }
+
+  duasColunas('Data', os.data, 'Status', os.status);
+  duasColunas('Veículo', os.veiculo, 'KM', os.km?Number(os.km).toLocaleString('pt-BR')+' km':'—');
+  duasColunas('Fornecedor', os.fornecedor, 'Responsável', os.responsavel);
+
+  doc.setDrawColor(220,220,220);
+  doc.line(14, y, 196, y); y += 8;
+
+  linha('Serviço', os.servico);
+  linha('Valor', os.valor ? 'R$ '+Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—');
+  if(os.observacao) linha('Observação', os.observacao);
+
+  y += 10;
+  doc.setDrawColor(220,220,220);
+  doc.line(14, y, 90, y);
+  doc.line(120, y, 196, y);
+  y += 5;
+  doc.setFontSize(9); doc.setTextColor(...cinza);
+  doc.text('Assinatura do prestador', 14, y);
+  doc.text('Assinatura do responsável', 120, y);
+
+  doc.setFontSize(8); doc.setTextColor(...cinza);
+  doc.text('Gerado em '+new Date().toLocaleString('pt-BR'), 14, 290);
+
+  const nomeArquivo = 'OS_'+os.numero+'_'+os.veiculo.replace(/[^a-zA-Z0-9]/g,'')+'.pdf';
+
+  if(modo==='share' && navigator.share && navigator.canShare){
+    try{
+      const blob = doc.output('blob');
+      const file = new File([blob], nomeArquivo, {type:'application/pdf'});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({
+          files:[file],
+          title:'Ordem de Serviço Nº '+os.numero,
+          text:'OS Nº '+os.numero+' — '+os.veiculo+' — '+os.servico
+        });
+        return;
+      }
+    }catch(e){
+      if(e.name==='AbortError') return; // usuário cancelou o compartilhamento
+      // segue para o fallback de download abaixo
+    }
+  }
+
+  // Fallback: navegador sem suporte a compartilhar arquivos, ou modo "download"
+  doc.save(nomeArquivo);
+  if(modo==='share') toast('Compartilhamento não suportado neste navegador — PDF baixado');
+}
+
+let veiculoSelOS = null;
+
 function abrirFormOS(){
   editandoOSLinha=null; editandoOSNumero=null;
   document.getElementById('fos-titulo').textContent='Nova OS';
-  preencherSelectVeiculosOS();
+  limparVeiculoOS();
   document.getElementById('fos-data').value=new Date().toISOString().slice(0,10);
   document.getElementById('fos-km').value='';
   document.getElementById('fos-valor').value='';
@@ -1488,17 +1595,54 @@ function abrirFormOS(){
   document.getElementById('form-os').scrollIntoView({behavior:'smooth'});
 }
 
-function preencherSelectVeiculosOS(selecionado){
-  const sel = document.getElementById('fos-veiculo');
-  sel.innerHTML = frota.map(v=>`<option value="${v.placa}">${v.placa} — ${v.modelo}</option>`).join('');
-  if(selecionado) sel.value = selecionado;
+/* ── Busca de veículo na OS (mesmo padrão do checklist) ── */
+function filtrarOS(){
+  const q=document.getElementById('fos-busca').value.trim().toLowerCase();
+  const dd=document.getElementById('ddos');
+  if(!q){ dd.classList.remove('on'); dd.innerHTML=''; return; }
+  const res=frota.filter(v=>v.placa.toLowerCase().includes(q)||v.modelo.toLowerCase().includes(q)).slice(0,8);
+  dd.innerHTML = res.length
+    ? res.map(v=>`<div class="ddi" data-placa="${v.placa.replace(/"/g,'&quot;')}">
+        <div class="ddic"><i class="ti ${TPI[v.tipo]||'ti-car'}"></i></div>
+        <div><div class="ddpl">${v.placa}</div><div class="ddsb">${v.modelo} · ${v.tipo} · ${v.ano}</div></div>
+      </div>`).join('')
+    : '<div class="ddem">Nenhum veículo encontrado</div>';
+  dd.classList.add('on');
+  ativarItensDropdown(dd, selecionarVeiculoOS);
+}
+function abrirDDOS(){ if(document.getElementById('fos-busca').value.trim()) filtrarOS(); }
+function fecharDDOS(){ document.getElementById('ddos').classList.remove('on'); }
+
+function selecionarVeiculoOS(placa){
+  const v=frota.find(x=>x.placa===placa); if(!v) return;
+  veiculoSelOS=v;
+  document.getElementById('fos-busca').value=v.placa+' — '+v.modelo;
+  document.getElementById('ddos').classList.remove('on');
+  document.getElementById('fos-vcn').textContent=v.modelo;
+  document.getElementById('fos-vcs').textContent='Placa: '+v.placa+' · Ano: '+v.ano;
+  const p=document.getElementById('fos-vcp'); p.textContent=v.tipo; p.className='pill '+(TPC[v.tipo]||'pu');
+  document.getElementById('fos-vcic').innerHTML='<i class="ti '+(TPI[v.tipo]||'ti-car')+'"></i>';
+  document.getElementById('fos-vc').className='vc on';
+}
+
+function limparVeiculoOS(){
+  veiculoSelOS=null;
+  document.getElementById('fos-busca').value='';
+  document.getElementById('fos-vc').className='vc';
 }
 
 function editarOSApp(os){
   editandoOSLinha = os.linha;
   editandoOSNumero = os.numero;
   document.getElementById('fos-titulo').textContent='Editar OS Nº '+os.numero;
-  preencherSelectVeiculosOS(os.veiculo);
+  const v = frota.find(x=>x.placa===os.veiculo);
+  if(v) selecionarVeiculoOS(v.placa);
+  else {
+    // Veículo pode ter sido desativado depois — mantém o valor mesmo assim
+    document.getElementById('fos-busca').value = os.veiculo;
+    veiculoSelOS = {placa: os.veiculo, modelo:'', tipo:'', ano:''};
+    document.getElementById('fos-vc').className='vc';
+  }
   // Converte data dd/MM/yyyy -> yyyy-MM-dd para o input date
   const m = String(os.data).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
   document.getElementById('fos-data').value = m ? `${m[3]}-${m[2]}-${m[1]}` : os.data;
@@ -1516,10 +1660,11 @@ function editarOSApp(os){
 function fecharFormOS(){ document.getElementById('form-os').style.display='none'; }
 
 async function salvarOSApp(){
-  const veiculo     = document.getElementById('fos-veiculo').value;
+  const veiculo     = veiculoSelOS ? veiculoSelOS.placa : '';
   const dataInput   = document.getElementById('fos-data').value;
   const servico     = document.getElementById('fos-servico').value.trim();
-  if(!veiculo || !servico){ toast('Preencha veículo e serviço'); return; }
+  if(!veiculo){ toast('Selecione o veículo'); return; }
+  if(!servico){ toast('Informe o serviço'); return; }
 
   // Converte yyyy-MM-dd -> dd/MM/yyyy para gravar no padrão da planilha
   const [ano,mes,dia] = dataInput.split('-');
