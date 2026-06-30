@@ -459,12 +459,37 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
     </div>
 
     <div id="os-painel" style="display:none">
+      <div class="sbar" style="border-bottom:1px solid var(--bd)">
+        <span style="font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:5px">
+          <i class="ti ti-user-circle"></i> <span id="operador-badge-os">Não identificado</span>
+        </span>
+        <button class="sbtn" onclick="sairAdmin()"><i class="ti ti-logout"></i> Sair</button>
+      </div>
       <div class="sbar">
         <span style="font-size:12px;color:var(--tx2)" id="os-status">Carregando...</span>
         <button class="sbtn" onclick="carregarOS()"><i class="ti ti-refresh"></i> Atualizar</button>
       </div>
       <div class="card" style="padding:14px 16px">
         <button class="btn-buscar" style="width:100%;justify-content:center" onclick="abrirFormOS()"><i class="ti ti-plus"></i> Nova Ordem de Serviço</button>
+      </div>
+
+      <div class="card" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+        <div class="sw">
+          <i class="ti ti-search sic"></i>
+          <input class="inp" id="os-filtro-texto" placeholder="Filtrar por placa, modelo, serviço ou fornecedor..." oninput="renderOS()">
+        </div>
+        <div style="display:flex;gap:8px">
+          <select class="inp" id="os-filtro-status" style="flex:1" onchange="renderOS()">
+            <option value="">Todos os status</option>
+            <option value="Aberta">Aberta</option>
+            <option value="Em andamento">Em andamento</option>
+            <option value="Concluída">Concluída</option>
+            <option value="Cancelada">Cancelada</option>
+          </select>
+          <button onclick="limparFiltrosOS()" style="background:none;border:1px solid var(--bd);border-radius:var(--rs);padding:0 12px;color:var(--tx2);cursor:pointer;font-family:inherit;font-size:12px;white-space:nowrap">
+            <i class="ti ti-x"></i> Limpar
+          </button>
+        </div>
       </div>
 
       <div id="form-os" style="display:none" class="card">
@@ -1362,43 +1387,31 @@ function updSub(){ document.getElementById('hsub').textContent=cfg.url?'Planilha
 
 /* ════════════════ ÁREA ADMIN — Cadastro/Edição ════════════════ */
 const ADMIN_K = 'cv_admin_session';
+const NIVEL_K = 'cv_admin_nivel';
 let adminSenha = sessionStorage.getItem(ADMIN_K) || '';
-let usuarioGoogle = '';
+let nivelAcesso = sessionStorage.getItem(NIVEL_K) || ''; // 'admin' ou 'operador'
+let usuarioGoogle = sessionStorage.getItem('cv_usuario_sessao') || '';
 
-// Nome do operador é informado manualmente uma vez e guardado no
-// dispositivo. O Apps Script roda sempre com a conta de quem
-// publicou o script, então não há como capturar automaticamente
-// o usuário que está de fato operando o navegador.
+// O nome do usuário agora vem direto da planilha (coluna Usuario da
+// aba Config), retornado junto com a validação da senha — não é
+// mais perguntado manualmente.
 function detectarUsuarioGoogle(){
-  usuarioGoogle = localStorage.getItem('cv_usuario') || '';
+  usuarioGoogle = sessionStorage.getItem('cv_usuario_sessao') || '';
 }
 
-function pedirNomeOperador(callback){
-  if(usuarioGoogle){ callback(); return; }
-  const nome = prompt('Para registrar quem fez esta alteração, informe seu nome:');
-  if(nome && nome.trim()){
-    usuarioGoogle = nome.trim();
-    localStorage.setItem('cv_usuario', usuarioGoogle);
-  } else {
-    usuarioGoogle = 'Não identificado';
-  }
-  callback();
-}
-
-function trocarNomeOperador(){
-  const atual = usuarioGoogle || '';
-  const nome = prompt('Nome do operador (aparece na auditoria de alterações):', atual);
-  if(nome !== null && nome.trim()){
-    usuarioGoogle = nome.trim();
-    localStorage.setItem('cv_usuario', usuarioGoogle);
-    toast('✓ Nome atualizado: '+usuarioGoogle);
-    atualizarBadgeOperador();
-  }
+function definirUsuarioSessao(nome, nivel){
+  usuarioGoogle = nome || '';
+  nivelAcesso = nivel || '';
+  sessionStorage.setItem('cv_usuario_sessao', usuarioGoogle);
+  sessionStorage.setItem(NIVEL_K, nivelAcesso);
+  atualizarBadgeOperador();
 }
 
 function atualizarBadgeOperador(){
   const el = document.getElementById('operador-badge');
-  if(el) el.textContent = usuarioGoogle ? usuarioGoogle : 'Definir nome';
+  if(el) el.textContent = usuarioGoogle ? usuarioGoogle + (nivelAcesso==='admin'?' (admin)':' (operador)') : 'Não identificado';
+  const elOS = document.getElementById('operador-badge-os');
+  if(elOS) elOS.textContent = usuarioGoogle ? usuarioGoogle + (nivelAcesso==='admin'?' (admin)':' (operador)') : 'Não identificado';
 }
 
 function goSubFrota(id, btn){
@@ -1419,7 +1432,7 @@ function goAdminTab(id, btn){
 }
 
 function verificarSessaoAdmin(){
-  if(adminSenha){
+  if(adminSenha && nivelAcesso==='admin'){
     document.getElementById('admin-login').style.display='none';
     document.getElementById('admin-painel').style.display='block';
     atualizarBadgeOperador();
@@ -1441,15 +1454,16 @@ async function entrarAdmin(){
     const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
       body: JSON.stringify({action:'validarSenhaAdmin', senha})});
     const d = await r.json();
-    if(d.ok){
+    if(d.ok && d.nivel==='admin'){
       adminSenha = senha;
       sessionStorage.setItem(ADMIN_K, senha);
+      definirUsuarioSessao(d.usuario, d.nivel);
       document.getElementById('admin-senha').value='';
-      pedirNomeOperador(()=>{
-        verificarSessaoAdmin();
-        atualizarBadgeOperador();
-        toast('✓ Acesso liberado');
-      });
+      verificarSessaoAdmin();
+      toast('✓ Acesso liberado — '+d.usuario);
+    } else if(d.ok){
+      erroEl.textContent = 'Esta área exige a senha de administração.';
+      erroEl.style.display='block';
     } else {
       erroEl.textContent = d.erro || 'Senha incorreta.';
       erroEl.style.display='block';
@@ -1461,7 +1475,10 @@ async function entrarAdmin(){
 }
 
 function sairAdmin(){
-  adminSenha=''; sessionStorage.removeItem(ADMIN_K);
+  adminSenha=''; nivelAcesso=''; usuarioGoogle='';
+  sessionStorage.removeItem(ADMIN_K);
+  sessionStorage.removeItem(NIVEL_K);
+  sessionStorage.removeItem('cv_usuario_sessao');
   verificarSessaoAdmin();
 }
 
@@ -1471,7 +1488,7 @@ let editandoOSLinha = null;
 let editandoOSNumero = null;
 
 async function entrarOS(){
-  // Se já existe sessão admin ativa (ex: usada na aba Frota), reaproveita
+  // Se já existe sessão ativa (admin ou operador), reaproveita
   if(adminSenha){
     document.getElementById('os-login').style.display='none';
     document.getElementById('os-painel').style.display='block';
@@ -1489,15 +1506,15 @@ async function entrarOS(){
       body: JSON.stringify({action:'validarSenhaAdmin', senha})});
     const d = await r.json();
     if(d.ok){
+      // OS aceita tanto admin quanto operador
       adminSenha = senha;
       sessionStorage.setItem(ADMIN_K, senha);
+      definirUsuarioSessao(d.usuario, d.nivel);
       document.getElementById('os-senha').value='';
-      pedirNomeOperador(()=>{
-        document.getElementById('os-login').style.display='none';
-        document.getElementById('os-painel').style.display='block';
-        carregarOS();
-        toast('✓ Acesso liberado');
-      });
+      document.getElementById('os-login').style.display='none';
+      document.getElementById('os-painel').style.display='block';
+      carregarOS();
+      toast('✓ Acesso liberado — '+d.usuario);
     } else {
       erroEl.textContent = d.erro || 'Senha incorreta.';
       erroEl.style.display='block';
@@ -1512,6 +1529,7 @@ function verificarSessaoOS(){
   if(adminSenha){
     document.getElementById('os-login').style.display='none';
     document.getElementById('os-painel').style.display='block';
+    atualizarBadgeOperador();
     carregarOS();
   } else {
     document.getElementById('os-login').style.display='block';
@@ -1538,11 +1556,38 @@ async function carregarOS(){
 
 const STATUS_CLASS = {'Aberta':'os-aberta','Em andamento':'os-andamento','Concluída':'os-concluida','Cancelada':'os-cancelada'};
 
+function limparFiltrosOS(){
+  document.getElementById('os-filtro-texto').value='';
+  document.getElementById('os-filtro-status').value='';
+  renderOS();
+}
+
 function renderOS(){
   const list = document.getElementById('os-list');
   if(!osCache.length){ list.innerHTML='<div class="empty"><i class="ti ti-file-invoice"></i>Nenhuma OS cadastrada</div>'; return; }
+
+  const textoEl = document.getElementById('os-filtro-texto');
+  const statusEl = document.getElementById('os-filtro-status');
+  const texto = textoEl ? textoEl.value.trim().toLowerCase() : '';
+  const statusFiltro = statusEl ? statusEl.value : '';
+
+  const filtradas = osCache.filter(os=>{
+    if(statusFiltro && os.status !== statusFiltro) return false;
+    if(texto){
+      const alvo = [os.veiculo, os.modelo, os.servico, os.fornecedor, os.responsavel, String(os.numero)]
+        .filter(Boolean).join(' ').toLowerCase();
+      if(!alvo.includes(texto)) return false;
+    }
+    return true;
+  });
+
+  if(!filtradas.length){
+    list.innerHTML='<div class="empty"><i class="ti ti-filter-off"></i>Nenhuma OS encontrada com esse filtro</div>';
+    return;
+  }
+
   list.innerHTML='';
-  osCache.forEach(os=>{
+  filtradas.forEach(os=>{
     const valorFmt = os.valor ? 'R$ '+Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
     const div=document.createElement('div'); div.className='os-card';
     div.innerHTML=`
@@ -1621,17 +1666,18 @@ async function gerarPdfOS(os, modo){
     doc.text('Ordem de Serviço', 196, 19, {align:'right'});
   }
 
-  y = alturaTopo + 10;
+  y = alturaTopo + 8;
   doc.setTextColor(20,20,20);
 
+  // Versão compacta: label e valor na mesma linha (economiza ~6mm por campo)
   function linha(label, valor, x=14, largura=182){
-    doc.setFontSize(9); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
-    doc.text(label.toUpperCase(), x, y);
-    y += 5;
-    doc.setFontSize(12); doc.setTextColor(20,20,20); doc.setFont(undefined,'normal');
-    const linhas = doc.splitTextToSize(String(valor||'—'), largura);
-    doc.text(linhas, x, y);
-    y += (linhas.length * 6) + 4;
+    doc.setFontSize(8.5); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+    doc.text(label.toUpperCase()+':', x, y);
+    const labelWidth = doc.getTextWidth(label.toUpperCase()+':') + 2;
+    doc.setFontSize(10.5); doc.setTextColor(20,20,20); doc.setFont(undefined,'normal');
+    const linhas = doc.splitTextToSize(String(valor||'—'), largura - labelWidth);
+    doc.text(linhas, x + labelWidth, y);
+    y += Math.max(linhas.length * 5, 5.5) + 2;
   }
 
   function duasColunas(l1,v1,l2,v2){
@@ -1648,7 +1694,7 @@ async function gerarPdfOS(os, modo){
   duasColunas('Fornecedor', os.fornecedor, 'Responsável', os.responsavel);
 
   doc.setDrawColor(220,220,220);
-  doc.line(14, y, 196, y); y += 8;
+  doc.line(14, y, 196, y); y += 5;
 
   linha('Serviço', os.servico);
 
@@ -1658,51 +1704,54 @@ async function gerarPdfOS(os, modo){
   const maoDeObra = Math.max(0, (Number(os.valor)||0) - totalProdutos);
 
   if(produtos.length){
-    doc.setFontSize(9); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+    y += 1;
+    doc.setFontSize(8.5); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
     doc.text('PRODUTOS / PEÇAS UTILIZADOS', 14, y);
-    y += 6;
+    y += 5;
 
     // Cabeçalho da tabela
     doc.setFillColor(245,246,250);
-    doc.rect(14, y-4, 182, 7, 'F');
-    doc.setFontSize(8.5); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+    doc.rect(14, y-3.5, 182, 6, 'F');
+    doc.setFontSize(8); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
     doc.text('Produto', 16, y);
     doc.text('Qtd', 130, y, {align:'right'});
     doc.text('Vlr. Unit.', 162, y, {align:'right'});
     doc.text('Subtotal', 194, y, {align:'right'});
-    y += 6;
+    y += 5.5;
 
-    doc.setFont(undefined,'normal'); doc.setTextColor(20,20,20); doc.setFontSize(9.5);
+    doc.setFont(undefined,'normal'); doc.setTextColor(20,20,20); doc.setFontSize(9);
     produtos.forEach(p=>{
       const sub = Number(p.subtotal)||(Number(p.quantidade)||0)*(Number(p.valorUnitario)||0);
       doc.text(String(p.produto||'—'), 16, y);
       doc.text(String(p.quantidade||0), 130, y, {align:'right'});
       doc.text('R$ '+Number(p.valorUnitario||0).toLocaleString('pt-BR',{minimumFractionDigits:2}), 162, y, {align:'right'});
       doc.text('R$ '+sub.toLocaleString('pt-BR',{minimumFractionDigits:2}), 194, y, {align:'right'});
-      y += 6;
+      y += 5;
     });
-    y += 2;
+    y += 1;
     doc.setDrawColor(220,220,220);
-    doc.line(14, y, 196, y); y += 7;
+    doc.line(14, y, 196, y); y += 5;
 
-    doc.setFontSize(10); doc.setTextColor(...cinza);
+    doc.setFontSize(9.5); doc.setTextColor(...cinza);
     doc.text('Subtotal peças:', 140, y); doc.text('R$ '+totalProdutos.toLocaleString('pt-BR',{minimumFractionDigits:2}), 194, y, {align:'right'});
-    y += 6;
+    y += 5;
     doc.text('Mão de obra:', 140, y); doc.text('R$ '+maoDeObra.toLocaleString('pt-BR',{minimumFractionDigits:2}), 194, y, {align:'right'});
-    y += 8;
+    y += 6;
+  } else {
+    y += 1;
   }
 
   doc.setFillColor(...azul);
-  doc.rect(120, y-5, 76, 10, 'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(11); doc.setFont(undefined,'bold');
-  doc.text('TOTAL:', 140, y+1.5);
-  doc.text('R$ '+(os.valor?Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}):'0,00'), 194, y+1.5, {align:'right'});
-  y += 14;
+  doc.rect(120, y-4, 76, 9, 'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(10.5); doc.setFont(undefined,'bold');
+  doc.text('TOTAL:', 140, y+1.2);
+  doc.text('R$ '+(os.valor?Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}):'0,00'), 194, y+1.2, {align:'right'});
+  y += 11;
   doc.setFont(undefined,'normal'); doc.setTextColor(20,20,20);
 
   if(os.observacao) linha('Observação', os.observacao);
 
-  y += 10;
+  y += 6;
   doc.setDrawColor(220,220,220);
   doc.line(14, y, 90, y);
   doc.line(120, y, 196, y);
@@ -1744,7 +1793,7 @@ let dadosEmpresaCache = {};
 let logoBase64Pendente = null;
 
 function verificarSessaoEmpresa(){
-  if(adminSenha){
+  if(adminSenha && nivelAcesso==='admin'){
     document.getElementById('emp-login').style.display='none';
     document.getElementById('emp-painel').style.display='block';
     carregarDadosEmpresa();
@@ -1755,7 +1804,7 @@ function verificarSessaoEmpresa(){
 }
 
 async function entrarEmpresa(){
-  if(adminSenha){
+  if(adminSenha && nivelAcesso==='admin'){
     document.getElementById('emp-login').style.display='none';
     document.getElementById('emp-painel').style.display='block';
     carregarDadosEmpresa();
@@ -1771,16 +1820,18 @@ async function entrarEmpresa(){
     const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
       body: JSON.stringify({action:'validarSenhaAdmin', senha})});
     const d = await r.json();
-    if(d.ok){
+    if(d.ok && d.nivel==='admin'){
       adminSenha = senha;
       sessionStorage.setItem(ADMIN_K, senha);
+      definirUsuarioSessao(d.usuario, d.nivel);
       document.getElementById('emp-senha').value='';
-      pedirNomeOperador(()=>{
-        document.getElementById('emp-login').style.display='none';
-        document.getElementById('emp-painel').style.display='block';
-        carregarDadosEmpresa();
-        toast('✓ Acesso liberado');
-      });
+      document.getElementById('emp-login').style.display='none';
+      document.getElementById('emp-painel').style.display='block';
+      carregarDadosEmpresa();
+      toast('✓ Acesso liberado — '+d.usuario);
+    } else if(d.ok){
+      erroEl.textContent = 'Esta área exige a senha de administração.';
+      erroEl.style.display='block';
     } else {
       erroEl.textContent = d.erro || 'Senha incorreta.';
       erroEl.style.display='block';
