@@ -331,7 +331,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
       <div class="hbrow">
         <div class="sw" style="flex:1">
           <i class="ti ti-search sic"></i>
-          <input class="inp" id="rbusca" placeholder="Placa ou modelo..." autocomplete="off"
+          <input class="inp" id="rbusca" placeholder="Placa ou modelo (opcional)..." autocomplete="off"
             oninput="filtrarRec()" onfocus="abrirDDRec()" onblur="setTimeout(fecharDDRec,200)" style="padding-left:34px">
           <div class="dd" id="ddrec"></div>
         </div>
@@ -1150,7 +1150,7 @@ async function enviar(){
 async function recuperarChecklist(){
   const placa=(recSel&&recSel.placa)||document.getElementById('rbusca').value.trim();
   const data=document.getElementById('rdt').value;
-  if(!placa){ toast('Selecione uma placa'); return; }
+  // Placa é opcional — busca todos os veículos da data se não informada
   if(!data){ toast('Informe a data'); return; }
   if(!cfg.url){ toast('Configure o Apps Script na aba Config'); return; }
   if(!navigator.onLine){ toast('Sem internet — não é possível recuperar do Sheets'); return; }
@@ -1159,9 +1159,11 @@ async function recuperarChecklist(){
   body.innerHTML='<div class="empty"><span class="spin" style="border-top-color:var(--nv);border-color:var(--bd)"></span></div>';
 
   try{
-    const r=await fetch(cfg.url+'?action=getChecklist&placa='+encodeURIComponent(placa)+'&data='+encodeURIComponent(data));
+    let url=cfg.url+'?action=getChecklist&data='+encodeURIComponent(data);
+    if(placa) url+='&placa='+encodeURIComponent(placa);
+    const r=await fetch(url);
     const d=await r.json();
-    if(!d.encontrado){ body.innerHTML='<div class="empty"><i class="ti ti-search-off"></i>'+d.mensagem+'</div>'; return; }
+    if(!d.encontrado){ body.innerHTML='<div class="empty"><i class="ti ti-search-off"></i>'+(d.mensagem||'Nenhum checklist encontrado para esta data')+'</div>'; return; }
     renderChecklists(d.checklists, body);
   }catch(e){
     body.innerHTML='<div class="empty"><i class="ti ti-wifi-off"></i>Erro ao conectar com o Sheets</div>';
@@ -1479,7 +1481,10 @@ function sairAdmin(){
   sessionStorage.removeItem(ADMIN_K);
   sessionStorage.removeItem(NIVEL_K);
   sessionStorage.removeItem('cv_usuario_sessao');
+  // Atualiza todas as telas protegidas para mostrar o login novamente
   verificarSessaoAdmin();
+  verificarSessaoOS();
+  verificarSessaoEmpresa();
 }
 
 /* ════════════════ ORDENS DE SERVIÇO ════════════════ */
