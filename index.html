@@ -109,7 +109,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 .sic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:15px;pointer-events:none}
 .dd{position:absolute;top:100%;left:0;right:0;background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);z-index:20;max-height:220px;overflow-y:auto;display:none;box-shadow:0 4px 16px rgba(0,0,0,.1)}
 .dd.on{display:block}
-.ddi{padding:10px 13px;cursor:pointer;border-bottom:1px solid var(--bdl);display:flex;align-items:center;gap:10px}
+.ddi{padding:10px 13px;cursor:pointer;border-bottom:1px solid #2d4a6b;display:flex;align-items:center;gap:10px;transition:background .12s}
 .ddi:last-child{border-bottom:none}.ddi:hover{background:var(--bg)}
 .ddic{width:30px;height:30px;border-radius:6px;background:var(--nvl);display:flex;align-items:center;justify-content:center;color:var(--nv);font-size:14px;flex-shrink:0}
 .ddpl{font-size:13px;font-weight:600;color:var(--tx)}.ddsb{font-size:12px;color:var(--tx2)}
@@ -269,11 +269,14 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 
   <!-- ── NOVO CHECKLIST ── -->
   <div id="s-cl" class="screen on">
-    <div class="card">
-      <div class="lbl">Buscar veículo por placa ou modelo</div>
+    <div class="card" style="border:2px solid var(--nv);background:var(--nvl)">
+      <div class="lbl" style="color:var(--nv);font-size:13px;display:flex;align-items:center;gap:6px">
+        <i class="ti ti-bus"></i> Selecione o veículo para iniciar o checklist
+      </div>
       <div class="sw">
-        <i class="ti ti-search sic"></i>
+        <i class="ti ti-search sic" style="color:var(--nv)"></i>
         <input class="inp" id="busca" placeholder="Digite placa ou modelo..." autocomplete="off"
+          style="background:var(--sf);font-weight:500"
           oninput="filtrar()" onfocus="abrirDD()" onblur="setTimeout(fecharDD,200)">
         <div class="dd" id="dd"></div>
       </div>
@@ -706,7 +709,7 @@ const CK='cv_cfg9', FK='cv_fr9', SK='cv_ck9';
 // ainda não tiver nenhuma configuração própria salva. Trocar e
 // salvar na aba Config substitui este padrão permanentemente.
 const CFG_PADRAO = {
-  url: 'https://script.google.com/macros/s/AKfycbzZMb8LGLWrVcGXSQ210Mhjbq7aK6rogFEs6f1WT37X3QUpSNIWA09J17R-qsWwNhHa/exec',
+  url: 'https://young-morning-67aa.julinhobps.workers.dev',
   tab: 'Veiculos',
   tabCk: 'Checklists'
 };
