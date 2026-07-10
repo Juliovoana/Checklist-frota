@@ -503,11 +503,12 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
       <div id="form-os" style="display:none" class="card">
         <div class="lbl" id="fos-titulo">Nova OS</div>
 
-        <div class="man-field" style="margin-bottom:8px">
-          <label>Veículo (placa ou modelo)</label>
-          <div class="sw">
-            <i class="ti ti-search sic"></i>
+        <div class="man-field" style="margin-bottom:8px;padding:10px 12px;border:2px solid var(--nv);border-radius:var(--rs);background:var(--nvl)">
+          <label style="color:var(--nv);font-weight:700;font-size:12px;display:flex;align-items:center;gap:5px"><i class="ti ti-bus"></i> Selecione o veículo</label>
+          <div class="sw" style="margin-top:6px">
+            <i class="ti ti-search sic" style="color:var(--nv)"></i>
             <input class="inp" id="fos-busca" placeholder="Digite placa ou modelo..." autocomplete="off"
+              style="background:var(--sf);font-weight:500"
               oninput="filtrarOS()" onfocus="abrirDDOS()" onblur="setTimeout(fecharDDOS,200)">
             <div class="dd" id="ddos"></div>
           </div>
@@ -2020,6 +2021,8 @@ function abrirFormOS(){
   renderProdutosOS();
   document.getElementById('form-os').style.display='block';
   document.getElementById('form-os').scrollIntoView({behavior:'smooth'});
+  // Foco automático no campo de busca de veículo
+  setTimeout(()=>document.getElementById('fos-busca').focus(), 350);
 }
 
 /* ── Produtos / peças utilizados na OS ────────────────────── */
