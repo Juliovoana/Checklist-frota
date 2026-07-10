@@ -252,7 +252,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 <body>
 <div class="app">
   <div class="hdr">
-    <div><div class="hdr-t"><i class="ti ti-clipboard-check"></i> Checklist Frota</div><div class="hdr-s" id="hsub">Configure a planilha</div></div>
+    <div><div class="hdr-t"><i class="ti ti-clipboard-check"></i> Checklist Frota</div><div class="hdr-s" id="hsub">Configure o servidor</div></div>
     <div class="hdr-r">
       <button class="hbtn" onclick="sincFrota()" title="Atualizar frota"><i class="ti ti-refresh"></i></button>
       <span class="bdg bon" id="sbdg">⬤ Online</span>
@@ -260,7 +260,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
   </div>
 
   <div class="tabs">
-    <button class="tab on"  onclick="goTab('cl',this)"><i class="ti ti-clipboard-list"></i> Novo</button>
+    <button class="tab on"  onclick="goTab('cl',this);if(vSel)novoChecklist()"><i class="ti ti-clipboard-list"></i> Novo</button>
     <button class="tab"     onclick="goTab('rec',this)"><i class="ti ti-search"></i> Recuperar</button>
     <button class="tab"     onclick="goTab('fr',this)"><i class="ti ti-bus"></i> Frota</button>
     <button class="tab"     onclick="goTab('os',this)"><i class="ti ti-file-invoice"></i> OS</button>
@@ -335,7 +335,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
   <!-- ── RECUPERAR ── -->
   <div id="s-rec" class="screen">
     <div class="hbusca">
-      <div class="lbl">Recuperar checklist do Google Sheets</div>
+      <div class="lbl">Recuperar checklist</div>
       <div class="hbrow">
         <div class="sw" style="flex:1">
           <i class="ti ti-search sic"></i>
@@ -345,7 +345,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
         </div>
         <input class="inp" type="date" id="rdt" style="flex:.7;width:auto">
       </div>
-      <button class="btn-buscar" onclick="recuperarChecklist()"><i class="ti ti-search"></i> Buscar no Sheets</button>
+      <button class="btn-buscar" onclick="recuperarChecklist()"><i class="ti ti-search"></i> Buscar</button>
     </div>
     <div id="recbody"><div class="empty"><i class="ti ti-search"></i>Selecione placa e data para recuperar um checklist</div></div>
   </div>
@@ -362,7 +362,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
         <span style="font-size:12px;color:var(--tx2)" id="frst">Aguardando configuração</span>
         <button class="sbtn" onclick="sincFrota()"><i class="ti ti-refresh"></i> Atualizar</button>
       </div>
-      <div id="frlist"><div class="empty"><i class="ti ti-bus"></i>Configure a URL do Apps Script na aba Config</div></div>
+      <div id="frlist"><div class="empty"><i class="ti ti-bus"></i>Configure a URL na aba Config</div></div>
     </div>
 
     <div id="sub-fr-ger" class="subscreen">
@@ -574,9 +574,9 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
   <!-- ── CONFIG ── -->
   <div id="s-cfg" class="screen">
     <div class="cfgs">
-      <div class="lbl">URL do Apps Script</div>
+      <div class="lbl">URL do servidor</div>
       <input class="inp" type="url" id="cfgurl" placeholder="https://script.google.com/macros/s/...">
-      <div class="hint">Publicar como <strong>Web App</strong> · acesso: Qualquer pessoa</div>
+      <div class="hint">Cole aqui a URL do Worker ou do servidor</div>
     </div>
     <div class="cfgs">
       <div class="lbl">Aba de veículos</div>
@@ -641,7 +641,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
     </div>
 
     <div style="padding:14px 16px;border-top:1px solid var(--bd);margin-top:8px">
-      <div class="lbl">Estrutura da planilha</div>
+      <div class="lbl">Configuração das abas</div>
       <div class="cfgbox"><strong style="color:var(--tx);display:block;margin-bottom:2px">Aba "Veiculos"</strong>
         Placa · Modelo · Tipo · Ano · Ativo<br>
         Tipos: <strong>Van</strong> · <strong>Micro Onibus</strong> · <strong>Utilitario</strong></div>
@@ -706,7 +706,7 @@ const DEMO=[
 
 const CK='cv_cfg9', FK='cv_fr9', SK='cv_ck9';
 
-// URL padrão da planilha/frota — usada apenas se o dispositivo
+// URL padrão do servidor — usada apenas se o dispositivo
 // ainda não tiver nenhuma configuração própria salva. Trocar e
 // salvar na aba Config substitui este padrão permanentemente.
 const CFG_PADRAO = {
@@ -732,7 +732,7 @@ function init(){
   dadosEmpresaCache = JSON.parse(localStorage.getItem('cv_empresa')||'{}');
 
   // Primeira abertura do dispositivo: ainda não há config própria
-  // salva, então busca a frota real da planilha padrão automaticamente
+  // salva, então busca a frota real do servidor automaticamente
   const primeiraAbertura = !localStorage.getItem(CK);
   if(primeiraAbertura && cfg.url && navigator.onLine){
     sincFrota().then(()=>carregarItens());
@@ -1016,7 +1016,7 @@ function limpar(){
   updCnt(); modoEdicao=false; checklistRecuperado=null;
 }
 
-/* ── ITENS DA PLANILHA ── */
+/* ── ITENS DO CHECKLIST ── */
 const IK='cv_itens9';
 let itensCache = JSON.parse(localStorage.getItem(IK)||'{}');
 
@@ -1025,22 +1025,44 @@ async function carregarItens(){
   if(!cfg.url){ updStatusItens('offline'); return; }
   if(!navigator.onLine){ updStatusItens('offline'); return; }
   try{
-    // Busca tipos distintos da frota e carrega itens de cada um
     const tipos = [...new Set(frota.map(v=>v.tipo).filter(Boolean))];
-    if(!tipos.length){ updStatusItens('offline','Nenhum tipo de veículo na frota'); return; }
+    if(!tipos.length){ updStatusItens('offline','Nenhum veículo na frota'); return; }
     const novo = {};
     for(const tipo of tipos){
       const r = await fetch(cfg.url+'?action=getItens&tipo='+encodeURIComponent(tipo));
       const d = await r.json();
-      if(d.encontrado && d.grupos && d.grupos.length) novo[tipo] = d.grupos;
+
+      // Suporte a dois formatos de retorno:
+      // 1. Worker/Supabase: { itens:[{tipo,grupo,item}], grupos:{grupo:[item,...]} }
+      // 2. Apps Script:     { grupos:[{g:'grupo', i:['item',...]}] }
+      let grupos = null;
+
+      if(d.grupos && Array.isArray(d.grupos) && d.grupos.length){
+        // Formato Apps Script — array de {g, i}
+        grupos = d.grupos;
+      } else if(d.grupos && typeof d.grupos === 'object' && !Array.isArray(d.grupos)){
+        // Formato Supabase — objeto {grupo: [itens]}
+        grupos = Object.entries(d.grupos).map(([g, arr])=>({g, i: arr}));
+      } else if(d.itens && Array.isArray(d.itens) && d.itens.length){
+        // Fallback: agrupa pelo campo grupo dentro de itens[]
+        const mapa = {};
+        d.itens.forEach(it=>{
+          const g = it.grupo || 'Geral';
+          if(!mapa[g]) mapa[g]=[];
+          mapa[g].push(it.item);
+        });
+        grupos = Object.entries(mapa).map(([g,i])=>({g,i}));
+      }
+
+      if(grupos && grupos.length) novo[tipo] = grupos;
     }
     if(Object.keys(novo).length){
       itensCache = novo;
       localStorage.setItem(IK, JSON.stringify(novo));
       const totalItens = Object.values(novo).reduce((a,gs)=>a+gs.reduce((b,g)=>b+g.i.length,0),0);
-      updStatusItens('ok', Object.keys(novo).length+' tipo(s) · '+totalItens+' itens');
+      updStatusItens('ok', Object.keys(novo).length+' tipo(s) · '+totalItens+' itens carregados');
     } else {
-      updStatusItens('erro','Nenhum item encontrado na aba Itens da planilha');
+      updStatusItens('erro','Nenhum item encontrado — verifique a tabela de itens');
     }
   }catch(e){
     updStatusItens('erro','Falha na conexão — usando cache');
@@ -1050,7 +1072,7 @@ async function carregarItens(){
 function updStatusItens(st, detalhe){
   const el = document.getElementById('itens-status'); if(!el) return;
   const M = {
-    ok:          {ic:'ti-circle-check',   cor:'#16a34a', txt:'Itens da planilha carregados'},
+    ok:          {ic:'ti-circle-check',   cor:'#16a34a', txt:'Itens carregados com sucesso'},
     carregando:  {ic:'ti-loader-2',       cor:'#854d0e', txt:'Carregando itens...'},
     offline:     {ic:'ti-database',       cor:'#9aa3b4', txt:'Usando itens em cache'},
     erro:        {ic:'ti-alert-triangle', cor:'#dc2626', txt:'Erro ao carregar itens'}
@@ -1061,7 +1083,7 @@ function updStatusItens(st, detalhe){
 
 /* ── CHECKLIST ── */
 function buildCL(tipo, itensRecuperados){
-  // Usa itens da planilha (cache) ou fallback fixo
+  // Usa itens em cache ou fallback fixo
   const grupos = (itensCache[tipo] && itensCache[tipo].length)
     ? itensCache[tipo]
     : (ITENS[tipo]||ITENS['Van']);
@@ -1071,7 +1093,7 @@ function buildCL(tipo, itensRecuperados){
     const h=document.createElement('div'); h.className='sec'; h.textContent=g.g; body.appendChild(h);
     g.i.forEach(item=>{
       const id='i'+Date.now()+Math.random().toString(36).slice(2,5);
-      // Se é edição, tenta recuperar status/obs do Sheets
+      // Se é edição, recupera status/obs anteriores
       const rec = itensRecuperados ? itensRecuperados.find(x=>x.nome===item) : null;
       est[id]={status: rec?rec.status:null, obs: rec?rec.obs:'', fotos:[], fotoBase64:[], fotoLinks: rec&&rec.fotoLink?rec.fotoLink.split(' | ').filter(Boolean):[], nome:item, linha: rec?rec.linha:null};
       const div=document.createElement('div'); div.className='ci';
@@ -1086,16 +1108,34 @@ function buildCL(tipo, itensRecuperados){
         <div class="cx ${rec?(rec.status==='nok'?'on':''):''}" id="ex_${id}">
           <textarea placeholder="Descreva a não conformidade..." oninput="est['${id}'].obs=this.value">${rec?rec.obs:''}</textarea>
           <div class="frow" id="fp_${id}"></div>
-          <button class="fbtn" onclick="tirarFoto('${id}')"><i class="ti ti-camera"></i> ${rec&&rec.fotoLink?'Substituir foto':'Adicionar foto'}</button>
+          <button class="fbtn" onclick="tirarFoto('${id}')"><i class="ti ti-camera"></i> Adicionar foto</button>
         </div>`;
       body.appendChild(div);
-      // Renderiza fotos já salvas no Drive
+      // Renderiza fotos já salvas como miniaturas com opção de remover
       if(rec && rec.fotoLink){
         const links=rec.fotoLink.split(' | ').filter(Boolean);
-        links.forEach(link=>{
-          const a=document.createElement('a'); a.href=link; a.target='_blank'; a.className='rflink';
-          a.innerHTML='<i class="ti ti-photo"></i> Ver foto no Drive'; 
-          document.getElementById('fp_'+id).appendChild(a);
+        links.forEach((link,idx)=>{
+          const wrap=document.createElement('div');
+          wrap.style.cssText='position:relative;display:inline-block;margin-right:6px';
+          const img=document.createElement('img');
+          img.className='fth'; img.src=driveThumbUrl(link); img.loading='lazy';
+          img.onclick=()=>window.open(link,'_blank');
+          img.onerror=()=>{ img.src=''; img.style.display='none'; };
+          const btn=document.createElement('button');
+          btn.innerHTML='<i class="ti ti-x"></i>';
+          btn.title='Remover foto';
+          btn.style.cssText='position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--nk);border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1';
+          btn.onclick=(e)=>{
+            e.stopPropagation();
+            est[id].fotoLinks=est[id].fotoLinks.filter((_,i)=>i!==idx);
+            est[id].fotos=est[id].fotoLinks;
+            wrap.remove();
+          };
+          wrap.appendChild(img); wrap.appendChild(btn);
+          document.getElementById('fp_'+id).appendChild(wrap);
+          // Mantém o link no estado para envio
+          if(!est[id].fotos) est[id].fotos=[];
+          est[id].fotos.push(link);
         });
       }
     });
@@ -1186,7 +1226,7 @@ function salvar(){
   mostrarResumo(reg, document.getElementById('clbody'));
 }
 
-/* ── ENVIAR SHEETS + DRIVE ── */
+/* ── ENVIAR CHECKLIST ── */
 async function enviar(){
   if(!vSel){ toast('Selecione um veículo'); return; }
   const motorista = document.getElementById('mot').value.trim();
@@ -1195,7 +1235,7 @@ async function enviar(){
   if(!kmVal){ toast('KM do veículo é obrigatório'); document.getElementById('km').focus(); return; }
   if(!kmValido()){ toast('KM não pode ser menor que o último registrado — verifique'); document.getElementById('km').focus(); return; }
   if(!navigator.onLine){ salvar(); toast('Offline — salvo para envio posterior'); return; }
-  if(!cfg.url){ toast('Configure o Apps Script na aba Config'); return; }
+  if(!cfg.url){ toast('Configure a URL na aba Config'); return; }
   const btn=document.getElementById('benv');
   btn.innerHTML='<span class="spin"></span>'; btn.disabled=true;
 
@@ -1225,7 +1265,7 @@ async function enviar(){
     const saves=JSON.parse(localStorage.getItem(SK)||'[]');
     const reg={...payload, sincronizado:true};
     saves.push(reg); localStorage.setItem(SK,JSON.stringify(saves));
-    toast(modoEdicao?'✓ Checklist atualizado no Sheets':'✓ Enviado ao Sheets e fotos ao Drive');
+    toast(modoEdicao?'✓ Checklist atualizado':'✓ Checklist enviado com sucesso');
     // Grava manutenção separadamente
     const manPayload = getPayloadManutencao();
     if(manPayload.length && cfg.url){
@@ -1246,8 +1286,8 @@ async function recuperarChecklist(){
   const data=document.getElementById('rdt').value;
   // Placa é opcional — busca todos os veículos da data se não informada
   if(!data){ toast('Informe a data'); return; }
-  if(!cfg.url){ toast('Configure o Apps Script na aba Config'); return; }
-  if(!navigator.onLine){ toast('Sem internet — não é possível recuperar do Sheets'); return; }
+  if(!cfg.url){ toast('Configure a URL na aba Config'); return; }
+  if(!navigator.onLine){ toast('Sem internet — não é possível recuperar'); return; }
 
   const body=document.getElementById('recbody');
   body.innerHTML='<div class="empty"><span class="spin" style="border-top-color:var(--nv);border-color:var(--bd)"></span></div>';
@@ -1260,7 +1300,7 @@ async function recuperarChecklist(){
     if(!d.encontrado){ body.innerHTML='<div class="empty"><i class="ti ti-search-off"></i>'+(d.mensagem||'Nenhum checklist encontrado para esta data')+'</div>'; return; }
     renderChecklists(d.checklists, body);
   }catch(e){
-    body.innerHTML='<div class="empty"><i class="ti ti-wifi-off"></i>Erro ao conectar com o Sheets</div>';
+    body.innerHTML='<div class="empty"><i class="ti ti-wifi-off"></i>Erro ao conectar com o servidor</div>';
   }
 }
 
@@ -1379,10 +1419,10 @@ function mostrarResumo(reg, body){
   const pd=itens.filter(x=>!x.status);
   let h=`<div class="res"><div class="rsh">
     <div>
-      <div class="rst"><i class="ti ti-circle-check" style="color:#16a34a"></i>${reg.sincronizado?'Enviado ao Google Sheets':'Salvo offline'}</div>
+      <div class="rst"><i class="ti ti-circle-check" style="color:#16a34a"></i>${reg.sincronizado?'Enviado ao servidor':'Salvo offline'}</div>
       <div class="rss">${reg.placa} · ${reg.modelo} · ${reg.data} · ${reg.motorista||'—'}${reg.km?' · '+Number(reg.km).toLocaleString('pt-BR')+' km':''}</div>
     </div>
-    <span class="rbdg ${reg.sincronizado?'rbok':'rbof'}">${reg.sincronizado?'✓ Sheets':'📱 Local'}</span>
+    <span class="rbdg ${reg.sincronizado?'rbok':'rbof'}">${reg.sincronizado?'✓ Enviado':'📱 Local'}</span>
   </div>`;
   if(nok.length){
     h+=`<div style="padding:8px 16px 4px;font-size:11px;font-weight:600;color:#991b1b;text-transform:uppercase;letter-spacing:.06em">⚠ Não conformidades (${nok.length})</div>`;
@@ -1404,11 +1444,27 @@ function mostrarResumo(reg, body){
 }
 
 function novoChecklist(){
+  // Volta para a aba de novo checklist
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('s-cl').classList.add('on');
+  const tabNovo = document.querySelector('.tab[onclick*="cl"]');
+  if(tabNovo) tabNovo.classList.add('on');
+  // Limpa e reseta
   limpar();
   carregarMotoristaFixo();
   document.getElementById('dt').value=new Date().toISOString().slice(0,10);
+  document.getElementById('km').value='';
+  document.getElementById('km-ultimo').textContent='';
+  document.getElementById('km-alerta').style.display='none';
+  document.getElementById('btn-ultimo-cl').style.display='none';
+  ultimoKmConhecido=null;
   document.getElementById('benv').innerHTML='<i class="ti ti-cloud-upload"></i> Enviar';
+  document.getElementById('benv').disabled=false;
   modoEdicao=false; checklistRecuperado=null;
+  // Rola para o topo
+  window.scrollTo({top:0,behavior:'smooth'});
+  document.getElementById('s-cl').scrollTop=0;
 }
 
 /* ── CONFIG ── */
@@ -1424,7 +1480,7 @@ function salvarCfg(){
 async function testar(){
   const url=document.getElementById('cfgurl').value.trim();
   const btn=document.getElementById('btntest');
-  if(!url){showT('er','URL não preenchida','Cole a URL do Apps Script.');return;}
+  if(!url){showT('er','URL não preenchida','Cole a URL do servidor.');return;}
   if(!navigator.onLine){showT('wn','Sem internet','Conecte-se e tente novamente.');return;}
   btn.innerHTML='<span class="spin"></span> Testando...'; btn.disabled=true;
   document.getElementById('tbox').className='tbox';
@@ -1478,7 +1534,7 @@ function renderFrota(){
   });
 }
 
-function updSub(){ document.getElementById('hsub').textContent=cfg.url?'Planilha configurada · '+frota.length+' veículos':'Configure a planilha para começar'; }
+function updSub(){ document.getElementById('hsub').textContent=cfg.url?'Conexão ativa · '+frota.length+' veículos':'Configure o servidor para começar'; }
 
 
 /* ════════════════ ÁREA ADMIN — Cadastro/Edição ════════════════ */
@@ -1488,7 +1544,7 @@ let adminSenha = sessionStorage.getItem(ADMIN_K) || '';
 let nivelAcesso = sessionStorage.getItem(NIVEL_K) || ''; // 'admin' ou 'operador'
 let usuarioGoogle = sessionStorage.getItem('cv_usuario_sessao') || '';
 
-// O nome do usuário agora vem direto da planilha (coluna Usuario da
+// O nome do usuário agora vem direto do servidor (coluna Usuario da
 // aba Config), retornado junto com a validação da senha — não é
 // mais perguntado manualmente.
 function detectarUsuarioGoogle(){
@@ -1544,7 +1600,7 @@ async function entrarAdmin(){
   const erroEl = document.getElementById('admin-erro');
   erroEl.style.display='none';
   if(!senha){ erroEl.textContent='Digite a senha.'; erroEl.style.display='block'; return; }
-  if(!cfg.url){ erroEl.textContent='Configure a URL do Apps Script primeiro.'; erroEl.style.display='block'; return; }
+  if(!cfg.url){ erroEl.textContent='Configure a URL do servidor primeiro.'; erroEl.style.display='block'; return; }
   if(!navigator.onLine){ erroEl.textContent='Sem internet — não é possível validar a senha.'; erroEl.style.display='block'; return; }
   try{
     const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
@@ -1598,7 +1654,7 @@ async function entrarOS(){
   const erroEl = document.getElementById('os-erro');
   erroEl.style.display='none';
   if(!senha){ erroEl.textContent='Digite a senha.'; erroEl.style.display='block'; return; }
-  if(!cfg.url){ erroEl.textContent='Configure a URL do Apps Script primeiro.'; erroEl.style.display='block'; return; }
+  if(!cfg.url){ erroEl.textContent='Configure a URL do servidor primeiro.'; erroEl.style.display='block'; return; }
   if(!navigator.onLine){ erroEl.textContent='Sem internet — não é possível validar a senha.'; erroEl.style.display='block'; return; }
   try{
     const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
@@ -1921,7 +1977,7 @@ async function entrarEmpresa(){
   const erroEl = document.getElementById('emp-erro');
   erroEl.style.display='none';
   if(!senha){ erroEl.textContent='Digite a senha.'; erroEl.style.display='block'; return; }
-  if(!cfg.url){ erroEl.textContent='Configure a URL do Apps Script primeiro.'; erroEl.style.display='block'; return; }
+  if(!cfg.url){ erroEl.textContent='Configure a URL do servidor primeiro.'; erroEl.style.display='block'; return; }
   if(!navigator.onLine){ erroEl.textContent='Sem internet — não é possível validar a senha.'; erroEl.style.display='block'; return; }
   try{
     const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
@@ -2394,7 +2450,7 @@ const MK = 'cv_man10'; // v10 — cache por tipo de veículo // cache tipos de m
 let tiposMan = JSON.parse(localStorage.getItem(MK) || '[]');
 let manEstado = {}; // { tipo: { dataUlt, kmUlt, dataProx, kmProx, obs } }
 
-// Tipos padrão caso não haja planilha configurada
+// Tipos padrão caso não haja servidor configurado
 // Fallback quando não há aba Manutencao ou sem conexão
 const TIPOS_MAN_DEFAULT = [
   { tipo: 'Troca de Óleo',        intervKm: 10000, intervDias: 180 },
