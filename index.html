@@ -347,6 +347,16 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
       </div>
       <button class="btn-buscar" onclick="recuperarChecklist()"><i class="ti ti-search"></i> Buscar</button>
     </div>
+    <!-- Login admin inline na aba Recuperar -->
+    <div id="rec-admin-bar" style="display:none;padding:10px 16px;background:var(--nvl);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <i class="ti ti-shield" style="color:var(--nv)"></i>
+      <span style="font-size:12px;color:var(--nv);font-weight:600;flex:1">Modo admin — pode excluir e corrigir KM</span>
+      <button onclick="sairAdminRec()" style="background:none;border:1px solid var(--bd);border-radius:var(--rs);padding:4px 10px;font-size:11px;color:var(--tx2);cursor:pointer;font-family:inherit"><i class="ti ti-logout"></i> Sair</button>
+    </div>
+    <div id="rec-login-bar" style="padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px">
+      <input class="inp" type="password" id="rec-senha" placeholder="Senha admin para excluir/corrigir" style="flex:1;height:32px;font-size:13px" onkeydown="if(event.key==='Enter')entrarAdminRec()">
+      <button onclick="entrarAdminRec()" style="background:var(--nv);color:#fff;border:none;border-radius:var(--rs);padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap"><i class="ti ti-login"></i> Entrar</button>
+    </div>
     <div id="recbody"><div class="empty"><i class="ti ti-search"></i>Selecione placa e data para recuperar um checklist</div></div>
   </div>
 
@@ -481,6 +491,12 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
         <button class="btn-buscar" style="width:100%;justify-content:center" onclick="abrirFormOS()"><i class="ti ti-plus"></i> Nova Ordem de Serviço</button>
       </div>
 
+      <div class="subtabs">
+        <button class="stab on" onclick="goSubOS('lista',this)"><i class="ti ti-list"></i> Lista de OS</button>
+        <button class="stab" onclick="goSubOS('veiculo',this)"><i class="ti ti-bus"></i> Por Veículo</button>
+      </div>
+
+      <div id="sub-os-lista" class="subscreen on">
       <div class="card" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
         <div class="sw">
           <i class="ti ti-search sic"></i>
@@ -568,7 +584,42 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
       </div>
 
       <div id="os-list"><div class="empty"><i class="ti ti-file-invoice"></i>Nenhuma OS cadastrada</div></div>
-    </div>
+      </div><!-- /sub-os-lista -->
+
+      <!-- Sub-aba: Por Veículo -->
+      <div id="sub-os-veiculo" class="subscreen">
+        <div class="card" style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--nv);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:5px"><i class="ti ti-bus"></i> Selecione o veículo</div>
+          <div class="sw" style="border:2px solid var(--nv);border-radius:var(--rs);background:var(--nvl)">
+            <i class="ti ti-search sic" style="color:var(--nv)"></i>
+            <input class="inp" id="osv-busca" placeholder="Digite placa ou modelo..." autocomplete="off"
+              style="background:transparent;font-weight:500"
+              oninput="filtrarVeiculoOS()" onfocus="abrirDDOSV()" onblur="setTimeout(fecharDDOSV,200)">
+            <div class="dd" id="ddosv"></div>
+          </div>
+          <div class="vc" id="osv-vc">
+            <div class="vcic" id="osv-vcic"><i class="ti ti-bus"></i></div>
+            <div style="flex:1"><div class="vcn" id="osv-vcn"></div><div class="vcs" id="osv-vcs"></div></div>
+            <button class="vccl" onclick="limparVeiculoOSV()"><i class="ti ti-x"></i></button>
+          </div>
+          <div style="display:flex;gap:8px">
+            <select class="inp" id="osv-filtro-status" style="flex:1" onchange="renderOSVeiculo()">
+              <option value="">Todos os status</option>
+              <option value="Aberta">Aberta</option>
+              <option value="Em andamento">Em andamento</option>
+              <option value="Concluída">Concluída</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+            <button onclick="limparFiltrosOSV()" style="background:none;border:1px solid var(--bd);border-radius:var(--rs);padding:0 12px;color:var(--tx2);cursor:pointer;font-family:inherit;font-size:12px;white-space:nowrap">
+              <i class="ti ti-x"></i> Limpar
+            </button>
+          </div>
+        </div>
+        <div id="osv-resumo" style="display:none;padding:10px 16px;background:var(--nvl);border-bottom:1px solid var(--bd);font-size:12px;color:var(--nv);font-weight:600"></div>
+        <div id="osv-list"><div class="empty"><i class="ti ti-bus"></i>Selecione um veículo para ver o histórico</div></div>
+      </div><!-- /sub-os-veiculo -->
+
+    </div><!-- /os-painel -->
   </div>
 
   <!-- ── CONFIG ── -->
@@ -767,6 +818,7 @@ function goTab(id,btn){
   document.getElementById('s-'+id).classList.add('on'); btn.classList.add('on');
   if(id==='os') verificarSessaoOS();
   if(id==='cfg') verificarSessaoEmpresa();
+  if(id==='rec') atualizarBarraAdminRec();
 }
 
 /* ── BUSCA VEÍCULO ── */
@@ -1315,15 +1367,25 @@ function renderChecklists(checklists, body){
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
         <div>
           <div style="font-size:14px;font-weight:600;color:var(--tx)">${ck.placa} · ${ck.modelo}</div>
-          <div style="font-size:12px;color:var(--tx2);margin-top:2px">${ck.data} ${ck.hora} · ${ck.motorista||'—'}</div>
+          <div style="font-size:12px;color:var(--tx2);margin-top:2px">${ck.data} ${ck.hora} · ${ck.motorista||'—'}${ck.km?' · '+Number(ck.km).toLocaleString('pt-BR')+' km':''}</div>
           <div style="font-size:12px;margin-top:4px">
             <span style="color:#16a34a;font-weight:500">${ok} OK</span>
             ${nok?`<span style="color:#dc2626;font-weight:500;margin-left:8px">${nok} NOK</span>`:''}
           </div>
         </div>
-        <button onclick="editarCK(${JSON.stringify(ck).replace(/"/g,'&quot;')})"
-          style="background:var(--nv);color:#fff;border:none;border-radius:var(--rs);padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">
-          <i class="ti ti-edit"></i> Editar</button>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+          <button onclick="editarCK(${JSON.stringify(ck).replace(/&/g,'&amp;').replace(/"/g,'&quot;')})"
+            style="background:var(--nv);color:#fff;border:none;border-radius:var(--rs);padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">
+            <i class="ti ti-edit"></i> Editar</button>
+          ${(nivelAcesso||sessionStorage.getItem('cv_admin_nivel'))==='admin'?`
+          <button onclick="corrigirKmCK('${ck.id}','${ck.km||''}')"
+            style="background:none;border:1px solid var(--bd);border-radius:var(--rs);padding:5px 10px;font-size:11px;color:var(--tx2);cursor:pointer;font-family:inherit;white-space:nowrap">
+            <i class="ti ti-gauge"></i> Corrigir KM</button>
+          <button onclick="excluirCK('${ck.id}','${ck.placa}')"
+            style="background:none;border:1px solid #fca5a5;border-radius:var(--rs);padding:5px 10px;font-size:11px;color:var(--nk);cursor:pointer;font-family:inherit;white-space:nowrap">
+            <i class="ti ti-trash"></i> Excluir</button>
+          `:''}
+        </div>
       </div>`;
 
     // lista itens NOK com fotos
@@ -1385,6 +1447,97 @@ function carregarImagemBase64(url){
   });
 }
 
+/* ── Login admin na aba Recuperar ─────────────────────────── */
+function atualizarBarraAdminRec(){
+  const nivel = nivelAcesso || sessionStorage.getItem('cv_admin_nivel') || '';
+  const barAdmin = document.getElementById('rec-admin-bar');
+  const barLogin = document.getElementById('rec-login-bar');
+  if(!barAdmin || !barLogin) return;
+  if(adminSenha && nivel==='admin'){
+    barAdmin.style.display='flex';
+    barLogin.style.display='none';
+  } else {
+    barAdmin.style.display='none';
+    barLogin.style.display='flex';
+  }
+}
+
+async function entrarAdminRec(){
+  const senha = document.getElementById('rec-senha').value.trim();
+  if(!senha){ toast('Digite a senha'); return; }
+  if(!cfg.url || !navigator.onLine){ toast('Sem conexão'); return; }
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'validarSenhaAdmin', senha})});
+    const d = await r.json();
+    if(d.ok && d.nivel==='admin'){
+      adminSenha = senha;
+      sessionStorage.setItem(ADMIN_K, senha);
+      definirUsuarioSessao(d.usuario, d.nivel);
+      document.getElementById('rec-senha').value='';
+      atualizarBarraAdminRec();
+      // Re-renderiza resultados com botões admin se houver busca ativa
+      const data = document.getElementById('rdt').value;
+      if(data) recuperarChecklist();
+      toast('✓ Modo admin ativado — '+d.usuario);
+    } else if(d.ok){
+      toast('Esta ação exige senha de administração');
+    } else {
+      toast(d.erro||'Senha incorreta');
+    }
+  }catch(e){ toast('Erro de conexão'); }
+}
+
+function sairAdminRec(){
+  adminSenha=''; nivelAcesso=''; usuarioGoogle='';
+  sessionStorage.removeItem(ADMIN_K);
+  sessionStorage.removeItem(NIVEL_K);
+  sessionStorage.removeItem('cv_usuario_sessao');
+  atualizarBarraAdminRec();
+  verificarSessaoAdmin();
+  verificarSessaoOS();
+  verificarSessaoEmpresa();
+  // Re-renderiza sem botões admin
+  const data = document.getElementById('rdt').value;
+  if(data) recuperarChecklist();
+  toast('Sessão admin encerrada');
+}
+
+async function excluirCK(id, placa){
+  if(!confirm('Excluir o checklist '+id+' do veículo '+placa+'?\n\nEsta ação não pode ser desfeita.')) return;
+  if(!cfg.url){ toast('Configure a URL do servidor'); return; }
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'excluirChecklist', id, senha:adminSenha, usuario:usuarioGoogle})});
+    const d = await r.json();
+    if(d.ok){
+      toast('✓ Checklist excluído');
+      // Recarrega a busca atual
+      const placa2=(recSel&&recSel.placa)||document.getElementById('rbusca').value.trim();
+      const data=document.getElementById('rdt').value;
+      if(data) recuperarChecklist();
+    } else { toast(d.erro||'Erro ao excluir'); }
+  }catch(e){ toast('Erro de conexão'); }
+}
+
+async function corrigirKmCK(id, kmAtual){
+  const novoKm = prompt('Corrigir KM do checklist '+id+':\nKM atual: '+(kmAtual||'não informado')+'\n\nDigite o KM correto:', kmAtual||'');
+  if(novoKm===null) return; // cancelou
+  const km = Number(novoKm.trim());
+  if(!novoKm.trim() || isNaN(km) || km <= 0){ toast('KM inválido'); return; }
+  if(!cfg.url){ toast('Configure a URL do servidor'); return; }
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'corrigirKmChecklist', id, km, senha:adminSenha, usuario:usuarioGoogle})});
+    const d = await r.json();
+    if(d.ok){
+      toast('✓ KM corrigido para '+km.toLocaleString('pt-BR')+' km');
+      const data=document.getElementById('rdt').value;
+      if(data) recuperarChecklist();
+    } else { toast(d.erro||'Erro ao corrigir KM'); }
+  }catch(e){ toast('Erro de conexão'); }
+}
+
 function editarCK(ck){
   checklistRecuperado=ck; modoEdicao=true;
   // Encontra o veículo na frota
@@ -1409,6 +1562,43 @@ function editarCK(ck){
   document.getElementById('benv').innerHTML='<i class="ti ti-cloud-upload"></i> Atualizar';
   buildCL(ck.tipo, ck.itens);
   toast('Checklist carregado — edite e clique em Atualizar');
+}
+
+/* ── AÇÕES ADMIN — Excluir checklist e Corrigir KM ─────── */
+
+async function excluirCK(id, placa){
+  if(!confirm('Excluir o checklist '+id+' do veículo '+placa+'?\n\nEsta ação não pode ser desfeita.')) return;
+  if(!cfg.url){ toast('Configure a URL do servidor'); return; }
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'excluirChecklist', id, senha:adminSenha, usuario:usuarioGoogle})});
+    const d = await r.json();
+    if(d.ok){
+      toast('✓ Checklist excluído');
+      // Recarrega a busca atual
+      const placa2=(recSel&&recSel.placa)||document.getElementById('rbusca').value.trim();
+      const data=document.getElementById('rdt').value;
+      if(data) recuperarChecklist();
+    } else { toast(d.erro||'Erro ao excluir'); }
+  }catch(e){ toast('Erro de conexão'); }
+}
+
+async function corrigirKmCK(id, kmAtual){
+  const novoKm = prompt('Corrigir KM do checklist '+id+':\nKM atual: '+(kmAtual||'não informado')+'\n\nDigite o KM correto:', kmAtual||'');
+  if(novoKm===null) return; // cancelou
+  const km = Number(novoKm.trim());
+  if(!novoKm.trim() || isNaN(km) || km <= 0){ toast('KM inválido'); return; }
+  if(!cfg.url){ toast('Configure a URL do servidor'); return; }
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'corrigirKmChecklist', id, km, senha:adminSenha, usuario:usuarioGoogle})});
+    const d = await r.json();
+    if(d.ok){
+      toast('✓ KM corrigido para '+km.toLocaleString('pt-BR')+' km');
+      const data=document.getElementById('rdt').value;
+      if(data) recuperarChecklist();
+    } else { toast(d.erro||'Erro ao corrigir KM'); }
+  }catch(e){ toast('Erro de conexão'); }
 }
 
 /* ── RESUMO ── */
@@ -1711,6 +1901,13 @@ async function carregarOS(){
 
 const STATUS_CLASS = {'Aberta':'os-aberta','Em andamento':'os-andamento','Concluída':'os-concluida','Cancelada':'os-cancelada'};
 
+function goSubOS(id, btn){
+  document.querySelectorAll('#os-painel .subscreen').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('#os-painel > .subtabs .stab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('sub-os-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+
 function limparFiltrosOS(){
   document.getElementById('os-filtro-texto').value='';
   document.getElementById('os-filtro-status').value='';
@@ -1769,6 +1966,118 @@ function renderOS(){
         <button class="fi-btn" title="Baixar PDF" onclick='gerarPdfOS(${JSON.stringify(os).replace(/'/g,"&apos;")},"download")'><i class="ti ti-file-type-pdf"></i></button>
         <button class="fi-btn" title="Compartilhar / Enviar" onclick='gerarPdfOS(${JSON.stringify(os).replace(/'/g,"&apos;")},"share")'><i class="ti ti-share"></i></button>
         <button class="fi-btn" title="Editar" onclick='editarOSApp(${JSON.stringify(os).replace(/'/g,"&apos;")})'><i class="ti ti-edit"></i></button>
+        ${(nivelAcesso||sessionStorage.getItem('cv_admin_nivel'))==='admin'?`<button class="fi-btn danger" title="Excluir OS" onclick='excluirOS(${os.linha},"${os.numero}","${os.veiculo}")'><i class="ti ti-trash"></i></button>`:''}
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+/* ── Excluir OS (admin only) ──────────────────────────────── */
+async function excluirOS(linha, numero, veiculo){
+  if(!confirm(`Excluir a OS Nº ${numero} (${veiculo})?\n\nEsta ação remove também os produtos vinculados e não pode ser desfeita.`)) return;
+  if(!cfg.url){ toast('Configure a URL do servidor'); return; }
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'excluirOS', linha, senha:adminSenha, usuario:usuarioGoogle})});
+    const d = await r.json();
+    if(d.ok){ toast('✓ OS Nº '+numero+' excluída'); carregarOS(); }
+    else toast(d.erro||'Erro ao excluir');
+  }catch(e){ toast('Erro de conexão'); }
+}
+
+/* ── Painel por Veículo ───────────────────────────────────── */
+let veiculoSelOSV = null;
+
+function filtrarVeiculoOS(){
+  const q=document.getElementById('osv-busca').value.trim().toLowerCase();
+  const dd=document.getElementById('ddosv');
+  if(!q){ dd.classList.remove('on'); dd.innerHTML=''; return; }
+  const res=frota.filter(v=>v.placa.toLowerCase().includes(q)||v.modelo.toLowerCase().includes(q)).slice(0,8);
+  dd.innerHTML = res.length
+    ? res.map(v=>`<div class="ddi" data-placa="${v.placa.replace(/"/g,'&quot;')}">
+        <div class="ddic"><i class="ti ${TPI[v.tipo]||'ti-car'}"></i></div>
+        <div><div class="ddpl">${v.placa}</div><div class="ddsb">${v.modelo} · ${v.tipo}</div></div>
+      </div>`).join('')
+    : '<div class="ddem">Nenhum veículo encontrado</div>';
+  dd.classList.add('on');
+  ativarItensDropdown(dd, selecionarVeiculoOSV);
+}
+function abrirDDOSV(){ if(document.getElementById('osv-busca').value.trim()) filtrarVeiculoOS(); }
+function fecharDDOSV(){ document.getElementById('ddosv').classList.remove('on'); }
+
+function selecionarVeiculoOSV(placa){
+  const v=frota.find(x=>x.placa===placa); if(!v) return;
+  veiculoSelOSV=v;
+  document.getElementById('osv-busca').value=v.placa+' — '+v.modelo;
+  document.getElementById('ddosv').classList.remove('on');
+  document.getElementById('osv-vcn').textContent=v.modelo;
+  document.getElementById('osv-vcs').textContent='Placa: '+v.placa+' · '+v.tipo;
+  document.getElementById('osv-vcic').innerHTML='<i class="ti '+(TPI[v.tipo]||'ti-car')+'"></i>';
+  document.getElementById('osv-vc').className='vc on';
+  renderOSVeiculo();
+}
+
+function limparVeiculoOSV(){
+  veiculoSelOSV=null;
+  document.getElementById('osv-busca').value='';
+  document.getElementById('osv-vc').className='vc';
+  document.getElementById('osv-list').innerHTML='<div class="empty"><i class="ti ti-bus"></i>Selecione um veículo para ver o histórico</div>';
+  document.getElementById('osv-resumo').style.display='none';
+}
+
+function limparFiltrosOSV(){
+  document.getElementById('osv-filtro-status').value='';
+  renderOSVeiculo();
+}
+
+function renderOSVeiculo(){
+  const list = document.getElementById('osv-list');
+  const resumoEl = document.getElementById('osv-resumo');
+  if(!veiculoSelOSV){ list.innerHTML='<div class="empty"><i class="ti ti-bus"></i>Selecione um veículo</div>'; return; }
+
+  const statusFiltro = document.getElementById('osv-filtro-status').value;
+  const placa = veiculoSelOSV.placa;
+
+  let filtradas = osCache.filter(os=> os.veiculo===placa || os.veiculo===placa.toUpperCase());
+  if(statusFiltro) filtradas = filtradas.filter(os=>os.status===statusFiltro);
+
+  if(!filtradas.length){
+    resumoEl.style.display='none';
+    list.innerHTML='<div class="empty"><i class="ti ti-file-invoice"></i>Nenhuma OS encontrada para este veículo</div>';
+    return;
+  }
+
+  // Resumo financeiro
+  const totalGeral = filtradas.reduce((s,os)=>s+(Number(os.valor)||0),0);
+  const totalConcluidas = filtradas.filter(os=>os.status==='Concluída').reduce((s,os)=>s+(Number(os.valor)||0),0);
+  resumoEl.style.display='block';
+  resumoEl.innerHTML=`<i class="ti ti-chart-bar"></i> ${filtradas.length} OS · Total: R$ ${totalGeral.toLocaleString('pt-BR',{minimumFractionDigits:2})} · Concluídas: R$ ${totalConcluidas.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+
+  // Tabela
+  list.innerHTML='';
+  filtradas.forEach(os=>{
+    const valorFmt = os.valor ? 'R$ '+Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
+    const div=document.createElement('div'); div.className='os-card';
+    div.innerHTML=`
+      <div class="os-hdr">
+        <div>
+          <span class="os-num">OS Nº ${os.numero}</span>
+          <span class="os-data"> · ${os.data}</span>
+          ${os.km?`<span class="os-data"> · ${Number(os.km).toLocaleString('pt-BR')} km</span>`:''}
+        </div>
+        <span class="os-status ${STATUS_CLASS[os.status]||'os-aberta'}">${os.status}</span>
+      </div>
+      <div class="os-serv">${os.servico}${os.fornecedor?' · '+os.fornecedor:''}</div>
+      ${os.produtos&&os.produtos.length?`<div style="margin-top:4px">
+        ${os.produtos.map(p=>`<div class="prod-os-item"><span>${p.quantidade}x ${p.produto}</span><span>R$ ${Number(p.subtotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>`).join('')}
+      </div>`:''}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <span style="font-size:13px;font-weight:700;color:var(--nv)">${valorFmt}</span>
+        <div style="display:flex;gap:6px">
+          <button class="fi-btn" title="Ver PDF" onclick='gerarPdfOS(${JSON.stringify(os).replace(/'/g,"&apos;")},"view")'><i class="ti ti-eye"></i></button>
+          <button class="fi-btn" title="Editar" onclick='editarOSApp(${JSON.stringify(os).replace(/'/g,"&apos;")})'><i class="ti ti-edit"></i></button>
+          ${(nivelAcesso||sessionStorage.getItem('cv_admin_nivel'))==='admin'?`<button class="fi-btn danger" title="Excluir" onclick='excluirOS(${os.linha},"${os.numero}","${os.veiculo}")'><i class="ti ti-trash"></i></button>`:''}
+        </div>
       </div>`;
     list.appendChild(div);
   });
@@ -2235,7 +2544,10 @@ async function salvarOSApp(){
     if(d.ok){
       toast(d.acao==='criado' ? '✓ OS Nº '+d.numero+' criada' : '✓ OS atualizada');
       fecharFormOS();
-      carregarOS();
+      // Recarrega a lista e abre o PDF automaticamente para visualização
+      await carregarOS();
+      const osGerada = osCache.find(o=> String(o.numero)===String(d.numero));
+      if(osGerada) gerarPdfOS(osGerada, 'view');
     } else { toast(d.erro || 'Erro ao salvar'); }
   }catch(e){ toast('Erro de conexão'); }
 }
