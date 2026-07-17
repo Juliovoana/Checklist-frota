@@ -200,6 +200,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 .os-andamento{background:#dbeafe;color:#1e40af}
 .os-concluida{background:#dcfce7;color:#166534}
 .os-cancelada{background:var(--bg);color:var(--tx3)}
+.os-status-sel{font-size:11px;padding:2px 6px;border-radius:10px;font-weight:600;border:none;cursor:pointer;font-family:inherit;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 4px center;padding-right:18px}
 .prod-row{display:flex;gap:6px;align-items:center}
 .prod-row input{height:32px;font-size:13px;padding:0 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--sf);color:var(--tx);font-family:var(--fn)}
 .prod-nome{flex:1;min-width:0}
@@ -1949,7 +1950,14 @@ function renderOS(){
           <span class="os-data"> · ${os.data}</span>
           <div class="os-veic">${os.veiculo}${os.modelo?' — '+os.modelo:''}</div>
         </div>
-        <span class="os-status ${STATUS_CLASS[os.status]||'os-aberta'}">${os.status}</span>
+<select class="os-status-sel ${STATUS_CLASS[os.status]||'os-aberta'}"
+          onchange="atualizarStatusOS(${os.linha},this.value,this)"
+          onclick="event.stopPropagation()">
+          <option value="Aberta" ${os.status==='Aberta'?'selected':''}>Aberta</option>
+          <option value="Em andamento" ${os.status==='Em andamento'?'selected':''}>Em andamento</option>
+          <option value="Concluída" ${os.status==='Concluída'?'selected':''}>Concluída</option>
+          <option value="Cancelada" ${os.status==='Cancelada'?'selected':''}>Cancelada</option>
+        </select>
       </div>
       <div class="os-serv">${os.servico}${os.fornecedor?' · '+os.fornecedor:''}</div>
       <div class="os-meta">
@@ -1970,6 +1978,34 @@ function renderOS(){
       </div>`;
     list.appendChild(div);
   });
+}
+
+/* ── Atualizar status da OS inline ───────────────────────── */
+async function atualizarStatusOS(linha, novoStatus, selectEl){
+  if(!cfg.url){ toast('Configure a URL do servidor'); return; }
+  const statusAnterior = selectEl.dataset.anterior || selectEl.value;
+  selectEl.dataset.anterior = novoStatus;
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'atualizarStatusOS', linha, status:novoStatus,
+        senha:adminSenha||'', usuario:usuarioGoogle})});
+    const d = await r.json();
+    if(d.ok){
+      // Atualiza cor do select imediatamente sem recarregar tudo
+      selectEl.className='os-status-sel '+(STATUS_CLASS[novoStatus]||'os-aberta');
+      // Atualiza cache local
+      const os = osCache.find(o=>o.linha===linha);
+      if(os){ os.status=novoStatus; }
+      toast('✓ Status atualizado: '+novoStatus);
+    } else {
+      // Reverte o select para o status anterior
+      selectEl.value = statusAnterior;
+      toast(d.erro||'Erro ao atualizar status');
+    }
+  }catch(e){
+    selectEl.value = statusAnterior;
+    toast('Erro de conexão');
+  }
 }
 
 /* ── Excluir OS (admin only) ──────────────────────────────── */
@@ -2065,7 +2101,14 @@ function renderOSVeiculo(){
           <span class="os-data"> · ${os.data}</span>
           ${os.km?`<span class="os-data"> · ${Number(os.km).toLocaleString('pt-BR')} km</span>`:''}
         </div>
-        <span class="os-status ${STATUS_CLASS[os.status]||'os-aberta'}">${os.status}</span>
+<select class="os-status-sel ${STATUS_CLASS[os.status]||'os-aberta'}"
+          onchange="atualizarStatusOS(${os.linha},this.value,this)"
+          onclick="event.stopPropagation()">
+          <option value="Aberta" ${os.status==='Aberta'?'selected':''}>Aberta</option>
+          <option value="Em andamento" ${os.status==='Em andamento'?'selected':''}>Em andamento</option>
+          <option value="Concluída" ${os.status==='Concluída'?'selected':''}>Concluída</option>
+          <option value="Cancelada" ${os.status==='Cancelada'?'selected':''}>Cancelada</option>
+        </select>
       </div>
       <div class="os-serv">${os.servico}${os.fornecedor?' · '+os.fornecedor:''}</div>
       ${os.produtos&&os.produtos.length?`<div style="margin-top:4px">
