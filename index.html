@@ -2590,7 +2590,7 @@ async function salvarOSApp(){
       // Recarrega a lista e abre o PDF automaticamente para visualização
       await carregarOS();
       const osGerada = osCache.find(o=> String(o.numero)===String(d.numero));
-      if(osGerada) gerarPdfOS(osGerada, 'view');
+      if(osGerada) gerarPdfOS(osGerada, 'share');
     } else { toast(d.erro || 'Erro ao salvar'); }
   }catch(e){ toast('Erro de conexão'); }
 }
