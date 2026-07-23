@@ -702,7 +702,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
       <div class="cfgbox"><strong style="color:var(--tx);display:block;margin-bottom:2px">Google Drive</strong>
         Pasta <strong>Checklist_Frota_Fotos/</strong> criada automaticamente.<br>
         Subpastas por: <strong>PLACA_DATA</strong><br>
-        Fotos comprimidas (≤800px, 70% qualidade) antes do envio.</div>
+        Fotos comprimidas (≤500px, 55% qualidade) antes do envio.</div>
     </div>
   </div>
 </div>
@@ -1218,7 +1218,7 @@ function tirarFoto(id){
   const inp=document.getElementById('finp');
   inp.onchange=e=>{
     const f=e.target.files[0]; if(!f) return;
-    comprimirImagem(f, 800, 0.70, blob=>{
+    comprimirImagem(f, 500, 0.55, blob=>{
       const r=new FileReader();
       r.onload=ev=>{
         const b64=ev.target.result;
@@ -1417,6 +1417,10 @@ function renderChecklists(checklists, body){
 // Converte um link de visualização do Google Drive
 // (.../file/d/ID/view ou ?id=ID) em URL de thumbnail direta
 function driveThumbUrl(link){
+  if(!link) return link;
+  // Link do Supabase Storage — retorna direto, já é URL pública de imagem
+  if(link.includes('supabase.co/storage')) return link;
+  // Link do Google Drive — converte para thumbnail
   const m = link.match(/\/file\/d\/([^\/]+)/) || link.match(/[?&]id=([^&]+)/);
   const id = m ? m[1] : null;
   return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w300` : link;
