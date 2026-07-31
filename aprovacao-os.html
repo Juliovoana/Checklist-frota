@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aprovação de Ordem de Serviço</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --azul:#1a3a5c;
+  --azul2:#2d5a8e;
+  --fundo:#f0f4f8;
+  --painel:#ffffff;
+  --linha:#dde3ea;
+  --texto:#1a2332;
+  --texto2:#5a6a7a;
+  --verde:#16a34a;
+  --verde-bg:#dcfce7;
+  --vermelho:#dc2626;
+  --vermelho-bg:#fee2e2;
+  --amarelo:#d97706;
+  --amarelo-bg:#fef3c7;
+  --raio:12px;
+  --sombra:0 2px 12px rgba(26,58,92,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;font-family:'Inter',system-ui,sans-serif;background:var(--fundo);color:var(--texto)}
+
+/* LOGIN */
+#tela-login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#1a3a5c 0%,#2d5a8e 100%)}
+.login-card{width:100%;max-width:380px;background:var(--painel);border-radius:var(--raio);padding:32px 28px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.login-logo-icon{width:40px;height:40px;background:var(--azul);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.login-logo-icon svg{width:24px;height:24px}
+.login-titulo{font-size:1.3rem;font-weight:700;color:var(--azul)}
+.login-sub{font-size:.85rem;color:var(--texto2);margin-bottom:24px}
+.campo{margin-bottom:14px}
+.campo label{display:block;font-size:.75rem;font-weight:600;color:var(--texto2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.campo-senha-wrap{position:relative}
+.campo-senha-wrap input{padding-right:42px}
+input{width:100%;background:var(--painel);border:1.5px solid var(--linha);color:var(--texto);padding:10px 12px;border-radius:8px;font-size:.95rem;font-family:inherit;transition:border-color .15s}
+input:focus{outline:none;border-color:var(--azul)}
+.btn-olho{position:absolute;top:50%;right:8px;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--texto2);display:flex;padding:4px}
+.btn-olho:hover{color:var(--azul)}
+.btn-olho svg{width:18px;height:18px}
+.btn-primary{width:100%;background:var(--azul);color:#fff;border:none;border-radius:8px;padding:12px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:4px}
+.btn-primary:hover{background:var(--azul2)}
+.msg-erro{color:var(--vermelho);font-size:.82rem;margin-top:10px;min-height:1.1em}
+
+/* APP */
+#tela-app{display:none;min-height:100vh}
+header{background:var(--azul);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.header-logo{display:flex;align-items:center;gap:10px}
+.header-logo-icon{width:32px;height:32px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.header-titulo{font-size:1rem;font-weight:700}
+.header-sub{font-size:.75rem;opacity:.7}
+.btn-sair{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 14px;border-radius:20px;font-size:.8rem;cursor:pointer;font-family:inherit}
+.btn-sair:hover{background:rgba(255,255,255,.25)}
+
+main{max-width:640px;margin:0 auto;padding:20px 16px}
+
+/* CARD OS */
+.os-card{background:var(--painel);border:1px solid var(--linha);border-radius:var(--raio);overflow:hidden;box-shadow:var(--sombra);margin-bottom:16px}
+.os-header{background:var(--azul);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.os-numero{font-size:1.1rem;font-weight:700}
+.os-data{font-size:.8rem;opacity:.75}
+.os-body{padding:20px}
+.os-linha{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.os-campo{flex:1;min-width:140px}
+.os-campo label{display:block;font-size:.7rem;font-weight:700;color:var(--texto2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.os-campo .valor{font-size:.95rem;font-weight:500;color:var(--texto)}
+.os-divider{border:none;border-top:1px solid var(--linha);margin:14px 0}
+.os-total{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--fundo);border-radius:8px;margin-bottom:16px}
+.os-total-label{font-size:.85rem;color:var(--texto2)}
+.os-total-valor{font-size:1.3rem;font-weight:700;color:var(--azul)}
+
+/* PRODUTOS */
+.prod-tabela{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:14px}
+.prod-tabela th{background:var(--fundo);color:var(--texto2);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;text-align:left;border-bottom:1px solid var(--linha)}
+.prod-tabela td{padding:8px 10px;border-bottom:1px solid var(--linha)}
+.prod-tabela tr:last-child td{border-bottom:none}
+.prod-tabela .num{text-align:right}
+
+/* STATUS */
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:.8rem;font-weight:600}
+.status-pendente{background:var(--amarelo-bg);color:var(--amarelo)}
+.status-aprovado{background:var(--verde-bg);color:var(--verde)}
+.status-reprovado{background:var(--vermelho-bg);color:var(--vermelho)}
+
+/* AÇÕES */
+.acoes{display:flex;gap:10px;margin-top:4px}
+.btn-aprovar{flex:1;background:var(--verde);color:#fff;border:none;border-radius:8px;padding:13px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s}
+.btn-reprovar{flex:1;background:var(--vermelho);color:#fff;border:none;border-radius:8px;padding:13px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s}
+.btn-aprovar:hover,.btn-reprovar:hover{opacity:.88}
+.btn-aprovar:disabled,.btn-reprovar:disabled{opacity:.5;cursor:default}
+
+.motivo-wrap{display:none;margin-top:10px}
+.motivo-wrap textarea{width:100%;border:1.5px solid var(--linha);border-radius:8px;padding:10px;font-family:inherit;font-size:.9rem;resize:vertical;min-height:80px}
+.motivo-wrap textarea:focus{outline:none;border-color:var(--vermelho)}
+.btn-confirmar-reprovacao{width:100%;background:var(--vermelho);color:#fff;border:none;border-radius:8px;padding:11px;font-size:.9rem;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;transition:opacity .15s}
+.btn-confirmar-reprovacao:hover{opacity:.88}
+
+.resultado-card{border-radius:var(--raio);padding:20px;text-align:center;margin-top:8px}
+.resultado-aprovado{background:var(--verde-bg);border:1px solid #bbf7d0}
+.resultado-reprovado{background:var(--vermelho-bg);border:1px solid #fecaca}
+.resultado-icon{font-size:2.5rem;margin-bottom:8px}
+.resultado-titulo{font-size:1.1rem;font-weight:700;margin-bottom:4px}
+.resultado-sub{font-size:.85rem;color:var(--texto2)}
+
+.empty-card{background:var(--painel);border:1px solid var(--linha);border-radius:var(--raio);padding:40px 20px;text-align:center;box-shadow:var(--sombra)}
+.empty-icon{font-size:2.5rem;margin-bottom:12px}
+.empty-title{font-size:1rem;font-weight:600;color:var(--texto);margin-bottom:6px}
+.empty-sub{font-size:.85rem;color:var(--texto2)}
+
+.spin{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="tela-login">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="login-titulo">Checklist Frota</div>
+      </div>
+    </div>
+    <div class="login-sub" style="margin-top:4px;margin-bottom:22px">Aprovação de Ordem de Serviço</div>
+
+    <div class="campo">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="campo">
+      <label>Senha</label>
+      <div class="campo-senha-wrap">
+        <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+        <button class="btn-olho" onclick="toggleSenha()" tabindex="-1" type="button">
+          <svg id="olho-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="fazerLogin()" id="btn-login">Entrar</button>
+    <div class="msg-erro" id="login-erro"></div>
+  </div>
+</div>
+
+<!-- TELA PRINCIPAL -->
+<div id="tela-app">
+  <header>
+    <div class="header-logo">
+      <div class="header-logo-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2">
+          <path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+      </div>
+      <div>
+        <div class="header-titulo">Aprovação de OS</div>
+        <div class="header-sub" id="header-usuario"></div>
+      </div>
+    </div>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </header>
+
+  <main id="main-conteudo">
+    <div class="empty-card">
+      <div class="empty-icon">⏳</div>
+      <div class="empty-title">Carregando...</div>
+    </div>
+  </main>
+</div>
+
+<script>
+const WORKER_URL = 'https://young-morning-67aa.julinhobps.workers.dev';
+
+// ── Pega token da URL (?token=xxx) ──────────────────────────
+const TOKEN = new URLSearchParams(window.location.search).get('token') || '';
+
+let usuarioLogado = null;
+
+// ── Toggle senha ────────────────────────────────────────────
+function toggleSenha(){
+  const inp = document.getElementById('login-senha');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// ── Login ───────────────────────────────────────────────────
+async function fazerLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value.trim();
+  const erroEl = document.getElementById('login-erro');
+  const btn = document.getElementById('btn-login');
+  erroEl.textContent = '';
+
+  if(!email || !senha){ erroEl.textContent='Preencha email e senha.'; return; }
+
+  btn.innerHTML = '<span class="spin"></span>';
+  btn.disabled = true;
+
+  try{
+    const r = await fetch(WORKER_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'loginAprovador', email, senha})
+    });
+    const d = await r.json();
+    if(d.ok){
+      usuarioLogado = d.aprovador;
+      document.getElementById('tela-login').style.display='none';
+      document.getElementById('tela-app').style.display='block';
+      document.getElementById('header-usuario').textContent = usuarioLogado.nome;
+      carregarOS();
+    } else {
+      erroEl.textContent = d.erro || 'Credenciais inválidas.';
+    }
+  }catch(e){
+    erroEl.textContent = 'Erro de conexão. Tente novamente.';
+  } finally {
+    btn.innerHTML = 'Entrar';
+    btn.disabled = false;
+  }
+}
+
+function sair(){
+  usuarioLogado = null;
+  document.getElementById('tela-login').style.display='flex';
+  document.getElementById('tela-app').style.display='none';
+  document.getElementById('login-senha').value='';
+  document.getElementById('login-erro').textContent='';
+}
+
+// ── Carrega OS pelo token ────────────────────────────────────
+async function carregarOS(){
+  const main = document.getElementById('main-conteudo');
+  if(!TOKEN){
+    main.innerHTML = `<div class="empty-card">
+      <div class="empty-icon">🔗</div>
+      <div class="empty-title">Link inválido</div>
+      <div class="empty-sub">Este link não contém um token de aprovação válido.</div>
+    </div>`;
+    return;
+  }
+
+  try{
+    const r = await fetch(WORKER_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'getOSporToken', token:TOKEN})
+    });
+    const d = await r.json();
+    if(!d.ok || !d.os){
+      main.innerHTML = `<div class="empty-card">
+        <div class="empty-icon">❌</div>
+        <div class="empty-title">OS não encontrada</div>
+        <div class="empty-sub">${d.erro||'O link pode ter expirado ou a OS foi removida.'}</div>
+      </div>`;
+      return;
+    }
+    renderOS(d.os, d.aprovacao);
+  }catch(e){
+    main.innerHTML = `<div class="empty-card">
+      <div class="empty-icon">⚠️</div>
+      <div class="empty-title">Erro ao carregar</div>
+      <div class="empty-sub">Verifique sua conexão e tente novamente.</div>
+    </div>`;
+  }
+}
+
+// ── Renderiza a OS ───────────────────────────────────────────
+function renderOS(os, aprovacao){
+  const main = document.getElementById('main-conteudo');
+  const valorFmt = v => v ? 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
+  const jaRespondida = aprovacao && aprovacao.status !== 'pendente';
+
+  // Badge de status
+  const statusMap = {
+    pendente:  {cls:'status-pendente',  txt:'⏳ Aguardando aprovação'},
+    aprovado:  {cls:'status-aprovado',  txt:'✅ Aprovado'},
+    reprovado: {cls:'status-reprovado', txt:'❌ Reprovado'}
+  };
+  const st = statusMap[aprovacao?.status||'pendente'];
+
+  // Produtos
+  let prodHTML = '';
+  if(os.produtos && os.produtos.length){
+    prodHTML = `<hr class="os-divider">
+    <table class="prod-tabela">
+      <thead><tr><th>Produto / Peça</th><th class="num">Qtd</th><th class="num">Unit.</th><th class="num">Subtotal</th></tr></thead>
+      <tbody>
+        ${os.produtos.map(p=>`<tr>
+          <td>${p.produto}</td>
+          <td class="num">${p.quantidade}</td>
+          <td class="num">${valorFmt(p.valorUnitario)}</td>
+          <td class="num">${valorFmt(p.subtotal)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+
+  // Área de ação ou resultado
+  let acaoHTML = '';
+  if(jaRespondida){
+    const cor = aprovacao.status==='aprovado' ? 'aprovado' : 'reprovado';
+    acaoHTML = `<div class="resultado-card resultado-${cor}">
+      <div class="resultado-icon">${aprovacao.status==='aprovado'?'✅':'❌'}</div>
+      <div class="resultado-titulo">${aprovacao.status==='aprovado'?'Serviço Aprovado':'Serviço Reprovado'}</div>
+      <div class="resultado-sub">Respondido por ${aprovacao.aprovador||usuarioLogado.nome}
+        ${aprovacao.respondido_em?' em '+new Date(aprovacao.respondido_em).toLocaleString('pt-BR'):''}</div>
+      ${aprovacao.motivo?`<div style="margin-top:10px;font-size:.85rem;font-style:italic;color:var(--texto2)">"${aprovacao.motivo}"</div>`:''}
+    </div>`;
+  } else {
+    acaoHTML = `<div class="acoes">
+      <button class="btn-aprovar" onclick="responder('aprovado')" id="btn-apr">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Aprovar
+      </button>
+      <button class="btn-reprovar" onclick="mostrarMotivo()" id="btn-rep">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        Reprovar
+      </button>
+    </div>
+    <div class="motivo-wrap" id="motivo-wrap">
+      <textarea id="motivo-txt" placeholder="Informe o motivo da reprovação (opcional)..."></textarea>
+      <button class="btn-confirmar-reprovacao" onclick="responder('reprovado')">Confirmar reprovação</button>
+    </div>`;
+  }
+
+  main.innerHTML = `
+    <div class="os-card">
+      <div class="os-header">
+        <div>
+          <div class="os-numero">OS Nº ${os.numero}</div>
+          <div class="os-data">${os.data}</div>
+        </div>
+        <span class="status-badge ${st.cls}">${st.txt}</span>
+      </div>
+      <div class="os-body">
+        <div class="os-linha">
+          <div class="os-campo"><label>Veículo</label><div class="valor">${os.veiculo}${os.modelo?' — '+os.modelo:''}</div></div>
+          <div class="os-campo"><label>KM</label><div class="valor">${os.km?Number(os.km).toLocaleString('pt-BR')+' km':'—'}</div></div>
+        </div>
+        <div class="os-linha">
+          <div class="os-campo"><label>Fornecedor</label><div class="valor">${os.fornecedor||'—'}</div></div>
+          <div class="os-campo"><label>Responsável</label><div class="valor">${os.responsavel||'—'}</div></div>
+        </div>
+        <div class="os-campo" style="margin-bottom:12px"><label>Serviço</label><div class="valor">${os.servico}</div></div>
+        ${os.observacao?`<div class="os-campo" style="margin-bottom:12px"><label>Observação</label><div class="valor">${os.observacao}</div></div>`:''}
+
+        ${prodHTML}
+
+        <div class="os-total">
+          <span class="os-total-label">Total da OS</span>
+          <span class="os-total-valor">${valorFmt(os.valor)}</span>
+        </div>
+
+        ${acaoHTML}
+      </div>
+    </div>`;
+}
+
+// ── Mostrar campo de motivo ──────────────────────────────────
+function mostrarMotivo(){
+  document.getElementById('motivo-wrap').style.display='block';
+  document.getElementById('motivo-txt').focus();
+}
+
+// ── Responder (aprovar ou reprovar) ─────────────────────────
+async function responder(status){
+  const motivo = document.getElementById('motivo-txt')?.value.trim() || '';
+  const btnApr = document.getElementById('btn-apr');
+  const btnRep = document.getElementById('btn-rep');
+  if(btnApr) btnApr.disabled = true;
+  if(btnRep) btnRep.disabled = true;
+
+  try{
+    const r = await fetch(WORKER_URL, {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({
+        action:'responderAprovacaoOS',
+        token: TOKEN,
+        status,
+        motivo,
+        aprovadorId: usuarioLogado.id
+      })
+    });
+    const d = await r.json();
+    if(d.ok){
+      carregarOS(); // recarrega para mostrar resultado
+    } else {
+      alert(d.erro || 'Erro ao registrar resposta.');
+      if(btnApr) btnApr.disabled = false;
+      if(btnRep) btnRep.disabled = false;
+    }
+  }catch(e){
+    alert('Erro de conexão.');
+    if(btnApr) btnApr.disabled = false;
+    if(btnRep) btnRep.disabled = false;
+  }
+}
+
+// Foca o email ao carregar
+window.addEventListener('load', ()=>document.getElementById('login-email').focus());
+</script>
+</body>
+</html>
