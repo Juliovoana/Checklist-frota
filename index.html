@@ -2275,17 +2275,20 @@ async function gerarPdfOS(os, modo){
   doc.setFontSize(8); doc.setTextColor(...cinza);
   doc.text('Gerado em '+new Date().toLocaleString('pt-BR'), 14, 290);
 
-  const nomeArquivo = 'OS_'+os.numero+'_'+os.veiculo.replace(/[^a-zA-Z0-9]/g,'')+'.pdf';
+  const nomeArquivo = 'OS_'+os.numero+'_'+os.veiculo.replace(/[^a-zA-Z0-9]/g,'')+(os.modelo?'_'+os.modelo.replace(/[^a-zA-Z0-9]/g,''):'')+'.pdf';
 
   if(modo==='share' && navigator.share && navigator.canShare){
     try{
       const blob = doc.output('blob');
       const file = new File([blob], nomeArquivo, {type:'application/pdf'});
       if(navigator.canShare({files:[file]})){
+        // Gera token de aprovação antes de compartilhar
+        const tokenApr = await gerarTokenAprovacao(os.linha);
+        const linkApr = tokenApr ? '\n\n🔗 Aprovar/Reprovar: https://julinhobps.github.io/checklist-frota/aprovacao-os.html?token='+tokenApr : '';
         await navigator.share({
           files:[file],
           title:'Ordem de Serviço Nº '+os.numero,
-          text:'OS Nº '+os.numero+' — '+os.veiculo+' — '+os.servico
+          text:'✅ OS Nº '+os.numero+' — '+os.veiculo+(os.modelo?' ('+os.modelo+')':'')+'\nServiço: '+os.servico+(os.valor?'\nValor: R$ '+Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}):'')+linkApr
         });
         return;
       }
@@ -2305,6 +2308,17 @@ async function gerarPdfOS(os, modo){
   // Fallback: navegador sem suporte a compartilhar arquivos, ou modo "download"
   doc.save(nomeArquivo);
   if(modo==='share') toast('Compartilhamento não suportado neste navegador — PDF baixado');
+}
+
+/* ── Gerar token de aprovação para a OS ──────────────────── */
+async function gerarTokenAprovacao(osId){
+  if(!cfg.url || !osId) return null;
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'gerarTokenAprovacao', osId, senha:adminSenha})});
+    const d = await r.json();
+    return d.ok ? d.token : null;
+  }catch(e){ return null; }
 }
 
 /* ════════════════ DADOS DA EMPRESA ════════════════ */
