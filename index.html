@@ -537,16 +537,16 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
         </div>
 
         <div class="man-grid" style="margin-bottom:8px">
-          <div class="man-field"><label>Data</label><input class="inp" type="date" id="fos-data"></div>
+          <div class="man-field"><label>Data</label><input class="inp" type="date" id="fos-data" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fos-km').focus()}"></div>
         </div>
 
         <div class="man-grid" style="margin-bottom:8px">
-          <div class="man-field"><label>KM</label><input class="inp" type="number" inputmode="numeric" id="fos-km" placeholder="Ex: 85000"></div>
-          <div class="man-field"><label>Mão de obra (R$)</label><input class="inp" type="number" inputmode="decimal" step="0.01" id="fos-valor" placeholder="Ex: 150.00" oninput="recalcularTotalOS()"></div>
+          <div class="man-field"><label>KM</label><input class="inp" type="number" inputmode="numeric" id="fos-km" placeholder="Ex: 85000" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fos-valor').focus()}"></div>
+          <div class="man-field"><label>Mão de obra (R$)</label><input class="inp" type="number" inputmode="decimal" step="0.01" id="fos-valor" placeholder="Ex: 150.00" oninput="recalcularTotalOS()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fos-fornecedor').focus()}"></div>
         </div>
 
-        <div class="man-field" style="margin-bottom:8px"><label>Fornecedor</label><input class="inp" id="fos-fornecedor" placeholder="Ex: Oficina Silva"></div>
-        <div class="man-field" style="margin-bottom:10px"><label>Serviço</label><input class="inp" id="fos-servico" placeholder="Ex: Troca de óleo"></div>
+        <div class="man-field" style="margin-bottom:8px"><label>Fornecedor</label><input class="inp" id="fos-fornecedor" placeholder="Ex: Oficina Silva" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fos-servico').focus()}"></div>
+        <div class="man-field" style="margin-bottom:10px"><label>Serviço</label><input class="inp" id="fos-servico" placeholder="Ex: Troca de óleo" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fos-responsavel').focus()}"></div>
 
         <!-- Produtos / peças utilizados -->
         <div style="margin-bottom:10px">
@@ -564,7 +564,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
         </div>
 
         <div class="man-grid" style="margin-bottom:8px">
-          <div class="man-field"><label>Responsável</label><input class="inp" id="fos-responsavel" placeholder="Nome"></div>
+          <div class="man-field"><label>Responsável</label><input class="inp" id="fos-responsavel" placeholder="Nome" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fos-obs').focus()}"></div>
           <div class="man-field">
             <label>Status</label>
             <select class="inp" id="fos-status">
@@ -576,7 +576,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
           </div>
         </div>
 
-        <div class="man-field" style="margin-bottom:10px"><label>Observação</label><textarea class="man-obs" id="fos-obs" placeholder="Detalhes do serviço, garantia..."></textarea></div>
+        <div class="man-field" style="margin-bottom:10px"><label>Observação</label><textarea class="man-obs" id="fos-obs" placeholder="Detalhes do serviço, garantia..." style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></textarea></div>
 
         <div style="display:flex;gap:8px">
           <button class="btn-buscar" style="flex:1;justify-content:center" onclick="salvarOSApp()"><i class="ti ti-device-floppy"></i> Salvar</button>
