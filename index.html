@@ -2286,7 +2286,7 @@ async function gerarPdfOS(os, modo){
         const tokenApr = await gerarTokenAprovacao(os.linha);
         const linkApr = tokenApr
           ? '\n\n👆 *TOQUE AQUI PARA APROVAR OU REPROVAR:*\n'
-            +'https://www.servir.site/aprovacao-os?token='+tokenApr
+            +'https://www.servir.site/aprovacao-os.html?token='+tokenApr
           : '';
         const valorFmt = os.valor
           ? 'R$ '+Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
