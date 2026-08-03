@@ -2277,38 +2277,44 @@ async function gerarPdfOS(os, modo){
 
   const nomeArquivo = 'OS_'+os.numero+'_'+os.veiculo.replace(/[^a-zA-Z0-9]/g,'')+(os.modelo?'_'+os.modelo.replace(/[^a-zA-Z0-9]/g,''):'')+'.pdf';
 
-  if(modo==='share' && navigator.share && navigator.canShare){
-    try{
-      const blob = doc.output('blob');
-      const file = new File([blob], nomeArquivo, {type:'application/pdf'});
-      if(navigator.canShare({files:[file]})){
-        // Gera token de aprovação antes de compartilhar
-        const tokenApr = await gerarTokenAprovacao(os.linha);
-        const linkApr = tokenApr
-          ? '\n\n👆 *TOQUE AQUI PARA APROVAR OU REPROVAR:*\n'
-            +'https://www.servir.site/aprovacao-os.html?token='+tokenApr
-          : '';
-        const valorFmt = os.valor
-          ? 'R$ '+Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
-        await navigator.share({
-          files:[file],
-          title:'Ordem de Serviço Nº '+os.numero,
-          text:'🔧 *ORDEM DE SERVIÇO Nº '+os.numero+'*'
-            +'\n━━━━━━━━━━━━━━━━━━━━'
-            +'\n🚗 *Veículo:* '+os.veiculo+(os.modelo?' — '+os.modelo:'')
-            +(os.km?'\n📍 *KM:* '+Number(os.km).toLocaleString('pt-BR')+' km':'')
-            +'\n🔩 *Serviço:* '+os.servico
-            +(os.fornecedor?'\n🏪 *Fornecedor:* '+os.fornecedor:'')
-            +(valorFmt?'\n💰 *Valor Total:* '+valorFmt:'')
-            +'\n━━━━━━━━━━━━━━━━━━━━'
-            +linkApr
-        });
-        return;
+  if(modo==='share'){
+    // Gera token e monta o texto antes de qualquer coisa
+    const tokenApr = await gerarTokenAprovacao(os.linha);
+    const linkApr = tokenApr
+      ? '\n\n👆 *TOQUE AQUI PARA APROVAR OU REPROVAR:*\n'
+        +'https://www.servir.site/aprovacao-os.html?token='+tokenApr
+      : '';
+    const valorFmt = os.valor
+      ? 'R$ '+Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
+    const textoWpp = '🔧 *ORDEM DE SERVIÇO Nº '+os.numero+'*'
+      +'\n━━━━━━━━━━━━━━━━━━━━'
+      +'\n🚗 *Veículo:* '+os.veiculo+(os.modelo?' — '+os.modelo:'')
+      +(os.km?'\n📍 *KM:* '+Number(os.km).toLocaleString('pt-BR')+' km':'')
+      +'\n🔩 *Serviço:* '+os.servico
+      +(os.fornecedor?'\n🏪 *Fornecedor:* '+os.fornecedor:'')
+      +(valorFmt?'\n💰 *Valor Total:* '+valorFmt:'')
+      +'\n━━━━━━━━━━━━━━━━━━━━'
+      +linkApr;
+
+    // Tenta compartilhar com arquivo (funciona no celular)
+    if(navigator.share && navigator.canShare){
+      try{
+        const blob = doc.output('blob');
+        const file = new File([blob], nomeArquivo, {type:'application/pdf'});
+        if(navigator.canShare({files:[file]})){
+          await navigator.share({files:[file], title:'OS Nº '+os.numero, text:textoWpp});
+          return;
+        }
+      }catch(e){
+        if(e.name==='AbortError') return;
       }
-    }catch(e){
-      if(e.name==='AbortError') return; // usuário cancelou o compartilhamento
-      // segue para o fallback de download abaixo
     }
+
+    // Fallback desktop: baixa o PDF e abre WhatsApp Web com o texto
+    doc.save(nomeArquivo);
+    const urlWpp = 'https://wa.me/?text='+encodeURIComponent(textoWpp);
+    window.open(urlWpp, '_blank');
+    return;
   }
 
   // Modo visualizar — abre em nova aba sem forçar download
@@ -2328,7 +2334,7 @@ async function gerarTokenAprovacao(osId){
   if(!cfg.url || !osId) return null;
   try{
     const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({action:'gerarTokenAprovacao', osId, senha:adminSenha})});
+      body: JSON.stringify({action:'gerarTokenAprovacao', osId})});
     const d = await r.json();
     return d.ok ? d.token : null;
   }catch(e){ return null; }
