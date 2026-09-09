@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Redefinir Senha · Checklist Frota</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;font-family:'Inter',sans-serif;background:linear-gradient(135deg,#1a3a5c,#2d5a8e);display:flex;align-items:center;justify-content:center;padding:24px}
+.card{width:100%;max-width:360px;background:#fff;border-radius:14px;padding:32px 28px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.logo-icon{width:42px;height:42px;background:#1a3a5c;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.titulo{font-size:1.1rem;font-weight:700;color:#1a3a5c}
+.sub{font-size:.8rem;color:#5a6a7a;margin-top:2px}
+label{display:block;font-size:.72rem;font-weight:700;color:#5a6a7a;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;margin-top:14px}
+.wrap{position:relative}
+.wrap input{padding-right:42px}
+input{width:100%;border:1.5px solid #dde3ea;border-radius:8px;padding:10px 12px;font-size:.95rem;font-family:inherit;color:#1a2332;transition:border-color .15s}
+input:focus{outline:none;border-color:#1a3a5c}
+.olho{position:absolute;top:50%;right:8px;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#8fa0b0;display:flex;padding:4px}
+.olho svg{width:18px;height:18px}
+.btn{width:100%;background:#1a3a5c;color:#fff;border:none;border-radius:8px;padding:12px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;margin-top:18px}
+.btn:hover{background:#2d5a8e}
+.btn:disabled{opacity:.6;cursor:default}
+.msg{font-size:.82rem;margin-top:10px;min-height:1.1em;text-align:center}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.voltar{text-align:center;margin-top:16px}
+.voltar a{font-size:.82rem;color:#1a3a5c;text-decoration:underline;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+        <path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/>
+      </svg>
+    </div>
+    <div>
+      <div class="titulo">Checklist Frota</div>
+      <div class="sub">Redefinição de senha</div>
+    </div>
+  </div>
+
+  <div id="conteudo">
+    <div style="text-align:center;padding:20px;color:#5a6a7a">
+      <div class="spin" style="border-top-color:#1a3a5c;border-color:#dde3ea;width:24px;height:24px;margin:0 auto 12px"></div>
+      Verificando link...
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL  = 'https://xgxghkksoezmgncpanpy.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_y4rTfXUvJBIo-F87ZimLjw_GnpZhu5k';
+const APROVACAO_URL = 'https://www.servir.site/aprovacao-os.html';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+function toggleSenha(id){
+  const i = document.getElementById(id);
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+
+function mostrarFormSenha(){
+  document.getElementById('conteudo').innerHTML = `
+    <p style="font-size:.85rem;color:#5a6a7a;margin-bottom:4px">Digite e confirme sua nova senha.</p>
+    <label>Nova senha</label>
+    <div class="wrap">
+      <input type="password" id="nova-senha" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key==='Enter')document.getElementById('conf-senha').focus()">
+      <button class="olho" onclick="toggleSenha('nova-senha')" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <label>Confirmar senha</label>
+    <div class="wrap">
+      <input type="password" id="conf-senha" placeholder="Repita a nova senha" onkeydown="if(event.key==='Enter')salvar()">
+      <button class="olho" onclick="toggleSenha('conf-senha')" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <button class="btn" id="btn-salvar" onclick="salvar()">Salvar nova senha</button>
+    <div class="msg" id="msg"></div>
+  `;
+  setTimeout(()=>document.getElementById('nova-senha').focus(), 100);
+}
+
+function mostrarErro(txt){
+  document.getElementById('conteudo').innerHTML = `
+    <div style="text-align:center;padding:10px">
+      <div style="font-size:2rem;margin-bottom:10px">⚠️</div>
+      <div style="font-size:.95rem;font-weight:600;color:#1a2332;margin-bottom:6px">Link inválido ou expirado</div>
+      <div style="font-size:.82rem;color:#5a6a7a;margin-bottom:16px">${txt||'Solicite um novo link de recuperação.'}</div>
+      <a href="${APROVACAO_URL}" style="font-size:.85rem;color:#1a3a5c;text-decoration:underline">Voltar ao login</a>
+    </div>`;
+}
+
+async function salvar(){
+  const nova = document.getElementById('nova-senha').value;
+  const conf = document.getElementById('conf-senha').value;
+  const msg  = document.getElementById('msg');
+  const btn  = document.getElementById('btn-salvar');
+  msg.textContent = '';
+  msg.style.color = '';
+
+  if(!nova || nova.length < 6){
+    msg.textContent = 'A senha deve ter pelo menos 6 caracteres.';
+    msg.style.color = '#dc2626'; return;
+  }
+  if(nova !== conf){
+    msg.textContent = 'As senhas não coincidem.';
+    msg.style.color = '#dc2626'; return;
+  }
+
+  btn.innerHTML = '<span class="spin"></span>'; btn.disabled = true;
+  const { error } = await sb.auth.updateUser({ password: nova });
+  btn.innerHTML = 'Salvar nova senha'; btn.disabled = false;
+
+  if(error){
+    msg.textContent = 'Erro: ' + error.message;
+    msg.style.color = '#dc2626';
+  } else {
+    msg.style.color = '#16a34a';
+    msg.textContent = '✓ Senha atualizada!';
+    document.getElementById('conteudo').innerHTML = `
+      <div style="text-align:center;padding:10px">
+        <div style="font-size:2.5rem;margin-bottom:10px">✅</div>
+        <div style="font-size:1rem;font-weight:700;color:#1a2332;margin-bottom:6px">Senha atualizada com sucesso!</div>
+        <div style="font-size:.82rem;color:#5a6a7a;margin-bottom:16px">Você já pode fazer login com a nova senha.</div>
+        <a href="${APROVACAO_URL}" style="font-size:.9rem;color:#fff;background:#1a3a5c;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Ir para o login</a>
+      </div>`;
+    await sb.auth.signOut();
+  }
+}
+
+// Detecta a sessão vinda do link de recuperação
+sb.auth.onAuthStateChange((event, session) => {
+  if(event === 'PASSWORD_RECOVERY'){
+    mostrarFormSenha();
+  } else if(event === 'INITIAL_SESSION' && !session){
+    mostrarErro('Este link já foi usado ou expirou.');
+  }
+});
+</script>
+</body>
+</html>
