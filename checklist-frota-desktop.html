@@ -120,7 +120,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 .vcic{width:40px;height:40px;border-radius:8px;background:var(--nvl);display:flex;align-items:center;justify-content:center;color:var(--nv);font-size:20px;flex-shrink:0}
 .vcn{font-size:14px;font-weight:600;color:var(--tx)}.vcs{font-size:12px;color:var(--tx2);margin-top:1px}
 .pill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;font-weight:500;margin-top:4px}
-.pv{background:#E1F5EE;color:#085041}.pm{background:#E6F1FB;color:#0C447C}.pu{background:#FAEEDA;color:#633806}
+.pv{background:#E1F5EE;color:#085041}.pm{background:#E6F1FB;color:#0C447C}.pu{background:#FAEEDA;color:#633806}.po{background:#F3E8FD;color:#5B21B6}
 .vccl{margin-left:auto;background:none;border:none;color:var(--tx3);cursor:pointer;font-size:16px;padding:4px}
 /* counter */
 .ctr{display:flex;background:var(--sf);border-bottom:1px solid var(--bd)}
@@ -442,11 +442,8 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
             <div class="man-grid" style="margin-bottom:10px">
               <div class="man-field">
                 <label>Tipo</label>
-                <select class="inp" id="fv-tipo">
-                  <option value="Van">Van</option>
-                  <option value="Micro Onibus">Micro Onibus</option>
-                  <option value="Utilitario">Utilitario</option>
-                </select>
+                <input class="inp" id="fv-tipo" list="lista-tipos-veiculo" placeholder="Ex: Van, Ônibus, Motos, Buggy...">
+                <datalist id="lista-tipos-veiculo"></datalist>
               </div>
               <div class="man-field">
                 <label>Ativo</label>
@@ -470,12 +467,8 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
             <div class="man-grid" style="margin-bottom:8px">
               <div class="man-field">
                 <label>Tipo de veículo</label>
-                <select class="inp" id="fi-tipo">
-                  <option value="Van">Van</option>
-                  <option value="Micro Onibus">Micro Onibus</option>
-                  <option value="Utilitario">Utilitario</option>
-                  <option value="Todos">Todos</option>
-                </select>
+                <input class="inp" id="fi-tipo" list="lista-tipos-item" placeholder="Ex: Van, Ônibus, Motos, Buggy, Todos...">
+                <datalist id="lista-tipos-item"></datalist>
               </div>
               <div class="man-field"><label>Ativo</label><select class="inp" id="fi-ativo"><option value="Sim">Sim</option><option value="Não">Não</option></select></div>
             </div>
@@ -781,8 +774,30 @@ const ITENS = {
     {g:'Segurança',i:['Freios','Extintor','Triângulo','Documentos (CRLV)']}
   ]
 };
-const TPC={'Van':'pv','Micro Onibus':'pm','Utilitario':'pu'};
-const TPI={'Van':'ti-bus','Micro Onibus':'ti-bus','Utilitario':'ti-truck'};
+// Ícone/cor por tipo -- são só um "capricho" visual; qualquer tipo que
+// não estiver aqui já cai automaticamente no ícone/cor padrão (ver
+// TPI[tipo]||'ti-car' e TPC[tipo]||'pu' usados nas listas), então o
+// tipo em si NUNCA precisa estar cadastrado aqui pra funcionar -- só
+// pra ganhar um ícone mais bonito. Backend não valida tipo nenhum,
+// aceita qualquer texto (ver worker-checklist-frota.js).
+const TPC={'Van':'pv','Micro Onibus':'pm','Utilitario':'pu','Onibus':'pm','Ônibus':'pm','Motos':'po'};
+const TPI={'Van':'ti-bus','Micro Onibus':'ti-bus','Utilitario':'ti-truck','Onibus':'ti-bus','Ônibus':'ti-bus','Motos':'ti-motorbike'};
+
+// Lista de tipos sugeridos nos campos de cadastro (veículo/item) --
+// combina uma base fixa com os tipos que já estão em uso na frota, pra
+// sempre sugerir o que já existe. Cadastrar um tipo novo (ex: "Buggy")
+// não precisa de nenhuma alteração de código: é só digitar o nome no
+// campo de Tipo ao cadastrar o veículo -- a lista de sugestões pega
+// esse tipo novo automaticamente na próxima vez que renderFrota() rodar.
+const TIPOS_BASE=['Van','Micro Onibus','Utilitario','Onibus','Motos','Buggy'];
+function popularListasTipos(){
+  const emUso=[...new Set((frota||[]).map(v=>v.tipo).filter(Boolean))];
+  const todos=[...new Set([...TIPOS_BASE, ...emUso])].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const dlVeic=document.getElementById('lista-tipos-veiculo');
+  if(dlVeic) dlVeic.innerHTML=todos.map(t=>`<option value="${escapeAttr(t)}">`).join('');
+  const dlItem=document.getElementById('lista-tipos-item');
+  if(dlItem) dlItem.innerHTML=['Todos',...todos].map(t=>`<option value="${escapeAttr(t)}">`).join('');
+}
 const DEMO=[
   {placa:'ABC-1234',modelo:'Sprinter 415',tipo:'Van',ano:'2022'},
   {placa:'DEF-5678',modelo:'Sprinter 515',tipo:'Van',ano:'2021'},
@@ -1786,6 +1801,7 @@ async function sincFrota(){
 }
 
 function renderFrota(){
+  popularListasTipos();
   const list=document.getElementById('frlist'),st=document.getElementById('frst');
   if(!frota||!frota.length){list.innerHTML='<div class="empty"><i class="ti ti-bus"></i>Nenhum veículo encontrado</div>';return;}
   st.innerHTML='<span style="color:#16a34a">✓ '+frota.length+' veículos</span>';
