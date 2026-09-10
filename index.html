@@ -1253,7 +1253,11 @@ function tirarFoto(id){
       const r=new FileReader();
       r.onload=ev=>{
         const b64=ev.target.result;
-        est[fAt].fotos.push(b64);
+        // só fotoBase64 -- "fotos" é reservado pra links já existentes
+        // (reaproveitados de um checklist anterior). Empurrar o base64
+        // bruto ali também fazia a foto ser contada duas vezes na hora
+        // de montar o foto_link (uma como base64 cru, outra como link
+        // já enviado), duplicando a miniatura.
         est[fAt].fotoBase64.push(b64);
         const row=document.getElementById('fp_'+fAt);
         const img=document.createElement('img'); img.className='fth'; img.src=b64;
@@ -2853,7 +2857,8 @@ async function salvarItemApp(){
       toast('✓ Item '+(d.acao==='criado'?'cadastrado':'atualizado'));
       fecharFormItem();
       carregarItensAdmin();
-      localStorage.removeItem(IK); // força recarregar cache de itens do checklist
+      localStorage.removeItem(IK);
+      carregarItens(); // recarrega de verdade agora -- só limpar o cache não bastava, precisava dessa chamada pra o checklist já pegar o item novo sem precisar clicar em "Recarregar Itens" manualmente
     } else { toast(d.erro || 'Erro ao salvar'); }
   }catch(e){ toast('Erro de conexão'); }
 }
@@ -2868,7 +2873,7 @@ async function excluirItemApp(linha, item){
     const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action:'excluirItem', senha:adminSenha, linha, item, usuario:usuarioGoogle})});
     const d = await r.json();
-    if(d.ok){ toast('✓ Item desativado'); carregarItensAdmin(); localStorage.removeItem(IK); }
+    if(d.ok){ toast('✓ Item desativado'); carregarItensAdmin(); localStorage.removeItem(IK); carregarItens(); }
     else toast(d.erro || 'Erro ao desativar');
   }catch(e){ toast('Erro de conexão'); }
 }
