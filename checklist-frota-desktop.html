@@ -213,6 +213,13 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 .prod-os-item{display:flex;justify-content:space-between;font-size:12px;color:var(--tx2);padding:3px 0}
 .fiic{width:36px;height:36px;border-radius:8px;background:var(--nvl);display:flex;align-items:center;justify-content:center;color:var(--nv);font-size:17px;flex-shrink:0}
 .fipl{font-size:14px;font-weight:600;color:var(--tx)}.fisb{font-size:12px;color:var(--tx2);margin-top:1px}
+.fi.clicavel{cursor:pointer}
+.fi.clicavel:active{background:var(--nvl)}
+.fi.clicavel .fiseta{margin-left:auto;color:var(--tx3);font-size:16px}
+.dcard{cursor:pointer;transition:background .15s}
+.dcard:active{background:var(--bdl)}
+.dcard.dcativo{background:var(--nvl)}
+.dcard.dcativo .cnn,.dcard.dcativo .cnl{color:var(--nv)}
 .sbar{padding:10px 16px;background:var(--sf);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
 .sbtn{background:none;border:none;font-size:12px;color:var(--nv);cursor:pointer;font-weight:600;font-family:var(--fn);display:flex;align-items:center;gap:4px}
 .empty{padding:40px 16px;text-align:center;color:var(--tx2);font-size:13px;line-height:1.7}
@@ -236,6 +243,8 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 .man-hdr-badge.alert{background:#fee2e2;color:#991b1b;border-color:#fca5a5}
 .man-body{display:none;border-top:1px solid var(--bd)}
 .man-body.on{display:block}
+#admin-itens-list .man-sec{margin:8px 16px;border-radius:10px;border:1px solid var(--bd);overflow:hidden}
+#admin-itens-list .fi{padding:10px 12px}
 .man-item{border-bottom:1px solid var(--bdl);padding:12px 16px;display:flex;flex-direction:column;gap:10px}
 .man-item:last-child{border-bottom:none}
 .man-item-title{font-size:13px;font-weight:600;color:var(--tx);display:flex;align-items:center;justify-content:space-between}
@@ -262,15 +271,33 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
   </div>
 
   <div class="tabs">
-    <button class="tab on"  onclick="goTab('cl',this);if(vSel)novoChecklist()"><i class="ti ti-clipboard-list"></i> Novo</button>
+    <button class="tab on"  onclick="goTab('dash',this)"><i class="ti ti-layout-dashboard"></i> Painel</button>
+    <button class="tab"     onclick="goTab('cl',this);if(vSel)novoChecklist()"><i class="ti ti-clipboard-list"></i> Novo</button>
     <button class="tab"     onclick="goTab('rec',this)"><i class="ti ti-search"></i> Recuperar</button>
     <button class="tab"     onclick="goTab('fr',this)"><i class="ti ti-bus"></i> Frota</button>
     <button class="tab"     onclick="goTab('os',this)"><i class="ti ti-file-invoice"></i> OS</button>
     <button class="tab"     onclick="goTab('cfg',this)"><i class="ti ti-settings"></i> Config</button>
   </div>
 
+  <!-- ── PAINEL (visão geral + abrir veículo com 1 clique) ── -->
+  <div id="s-dash" class="screen on">
+    <div class="sbar">
+      <span style="font-size:12px;color:var(--tx2)" id="dash-info">—</span>
+      <button class="sbtn" onclick="sincFrota()"><i class="ti ti-refresh"></i> Atualizar</button>
+    </div>
+    <div id="dash-cards" class="ctr" style="flex-wrap:wrap"></div>
+    <div class="hbusca" style="padding-top:10px;padding-bottom:6px">
+      <div class="sw">
+        <i class="ti ti-search sic"></i>
+        <input class="inp" id="dash-busca" placeholder="Buscar por placa ou modelo..." oninput="renderDash()">
+      </div>
+    </div>
+    <div style="padding:0 16px 4px;font-size:11px;color:var(--tx3)">Toque num veículo pra abrir o checklist dele</div>
+    <div id="dash-lista"></div>
+  </div>
+
   <!-- ── NOVO CHECKLIST ── -->
-  <div id="s-cl" class="screen on">
+  <div id="s-cl" class="screen">
     <div class="card" style="border:2px solid var(--nv);background:var(--nvl)">
       <div class="lbl" style="color:var(--nv);font-size:13px;display:flex;align-items:center;gap:6px">
         <i class="ti ti-bus"></i> Selecione o veículo para iniciar o checklist
@@ -329,8 +356,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
     </div>
     <div id="clbody"><div class="empty"><i class="ti ti-bus"></i>Busque e selecione um veículo para iniciar</div></div>
     <div class="footer">
-      <button class="btp" onclick="salvar()"><i class="ti ti-device-floppy"></i> Salvar offline</button>
-      <button class="bto" id="benv" onclick="enviar()"><i class="ti ti-cloud-upload"></i> Enviar</button>
+      <button class="btp" id="benv" onclick="enviar()"><i class="ti ti-cloud-upload"></i> Salvar e enviar</button>
     </div>
   </div>
 
@@ -788,7 +814,7 @@ function init(){
   document.getElementById('cfgtabck').value = cfg.tabCk ||'Checklists';
   document.getElementById('dt').value  = new Date().toISOString().slice(0,10);
   document.getElementById('rdt').value = new Date().toISOString().slice(0,10);
-  renderFrota(); updSub(); checkOnline();
+  renderFrota(); renderDash(); updSub(); checkOnline();
   detectarUsuarioGoogle();
   carregarMotoristaFixo();
   dadosEmpresaCache = JSON.parse(localStorage.getItem('cv_empresa')||'{}');
@@ -830,6 +856,7 @@ function goTab(id,btn){
   if(id==='os') verificarSessaoOS();
   if(id==='cfg') verificarSessaoEmpresa();
   if(id==='rec') atualizarBarraAdminRec();
+  if(id==='dash') renderDash();
 }
 
 /* ── BUSCA VEÍCULO ── */
@@ -1293,7 +1320,9 @@ function abrirFoto(src){
 }
 function fecharFoto(){ document.getElementById('fmodal').classList.remove('on'); }
 
-/* ── SALVAR OFFLINE ── */
+/* ── SALVAR LOCAL (só usado como último recurso pelo enviar(), sem
+   internet ou se o envio falhar -- não existe mais botão manual pra
+   isso nem tela de reenvio dos pendentes; é só um backup no aparelho) ── */
 function salvar(){
   if(!vSel){ toast('Selecione um veículo'); return; }
   const motorista = document.getElementById('mot').value.trim();
@@ -1322,7 +1351,7 @@ async function enviar(){
   const kmVal = document.getElementById('km').value.trim();
   if(!kmVal){ toast('KM do veículo é obrigatório'); document.getElementById('km').focus(); return; }
   if(!kmValido()){ toast('KM não pode ser menor que o último registrado — verifique'); document.getElementById('km').focus(); return; }
-  if(!navigator.onLine){ salvar(); toast('Offline — salvo para envio posterior'); return; }
+  if(!navigator.onLine){ salvar(); toast('Sem internet — os dados ficaram salvos só neste aparelho. Envie de novo quando tiver conexão.'); return; }
   if(!cfg.url){ toast('Configure a URL na aba Config'); return; }
   const btn=document.getElementById('benv');
   btn.innerHTML='<span class="spin"></span>'; btn.disabled=true;
@@ -1362,10 +1391,17 @@ async function enviar(){
       }).catch(()=>{});
     }
     mostrarResumo(reg, document.getElementById('clbody'));
+    // rola até o resumo e deixa o botão marcado como concluído -- sem isso
+    // a tela ficava com a mesma cara de antes do envio (mesmo veículo, KM,
+    // botão "Enviar" de novo ativo), dando impressão de tela travada mesmo
+    // já tendo salvo. Só volta ao normal quando clicar em "Novo checklist"
+    // (novoChecklist() reabilita e troca o texto de volta).
+    document.getElementById('clbody').scrollIntoView({behavior:'smooth', block:'start'});
+    btn.innerHTML='<i class="ti ti-circle-check"></i> '+(modoEdicao?'Atualizado':'Enviado');
   }catch(e){
-    salvar(); toast('Erro de rede — salvo offline');
+    salvar(); toast('Erro de rede — os dados ficaram salvos só neste aparelho. Envie de novo quando tiver conexão.');
+    btn.innerHTML='<i class="ti ti-cloud-upload"></i> Salvar e enviar'; btn.disabled=false;
   }
-  btn.innerHTML='<i class="ti ti-cloud-upload"></i> Enviar'; btn.disabled=false;
 }
 
 /* ── RECUPERAR CHECKLIST ── */
@@ -1516,6 +1552,7 @@ async function entrarAdminRec(){
       definirUsuarioSessao(d.usuario, d.nivel);
       document.getElementById('rec-senha').value='';
       atualizarBarraAdminRec();
+      renderDash(); // mostra o botão de editar veículo na lista do Painel
       // Re-renderiza resultados com botões admin se houver busca ativa
       const data = document.getElementById('rdt').value;
       if(data) recuperarChecklist();
@@ -1689,7 +1726,7 @@ function novoChecklist(){
   document.getElementById('km-alerta').style.display='none';
   document.getElementById('btn-ultimo-cl').style.display='none';
   ultimoKmConhecido=null;
-  document.getElementById('benv').innerHTML='<i class="ti ti-cloud-upload"></i> Enviar';
+  document.getElementById('benv').innerHTML='<i class="ti ti-cloud-upload"></i> Salvar e enviar';
   document.getElementById('benv').disabled=false;
   modoEdicao=false; checklistRecuperado=null;
   // Rola para o topo
@@ -1721,7 +1758,7 @@ async function testar(){
     const d=await r.json();
     if(d.veiculos){
       frota=d.veiculos; localStorage.setItem(FK,JSON.stringify(frota));
-      renderFrota(); updSub();
+      renderFrota(); renderDash(); updSub();
       showT('ok','Conexão bem-sucedida!',d.veiculos.length+' veículo(s) carregado(s).');
     } else if(d.erro){ showT('er','Erro',d.erro);
     } else { showT('wn','Resposta inesperada','Verifique o nome da aba de veículos.'); }
@@ -1744,7 +1781,7 @@ async function sincFrota(){
   try{
     const r=await fetch(cfg.url+'?action=getVeiculos');
     const d=await r.json();
-    if(d.veiculos&&d.veiculos.length){frota=d.veiculos;localStorage.setItem(FK,JSON.stringify(frota));renderFrota();updSub();toast('✓ Frota atualizada: '+frota.length+' veículos');}
+    if(d.veiculos&&d.veiculos.length){frota=d.veiculos;localStorage.setItem(FK,JSON.stringify(frota));renderFrota();renderDash();updSub();toast('✓ Frota atualizada: '+frota.length+' veículos');}
   }catch(e){toast('Erro ao conectar — usando cache local');}
 }
 
@@ -1765,6 +1802,107 @@ function renderFrota(){
 }
 
 function updSub(){ document.getElementById('hsub').textContent=cfg.url?'Conexão ativa · '+frota.length+' veículos':'Configure o servidor para começar'; }
+
+/* ── PAINEL — visão geral da frota + abrir um veículo com 1 clique
+   pra fazer o checklist (mesma lógica de seleção usada na busca da
+   aba Novo, só que disparada a partir da lista em vez de digitar) ── */
+let dashFiltroTipo=null; // tipo selecionado ao clicar num card do Painel (null = "Total", sem filtro)
+
+function renderDash(){
+  const cards=document.getElementById('dash-cards'), info=document.getElementById('dash-info'), lista=document.getElementById('dash-lista');
+  if(!frota||!frota.length){
+    cards.innerHTML='';
+    info.textContent='Nenhum veículo cadastrado ainda';
+    lista.innerHTML='<div class="empty"><i class="ti ti-bus"></i>Nenhum veículo encontrado</div>';
+    return;
+  }
+  info.innerHTML = cfg.url && localStorage.getItem(FK)
+    ? '<span style="color:#16a34a">✓ '+frota.length+' veículos</span>'
+    : frota.length+' veículos · dados de demonstração';
+
+  const porTipo={};
+  frota.forEach(v=>{ porTipo[v.tipo]=(porTipo[v.tipo]||0)+1; });
+  if(dashFiltroTipo && !porTipo[dashFiltroTipo]) dashFiltroTipo=null; // tipo sumiu da frota (ex: sincronizou de novo) — não deixa filtro preso
+
+  const ch=[`<div class="cn dcard${dashFiltroTipo?'':' dcativo'}" data-dc-tipo=""><div class="cnn">${frota.length}</div><div class="cnl">Total</div></div>`];
+  Object.keys(porTipo).sort().forEach(tipo=>{
+    ch.push(`<div class="cn dcard${dashFiltroTipo===tipo?' dcativo':''}" data-dc-tipo="${escapeAttr(tipo)}"><div class="cnn">${porTipo[tipo]}</div><div class="cnl">${tipo}</div></div>`);
+  });
+  cards.innerHTML=ch.join('');
+  cards.querySelectorAll('[data-dc-tipo]').forEach(c=>{
+    c.addEventListener('click',()=>{ dashFiltroTipo=c.dataset.dcTipo||null; renderDash(); });
+  });
+
+  const termo=(document.getElementById('dash-busca').value||'').trim().toLowerCase();
+  let filtrados = dashFiltroTipo ? frota.filter(v=>v.tipo===dashFiltroTipo) : frota;
+  if(termo) filtrados = filtrados.filter(v=>v.placa.toLowerCase().includes(termo)||v.modelo.toLowerCase().includes(termo));
+
+  if(!filtrados.length){ lista.innerHTML='<div class="empty"><i class="ti ti-search-off"></i>Nenhum veículo encontrado'+(dashFiltroTipo?' em "'+dashFiltroTipo+'"':'')+'</div>'; return; }
+
+  const g={}; filtrados.forEach(v=>{ if(!g[v.tipo])g[v.tipo]=[]; g[v.tipo].push(v); });
+  const soUmGrupo = Object.keys(g).length===1;
+  lista.innerHTML='';
+  Object.keys(g).sort().forEach(tipo=>{
+    if(!soUmGrupo){
+      const h=document.createElement('div');
+      h.style.cssText='padding:9px 16px;background:var(--bg);border-bottom:1px solid var(--bd);font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em';
+      h.textContent=tipo+' ('+g[tipo].length+')';
+      lista.appendChild(h);
+    }
+    const podeEditar = !!(adminSenha && nivelAcesso==='admin');
+    g[tipo].forEach(v=>{
+      const d=document.createElement('div'); d.className='fi clicavel';
+      d.innerHTML=`<div class="fiic"><i class="ti ${TPI[v.tipo]||'ti-car'}"></i></div><div><div class="fipl">${v.placa}</div><div class="fisb">${v.modelo} · ${v.ano}</div></div>`
+        +(podeEditar ? `<button type="button" class="fi-btn" title="Editar veículo" data-editar-placa="${escapeAttr(v.placa)}"><i class="ti ti-edit"></i></button>` : '')
+        +`<i class="ti ti-chevron-right fiseta"></i>`;
+      d.addEventListener('click',()=>abrirChecklistVeiculo(v.placa));
+      if(podeEditar){
+        d.querySelector('[data-editar-placa]').addEventListener('click',(e)=>{
+          e.stopPropagation(); // não deixa o clique "vazar" pro clique da linha, que abriria o checklist em vez da edição
+          editarVeiculoDoPainel(v.placa);
+        });
+      }
+      lista.appendChild(d);
+    });
+  });
+}
+
+// Atalho pra quem está logado como admin: edita o veículo direto pela
+// lista do Painel, sem precisar navegar manualmente até Frota →
+// Gerenciar → Veículos. Reaproveita o mesmo formulário de lá.
+async function editarVeiculoDoPainel(placa){
+  if(!(adminSenha && nivelAcesso==='admin')){ toast('Área restrita a administradores'); return; }
+
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('s-fr').classList.add('on');
+  document.querySelector(`.tab[onclick*="goTab('fr'"]`)?.classList.add('on');
+
+  document.querySelectorAll('#s-fr > .subscreen').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('#s-fr > .subtabs .stab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('sub-fr-ger').classList.add('on');
+  document.querySelector(`#s-fr .subtabs .stab[onclick*="goSubFrota('ger'"]`)?.classList.add('on');
+  document.getElementById('admin-login').style.display='none';
+  document.getElementById('admin-painel').style.display='block';
+
+  document.querySelectorAll('#admin-painel .subscreen').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('#admin-painel > .subtabs .stab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('admin-veic').classList.add('on');
+  document.querySelector(`#admin-painel .subtabs .stab[onclick*="goAdminTab('veic'"]`)?.classList.add('on');
+
+  await carregarVeiculosAdmin(); // precisa da lista "admin" (com o número da linha) pra poder editar/salvar
+  const v = veiculosAdminCache.find(x=>x.placa===placa);
+  if(v) editarVeiculoApp(v);
+  else toast('Não achei esse veículo no cadastro — toque em Atualizar e tente de novo.');
+}
+
+function escapeAttr(t){ return String(t||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+
+function abrirChecklistVeiculo(placa){
+  novoChecklist();      // troca pra aba Novo e reseta qualquer checklist em andamento
+  selecionarV(placa);   // seleciona o veículo e já monta os itens do checklist
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 
 
 /* ════════════════ ÁREA ADMIN — Cadastro/Edição ════════════════ */
@@ -1823,6 +1961,7 @@ function verificarSessaoAdmin(){
     document.getElementById('admin-login').style.display='block';
     document.getElementById('admin-painel').style.display='none';
   }
+  renderDash(); // mostra/esconde o botão de editar veículo da lista do Painel
 }
 
 async function entrarAdmin(){
@@ -2802,16 +2941,37 @@ function renderItensAdmin(){
   itensAdminCache.forEach(it=>{ if(!porTipo[it.tipo])porTipo[it.tipo]=[]; porTipo[it.tipo].push(it); });
   Object.keys(porTipo).sort().forEach(tipo=>{
     const h=document.createElement('div'); h.className='sec'; h.textContent=tipo; list.appendChild(h);
-    porTipo[tipo].forEach(it=>{
-      const d=document.createElement('div'); d.className='fi';
-      const inativoStyle = it.ativo.toLowerCase()!=='sim' ? 'opacity:.5' : '';
-      d.style.cssText += inativoStyle;
-      d.innerHTML=`<div style="flex:1"><div class="fipl" style="font-size:13px">${it.item}${it.criarOs?' <span class="pill" style="background:#fee2e2;color:#991b1b">🚨 Gera OS</span>':''}</div><div class="fisb">${it.grupo}</div></div>
-        <div class="fi-actions">
-          <button class="fi-btn" title="Editar" onclick='editarItemApp(${JSON.stringify(it).replace(/'/g,"&apos;")})'><i class="ti ti-edit"></i></button>
-          <button class="fi-btn danger" title="Desativar" onclick="confirmarExcluirItem(${it.linha},'${it.item.replace(/'/g,"")}')"><i class="ti ti-trash"></i></button>
-        </div>`;
-      list.appendChild(d);
+
+    // dentro de cada tipo, agrupa por "grupo" (categoria) -- cada grupo
+    // vira um acordeão recuado e fechado por padrão, pra não precisar
+    // rolar uma lista enorme só pra achar e editar um item
+    const porGrupo={};
+    porTipo[tipo].forEach(it=>{ const g=it.grupo||'(sem grupo)'; if(!porGrupo[g])porGrupo[g]=[]; porGrupo[g].push(it); });
+    Object.keys(porGrupo).sort().forEach(grupo=>{
+      const itensDoGrupo = porGrupo[grupo];
+      const sec=document.createElement('div'); sec.className='man-sec';
+      const hdr=document.createElement('div'); hdr.className='man-hdr';
+      hdr.innerHTML=`<div class="man-hdr-l"><i class="ti ti-folder" style="color:var(--nv);font-size:15px"></i><span class="man-hdr-title">${grupo}</span><span class="man-hdr-badge">${itensDoGrupo.length}</span></div><i class="ti ti-chevron-down" style="color:var(--tx3);transition:transform .2s"></i>`;
+      const body=document.createElement('div'); body.className='man-body';
+      const chevron=hdr.querySelector('.ti-chevron-down');
+      hdr.addEventListener('click',()=>{
+        const aberto=body.classList.contains('on');
+        body.classList.toggle('on', !aberto);
+        chevron.style.transform=aberto?'':'rotate(180deg)';
+      });
+      itensDoGrupo.forEach(it=>{
+        const d=document.createElement('div'); d.className='fi';
+        const inativoStyle = it.ativo.toLowerCase()!=='sim' ? 'opacity:.5' : '';
+        d.style.cssText += inativoStyle;
+        d.innerHTML=`<div style="flex:1"><div class="fipl" style="font-size:13px">${it.item}${it.criarOs?' <span class="pill" style="background:#fee2e2;color:#991b1b">🚨 Gera OS</span>':''}</div></div>
+          <div class="fi-actions">
+            <button class="fi-btn" title="Editar" onclick='editarItemApp(${JSON.stringify(it).replace(/'/g,"&apos;")})'><i class="ti ti-edit"></i></button>
+            <button class="fi-btn danger" title="Desativar" onclick="confirmarExcluirItem(${it.linha},'${it.item.replace(/'/g,"")}')"><i class="ti ti-trash"></i></button>
+          </div>`;
+        body.appendChild(d);
+      });
+      sec.appendChild(hdr); sec.appendChild(body);
+      list.appendChild(sec);
     });
   });
 }
