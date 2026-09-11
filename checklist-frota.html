@@ -237,6 +237,23 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 .man-sec{background:var(--sf);border-bottom:1px solid var(--bd);padding:0}
 .man-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none}
 .man-hdr-l{display:flex;align-items:center;gap:8px}
+/* popup de Ajuda do módulo */
+.modal-ajuda-overlay{display:none;position:fixed;inset:0;background:rgba(20,30,50,.55);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-ajuda-overlay.on{display:flex}
+.modal-ajuda-caixa{background:var(--sf);border-radius:12px;width:100%;max-width:480px;height:min(640px,85vh);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.modal-ajuda-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.modal-ajuda-head .lbl{font-size:14px;font-weight:600;color:var(--nv);display:flex;align-items:center;gap:6px}
+.modal-ajuda-nav{display:flex;overflow-x:auto;gap:4px;padding:8px 10px;border-bottom:1px solid var(--bd);background:var(--bg);flex-shrink:0;white-space:nowrap}
+.modal-ajuda-nav-item{flex:none;background:none;border:none;color:var(--tx2);font-size:12px;font-weight:500;padding:8px 12px;border-radius:20px;cursor:pointer;font-family:inherit}
+.modal-ajuda-nav-item.on{background:var(--nv);color:#fff}
+.modal-ajuda-conteudo{flex:1;overflow-y:auto;padding:16px;font-size:13px;line-height:1.55;color:var(--tx)}
+.modal-ajuda-conteudo h4{margin:0 0 8px;font-size:14px;font-weight:600;color:var(--nv)}
+.modal-ajuda-conteudo p{margin:0 0 10px}
+.modal-ajuda-conteudo ul{margin:0 0 12px 18px}
+.modal-ajuda-conteudo li{margin-bottom:6px}
+.modal-ajuda-conteudo strong{color:var(--tx)}
+.modal-ajuda-conteudo .ajuda-atualizado{font-size:11px;color:var(--tx3);margin-top:16px;padding-top:10px;border-top:1px solid var(--bdl)}
+
 .man-hdr-title{font-size:13px;font-weight:600;color:var(--tx)}
 .man-hdr-badge{font-size:11px;padding:2px 8px;border-radius:10px;background:#fef9c3;color:#854d0e;border:1px solid #fde047;font-weight:500}
 .man-hdr-badge.ok{background:#dcfce7;color:#166534;border-color:#86efac}
@@ -265,6 +282,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
   <div class="hdr">
     <div><div class="hdr-t"><i class="ti ti-clipboard-check"></i> Checklist Frota</div><div class="hdr-s" id="hsub">Configure o servidor</div></div>
     <div class="hdr-r">
+      <button class="hbtn" onclick="abrirModalAjuda()" title="Ajuda"><i class="ti ti-help-circle"></i></button>
       <button class="hbtn" onclick="sincFrota()" title="Atualizar frota"><i class="ti ti-refresh"></i></button>
       <span class="bdg bon" id="sbdg">⬤ Online</span>
     </div>
@@ -277,6 +295,18 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
     <button class="tab"     onclick="goTab('fr',this)"><i class="ti ti-bus"></i> Frota</button>
     <button class="tab"     onclick="goTab('os',this)"><i class="ti ti-file-invoice"></i> OS</button>
     <button class="tab"     onclick="goTab('cfg',this)"><i class="ti ti-settings"></i> Config</button>
+  </div>
+
+  <!-- ── AJUDA DO MÓDULO ── -->
+  <div class="modal-ajuda-overlay" id="modal-ajuda-overlay">
+    <div class="modal-ajuda-caixa">
+      <div class="modal-ajuda-head">
+        <span class="lbl" id="modal-ajuda-titulo"><i class="ti ti-help-circle"></i> Ajuda</span>
+        <button class="hbtn" style="color:var(--tx2)" onclick="fecharModalAjuda()" title="Fechar"><i class="ti ti-x"></i></button>
+      </div>
+      <nav class="modal-ajuda-nav" id="ajuda-modulo-nav"></nav>
+      <div class="modal-ajuda-conteudo" id="ajuda-modulo-conteudo"></div>
+    </div>
   </div>
 
   <!-- ── PAINEL (visão geral + abrir veículo com 1 clique) ── -->
@@ -902,6 +932,143 @@ function goTab(id,btn){
   if(id==='cfg'){ verificarSessaoEmpresa(); verificarSessaoConfigServidor(); }
   if(id==='rec') atualizarBarraAdminRec();
   if(id==='dash') renderDash();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   AJUDA DO MÓDULO -- conteúdo educativo pro operador (não é
+   documentação técnica pra dev, é o "manual" de quem usa no dia a
+   dia -- motorista lançando checklist, administrador cadastrando).
+   IMPORTANTE: toda vez que uma decisão de negócio ou um comportamento
+   substancial deste módulo mudar (novo status de OS, nova trava de
+   config, nova regra de tipo de veículo etc.), a seção correspondente
+   aqui embaixo precisa ser atualizada na mesma sessão -- e o campo
+   `ultimaRevisao` também. O id de cada seção é o mesmo usado em
+   `goTab(id,...)` da aba equivalente, pra abrir contextualizado.
+   ══════════════════════════════════════════════════════════════════ */
+const AJUDA_FROTA = {
+  titulo: 'Checklist Frota',
+  ultimaRevisao: '11/09/2026',
+  secoes: [
+    { id: 'geral', titulo: 'Visão geral', corpo: `
+      <p>Registra o checklist diário de cada veículo da frota (Van, Micro Ônibus, Utilitário,
+      ou qualquer tipo novo cadastrado — Ônibus, Motos, Buggy etc.) e permite abrir Ordens de
+      Serviço quando algo precisa de manutenção.</p>
+      <ul>
+        <li>Um item marcado <strong>NOK</strong> no checklist, se estiver cadastrado pra "gerar
+        OS" (aba Frota → Gerenciar → Itens checklist), cria <strong>automaticamente</strong> uma
+        Ordem de Serviço <strong>Urgente</strong> na aba OS, já com a observação e as fotos que o
+        motorista lançou.</li>
+        <li>Diferente de outros apps da Servir, aqui <strong>não existe restrição de tela por
+        papel</strong> — qualquer pessoa vê todas as abas. Só as <strong>ações
+        administrativas</strong> (editar veículo/item, ver Gerenciar, mudar a Config do
+        servidor, lançar/ver OS) pedem a senha de administrador — a mesma sessão vale em todas
+        as telas protegidas, não precisa digitar de novo em cada uma.</li>
+      </ul>
+    ` },
+    { id: 'dash', titulo: 'Painel', corpo: `
+      <p>Visão geral da frota, pensada pra abrir um checklist rápido:</p>
+      <ul>
+        <li><strong>Cards de resumo</strong> (total + por tipo de veículo) são clicáveis —
+        tocar num card filtra a lista abaixo só pro tipo escolhido; tocar em "Total" limpa o
+        filtro.</li>
+        <li><strong>Tocar num veículo da lista já abre o checklist dele</strong> na aba Novo,
+        pronto pra marcar os itens — sem precisar digitar nada na busca.</li>
+        <li>Se você estiver logado como administrador, cada linha ganha um botão de editar o
+        cadastro do veículo direto dali (sem precisar navegar até Frota → Gerenciar).</li>
+      </ul>
+    ` },
+    { id: 'cl', titulo: 'Novo', corpo: `
+      <p>Tela principal, usada todo dia:</p>
+      <ul>
+        <li>Selecione o veículo (digitando ou vindo do Painel), informe motorista, data e o
+        <strong>KM/horímetro atual</strong> — o sistema avisa se você digitar um valor
+        <strong>menor</strong> que o último registrado, pra evitar erro de digitação.</li>
+        <li><strong>Preencher com último checklist deste veículo</strong> reaproveita os
+        mesmos itens já usados na vez anterior, pra ganhar tempo.</li>
+        <li>O bloco <strong>Manutenção &amp; Trocas</strong> (quando aparece) permite registrar
+        uma troca junto com o checklist, sem abrir outra tela.</li>
+        <li><strong>Salvar e enviar</strong> é um botão só — salva e manda pro servidor numa
+        ação. Se não tiver internet (ou o envio falhar), os dados ficam salvos só neste
+        aparelho como último recurso — não sincroniza sozinho depois, precisa enviar de novo
+        manualmente quando tiver conexão.</li>
+        <li>Depois de enviar com sucesso, a tela rola até o resumo e o botão fica marcado como
+        "Enviado" até você tocar em "Novo checklist" — evita reenvio duplicado sem querer.</li>
+      </ul>
+    ` },
+    { id: 'rec', titulo: 'Recuperar', corpo: `
+      <p>Busca checklists já enviados, por placa/modelo e/ou data — útil pra conferir o que já
+      foi lançado ou reabrir os dados de um checklist anterior pra edição.</p>
+    ` },
+    { id: 'fr', titulo: 'Frota', corpo: `
+      <p><strong>Ver frota</strong>: lista de todos os veículos cadastrados, agrupados por tipo.</p>
+      <p><strong>Gerenciar</strong> (só Administrador) tem 2 abas:</p>
+      <ul>
+        <li><strong>Veículos</strong> — cadastro (placa, modelo, ano, tipo). O campo Tipo é um
+        texto com sugestões, não uma lista fechada — dá pra digitar um tipo novo (Ônibus,
+        Motos, Buggy...) a qualquer momento, sem precisar mexer em código.</li>
+        <li><strong>Itens checklist</strong> — os itens que aparecem no checklist, organizados
+        por tipo de veículo e, dentro dele, por grupo/categoria (acordeão recuado e fechado
+        por padrão — clique no grupo pra abrir). Cada item pode ser marcado "🚨 Gera OS": se
+        marcado, um NOK nesse item cria a Ordem de Serviço automática descrita na Visão geral.
+        O botão <strong>🗐 duplicar</strong> no cabeçalho de um grupo copia os itens marcados
+        (checkbox por item, todos marcados por padrão) pra outro tipo de veículo de uma vez —
+        não duplica item que já existe no tipo de destino.</li>
+      </ul>
+    ` },
+    { id: 'os', titulo: 'OS', corpo: `
+      <p>Ordens de Serviço — área protegida (senha de administrador).</p>
+      <ul>
+        <li>Lista com busca e filtro por status: <strong>Urgente</strong>, Aberta, Em
+        andamento, Concluída, Cancelada.</li>
+        <li><strong>Nova Ordem de Serviço</strong> lança uma OS manual vinculada a um veículo —
+        não precisa vir de um checklist.</li>
+        <li>Uma OS <strong>Urgente</strong> também pode entrar sozinha aqui, criada
+        automaticamente quando um item marcado "Gera OS" é reportado NOK num checklist (ver
+        aba Frota).</li>
+        <li>Sub-aba <strong>Por Veículo</strong> agrupa o histórico de OS de cada veículo.</li>
+      </ul>
+    ` },
+    { id: 'cfg', titulo: 'Config', corpo: `
+      <ul>
+        <li><strong>URL do servidor</strong> e as abas da planilha continuam visíveis (útil
+        caso precise dividir a frota em mais de um servidor no futuro) mas ficam
+        <strong>travadas</strong> — só um Administrador consegue editar, pra evitar trocar por
+        engano. Desbloqueia com a mesma senha de admin usada no resto do app.</li>
+        <li><strong>Dados da Empresa</strong> (logo, CNPJ, endereço) — usados no PDF das Ordens
+        de Serviço; também protegido por senha de admin.</li>
+        <li><strong>Atualizar itens do checklist</strong> não pede senha — é só um refresh do
+        que já está cadastrado, não uma mudança de configuração.</li>
+      </ul>
+    ` },
+  ]
+};
+
+function renderizarAjudaModulo(secaoId){
+  const secao = AJUDA_FROTA.secoes.find(s => s.id === secaoId) || AJUDA_FROTA.secoes[0];
+  document.querySelectorAll('.modal-ajuda-nav-item').forEach(el => el.classList.toggle('on', el.dataset.secao === secao.id));
+  document.getElementById('ajuda-modulo-conteudo').innerHTML = `
+    <h4>${secao.titulo}</h4>
+    ${secao.corpo}
+    <div class="ajuda-atualizado">Última revisão deste conteúdo: ${AJUDA_FROTA.ultimaRevisao}</div>
+  `;
+}
+
+function abrirModalAjuda(){
+  const abaAtiva = document.querySelector('.tab.on')?.getAttribute('onclick')?.match(/goTab\('(\w+)'/)?.[1];
+  const secaoInicial = AJUDA_FROTA.secoes.some(s => s.id === abaAtiva) ? abaAtiva : 'geral';
+  document.getElementById('modal-ajuda-titulo').innerHTML = '<i class="ti ti-help-circle"></i> Ajuda — ' + AJUDA_FROTA.titulo;
+  document.getElementById('ajuda-modulo-nav').innerHTML = AJUDA_FROTA.secoes.map(s =>
+    `<button type="button" class="modal-ajuda-nav-item" data-secao="${s.id}">${s.titulo}</button>`
+  ).join('');
+  document.querySelectorAll('.modal-ajuda-nav-item').forEach(btn => {
+    btn.addEventListener('click', () => renderizarAjudaModulo(btn.dataset.secao));
+  });
+  renderizarAjudaModulo(secaoInicial);
+  document.getElementById('modal-ajuda-overlay').classList.add('on');
+}
+
+function fecharModalAjuda(){
+  document.getElementById('modal-ajuda-overlay').classList.remove('on');
 }
 
 /* ── BUSCA VEÍCULO ── */
