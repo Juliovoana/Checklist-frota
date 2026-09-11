@@ -1024,7 +1024,9 @@ const AJUDA_FROTA = {
         não precisa vir de um checklist.</li>
         <li>Uma OS <strong>Urgente</strong> também pode entrar sozinha aqui, criada
         automaticamente quando um item marcado "Gera OS" é reportado NOK num checklist (ver
-        aba Frota).</li>
+        aba Frota) — junto com a(s) foto(s) que o motorista tirou naquele item.</li>
+        <li>Clique numa miniatura de foto pra abrir em tela cheia, direto na página (não abre
+        aba nova do navegador) — igual em qualquer outra tela do app que mostra foto.</li>
         <li>Sub-aba <strong>Por Veículo</strong> agrupa o histórico de OS de cada veículo.</li>
       </ul>
     ` },
@@ -1241,7 +1243,7 @@ async function preencherUltimoChecklist(){
             const thumb = driveThumbUrl(link);
             const img = document.createElement('img');
             img.className='fth'; img.src=thumb; img.loading='lazy';
-            img.onclick=()=>window.open(link,'_blank');
+            img.onclick=()=>abrirFoto(driveThumbUrl(link,1200));
             img.onerror=()=>{ img.replaceWith(linkFallback(link)); };
             fp.appendChild(img);
           });
@@ -1442,7 +1444,7 @@ function buildCL(tipo, itensRecuperados){
           wrap.style.cssText='position:relative;display:inline-block;margin-right:6px';
           const img=document.createElement('img');
           img.className='fth'; img.src=driveThumbUrl(link); img.loading='lazy';
-          img.onclick=()=>window.open(link,'_blank');
+          img.onclick=()=>abrirFoto(driveThumbUrl(link,1200));
           img.onerror=()=>{ img.src=''; img.style.display='none'; };
           const btn=document.createElement('button');
           btn.innerHTML='<i class="ti ti-x"></i>';
@@ -1685,7 +1687,7 @@ function renderChecklists(checklists, body){
           const thumbUrl = driveThumbUrl(link);
           const img=document.createElement('img');
           img.className='fth'; img.src=thumbUrl; img.loading='lazy';
-          img.onclick=()=>window.open(link,'_blank');
+          img.onclick=()=>abrirFoto(driveThumbUrl(link,1200));
           img.onerror=()=>{ img.replaceWith(linkFallback(link)); };
           fotosRow.appendChild(img);
         });
@@ -1698,15 +1700,17 @@ function renderChecklists(checklists, body){
 }
 
 // Converte um link de visualização do Google Drive
-// (.../file/d/ID/view ou ?id=ID) em URL de thumbnail direta
-function driveThumbUrl(link){
+// (.../file/d/ID/view ou ?id=ID) em URL de thumbnail direta.
+// "tamanho" é a largura em px pedida ao Drive -- w300 pra miniatura na
+// lista, maior (ex: w1200) pra abrir no visualizador em tela cheia.
+function driveThumbUrl(link, tamanho){
   if(!link) return link;
   // Link do Supabase Storage — retorna direto, já é URL pública de imagem
   if(link.includes('supabase.co/storage')) return link;
   // Link do Google Drive — converte para thumbnail
   const m = link.match(/\/file\/d\/([^\/]+)/) || link.match(/[?&]id=([^&]+)/);
   const id = m ? m[1] : null;
-  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w300` : link;
+  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w${tamanho||300}` : link;
 }
 
 // Se a miniatura falhar ao carregar (ex: permissão), volta para o link de texto
@@ -2361,11 +2365,13 @@ function limparFiltrosOS(){
 
 // Miniaturas das fotos de uma OS (as mesmas fotos do item do checklist
 // quando a OS foi gerada automaticamente) -- mesmo padrão visual das
-// fotos do checklist, clique abre a foto original em nova aba
+// fotos do checklist, clique abre no visualizador embutido (fmodal),
+// igual já foi padronizado no checklist-equipamentos -- sem abrir aba
+// nova do navegador
 function htmlFotosOS(fotos){
   if(!fotos || !fotos.length) return '';
   return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-    ${fotos.map(link=>`<img class="fth" src="${driveThumbUrl(link)}" loading="lazy" onclick="event.stopPropagation();window.open('${link}','_blank')" onerror="this.style.display='none'">`).join('')}
+    ${fotos.map(link=>`<img class="fth" src="${driveThumbUrl(link)}" loading="lazy" onclick="event.stopPropagation();abrirFoto('${driveThumbUrl(link,1200)}')" onerror="this.style.display='none'">`).join('')}
   </div>`;
 }
 
