@@ -488,6 +488,11 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
           <div id="form-duplicar-grupo" style="display:none" class="card">
             <div class="lbl"><i class="ti ti-copy"></i> Duplicar grupo</div>
             <p style="font-size:12px;color:var(--tx2);margin:4px 0 10px" id="dg-descricao"></p>
+            <div id="dg-itens-lista" style="margin-bottom:8px;max-height:200px;overflow-y:auto;border:1px solid var(--bd);border-radius:var(--rs)"></div>
+            <div style="display:flex;gap:8px;margin-bottom:10px;font-size:12px">
+              <button type="button" class="sbtn" onclick="marcarTodosItensDuplicar(true)" style="border:1px solid var(--bd);border-radius:6px;padding:4px 8px">Marcar todos</button>
+              <button type="button" class="sbtn" onclick="marcarTodosItensDuplicar(false)" style="border:1px solid var(--bd);border-radius:6px;padding:4px 8px">Desmarcar todos</button>
+            </div>
             <div class="man-field" style="margin-bottom:10px">
               <label>Duplicar para o tipo</label>
               <input class="inp" id="dg-tipo-destino" list="lista-tipos-item" placeholder="Ex: Onibus">
@@ -3090,13 +3095,22 @@ let duplicarGrupoOrigem = null; // {tipo, grupo, itens}
 function abrirDuplicarGrupo(tipo, grupo, itens){
   duplicarGrupoOrigem = {tipo, grupo, itens};
   document.getElementById('dg-descricao').textContent =
-    `Grupo "${grupo}" (${itens.length} ${itens.length===1?'item':'itens'}) de "${tipo}" -- escolha pra qual outro tipo de veículo copiar.`;
+    `Grupo "${grupo}" de "${tipo}" -- marque quais itens duplicar e escolha pra qual outro tipo de veículo.`;
+  document.getElementById('dg-itens-lista').innerHTML = itens.map((it,i) => `
+    <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--bdl);cursor:pointer;font-size:13px">
+      <input type="checkbox" class="dg-item-check" data-idx="${i}" checked style="width:16px;height:16px;flex-shrink:0">
+      <span>${it.item}${it.criarOs?' <span class="pill" style="background:#fee2e2;color:#991b1b;font-size:10px">🚨</span>':''}</span>
+    </label>`).join('');
   document.getElementById('dg-tipo-destino').value='';
   const statusEl=document.getElementById('dg-status'); statusEl.style.display='none'; statusEl.textContent='';
   document.getElementById('form-item').style.display='none'; // fecha o outro form se tava aberto, evita confusão
   document.getElementById('form-duplicar-grupo').style.display='block';
   document.getElementById('form-duplicar-grupo').scrollIntoView({behavior:'smooth'});
   document.getElementById('dg-tipo-destino').focus();
+}
+
+function marcarTodosItensDuplicar(marcar){
+  document.querySelectorAll('.dg-item-check').forEach(chk=>{ chk.checked=marcar; });
 }
 
 function fecharDuplicarGrupo(){
@@ -3110,6 +3124,10 @@ async function confirmarDuplicarGrupo(){
   const statusEl = document.getElementById('dg-status');
   statusEl.style.display='block'; statusEl.style.color='var(--nk)';
 
+  const selecionados = [...document.querySelectorAll('.dg-item-check:checked')]
+    .map(chk => duplicarGrupoOrigem.itens[Number(chk.dataset.idx)]);
+
+  if(!selecionados.length){ statusEl.textContent='Marque ao menos um item pra duplicar.'; return; }
   if(!tipoDestino){ statusEl.textContent='Digite o tipo de veículo de destino.'; return; }
   if(tipoDestino===duplicarGrupoOrigem.tipo){ statusEl.textContent='Escolha um tipo diferente do original -- copiar pro mesmo tipo criaria itens repetidos.'; return; }
   if(!cfg.url){ statusEl.textContent='Configure a URL do servidor primeiro.'; return; }
@@ -3121,8 +3139,8 @@ async function confirmarDuplicarGrupo(){
   const jaExistentes = new Set(
     itensAdminCache.filter(it=>it.tipo===tipoDestino && it.grupo===duplicarGrupoOrigem.grupo).map(it=>it.item)
   );
-  const paraCopiar = duplicarGrupoOrigem.itens.filter(it=>!jaExistentes.has(it.item));
-  if(!paraCopiar.length){ statusEl.textContent=`Todos os itens desse grupo já existem em "${tipoDestino}".`; return; }
+  const paraCopiar = selecionados.filter(it=>!jaExistentes.has(it.item));
+  if(!paraCopiar.length){ statusEl.textContent=`Os itens marcados já existem em "${tipoDestino}".`; return; }
 
   const btn = document.getElementById('dg-btn-confirmar');
   btn.disabled=true;
