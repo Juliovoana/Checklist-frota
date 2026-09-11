@@ -485,6 +485,19 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
               <button class="sbtn" onclick="fecharFormItem()" style="border:1px solid var(--bd);border-radius:var(--rs);padding:0 14px">Cancelar</button>
             </div>
           </div>
+          <div id="form-duplicar-grupo" style="display:none" class="card">
+            <div class="lbl"><i class="ti ti-copy"></i> Duplicar grupo</div>
+            <p style="font-size:12px;color:var(--tx2);margin:4px 0 10px" id="dg-descricao"></p>
+            <div class="man-field" style="margin-bottom:10px">
+              <label>Duplicar para o tipo</label>
+              <input class="inp" id="dg-tipo-destino" list="lista-tipos-item" placeholder="Ex: Onibus">
+            </div>
+            <div id="dg-status" style="font-size:12px;color:var(--tx2);margin-bottom:10px;display:none"></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn-buscar" id="dg-btn-confirmar" style="flex:1;justify-content:center" onclick="confirmarDuplicarGrupo()"><i class="ti ti-copy"></i> Duplicar</button>
+              <button class="sbtn" onclick="fecharDuplicarGrupo()" style="border:1px solid var(--bd);border-radius:var(--rs);padding:0 14px">Cancelar</button>
+            </div>
+          </div>
           <div id="admin-itens-list"><div class="empty"><i class="ti ti-list-check"></i>Carregando...</div></div>
         </div>
       </div>
@@ -3034,13 +3047,21 @@ function renderItensAdmin(){
       const itensDoGrupo = porGrupo[grupo];
       const sec=document.createElement('div'); sec.className='man-sec';
       const hdr=document.createElement('div'); hdr.className='man-hdr';
-      hdr.innerHTML=`<div class="man-hdr-l"><i class="ti ti-folder" style="color:var(--nv);font-size:15px"></i><span class="man-hdr-title">${grupo}</span><span class="man-hdr-badge">${itensDoGrupo.length}</span></div><i class="ti ti-chevron-down" style="color:var(--tx3);transition:transform .2s"></i>`;
+      hdr.innerHTML=`<div class="man-hdr-l"><i class="ti ti-folder" style="color:var(--nv);font-size:15px"></i><span class="man-hdr-title">${grupo}</span><span class="man-hdr-badge">${itensDoGrupo.length}</span></div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button type="button" class="fi-btn" title="Duplicar grupo pra outro tipo de veículo" data-duplicar-grupo><i class="ti ti-copy"></i></button>
+          <i class="ti ti-chevron-down" style="color:var(--tx3);transition:transform .2s"></i>
+        </div>`;
       const body=document.createElement('div'); body.className='man-body';
       const chevron=hdr.querySelector('.ti-chevron-down');
       hdr.addEventListener('click',()=>{
         const aberto=body.classList.contains('on');
         body.classList.toggle('on', !aberto);
         chevron.style.transform=aberto?'':'rotate(180deg)';
+      });
+      hdr.querySelector('[data-duplicar-grupo]').addEventListener('click',(e)=>{
+        e.stopPropagation(); // não deixa abrir/fechar o acordeão junto
+        abrirDuplicarGrupo(tipo, grupo, itensDoGrupo);
       });
       itensDoGrupo.forEach(it=>{
         const d=document.createElement('div'); d.className='fi';
@@ -3059,6 +3080,77 @@ function renderItensAdmin(){
   });
 }
 
+/* ── DUPLICAR GRUPO -- copia todos os itens de um grupo pra outro tipo
+   de veículo de uma vez, em vez de recadastrar item por item na mão
+   (ou pedir um SQL toda vez que entra um tipo novo). Reaproveita a
+   mesma ação salvarItem já usada pelo formulário normal -- cada item
+   vira uma chamada (sem "linha"), o que já cria uma linha nova. ── */
+let duplicarGrupoOrigem = null; // {tipo, grupo, itens}
+
+function abrirDuplicarGrupo(tipo, grupo, itens){
+  duplicarGrupoOrigem = {tipo, grupo, itens};
+  document.getElementById('dg-descricao').textContent =
+    `Grupo "${grupo}" (${itens.length} ${itens.length===1?'item':'itens'}) de "${tipo}" -- escolha pra qual outro tipo de veículo copiar.`;
+  document.getElementById('dg-tipo-destino').value='';
+  const statusEl=document.getElementById('dg-status'); statusEl.style.display='none'; statusEl.textContent='';
+  document.getElementById('form-item').style.display='none'; // fecha o outro form se tava aberto, evita confusão
+  document.getElementById('form-duplicar-grupo').style.display='block';
+  document.getElementById('form-duplicar-grupo').scrollIntoView({behavior:'smooth'});
+  document.getElementById('dg-tipo-destino').focus();
+}
+
+function fecharDuplicarGrupo(){
+  document.getElementById('form-duplicar-grupo').style.display='none';
+  duplicarGrupoOrigem=null;
+}
+
+async function confirmarDuplicarGrupo(){
+  if(!duplicarGrupoOrigem) return;
+  const tipoDestino = document.getElementById('dg-tipo-destino').value.trim();
+  const statusEl = document.getElementById('dg-status');
+  statusEl.style.display='block'; statusEl.style.color='var(--nk)';
+
+  if(!tipoDestino){ statusEl.textContent='Digite o tipo de veículo de destino.'; return; }
+  if(tipoDestino===duplicarGrupoOrigem.tipo){ statusEl.textContent='Escolha um tipo diferente do original -- copiar pro mesmo tipo criaria itens repetidos.'; return; }
+  if(!cfg.url){ statusEl.textContent='Configure a URL do servidor primeiro.'; return; }
+  if(!navigator.onLine){ statusEl.textContent='Sem internet.'; return; }
+
+  // pula item que já existe com esse tipo+grupo+item de destino --
+  // idempotente, igual o SQL que já usamos antes pra duplicar
+  // Micro Onibus -> Onibus
+  const jaExistentes = new Set(
+    itensAdminCache.filter(it=>it.tipo===tipoDestino && it.grupo===duplicarGrupoOrigem.grupo).map(it=>it.item)
+  );
+  const paraCopiar = duplicarGrupoOrigem.itens.filter(it=>!jaExistentes.has(it.item));
+  if(!paraCopiar.length){ statusEl.textContent=`Todos os itens desse grupo já existem em "${tipoDestino}".`; return; }
+
+  const btn = document.getElementById('dg-btn-confirmar');
+  btn.disabled=true;
+  let copiados=0;
+  for(const it of paraCopiar){
+    btn.innerHTML = `<span class="spin"></span> Duplicando ${copiados+1}/${paraCopiar.length}...`;
+    try{
+      const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+        body: JSON.stringify({action:'salvarItem', senha:adminSenha, tipo:tipoDestino, grupo:duplicarGrupoOrigem.grupo, item:it.item, ativo:'Sim', criarOS:!!it.criarOs, usuario:usuarioGoogle})});
+      const d = await r.json();
+      if(d.ok) copiados++;
+    }catch(e){ /* segue tentando os próximos, reporta no fim quantos deram certo */ }
+  }
+  btn.disabled=false;
+  btn.innerHTML='<i class="ti ti-copy"></i> Duplicar';
+
+  if(copiados===paraCopiar.length){
+    toast(`✓ ${copiados} ${copiados===1?'item duplicado':'itens duplicados'} para "${tipoDestino}"`);
+    fecharDuplicarGrupo();
+    carregarItensAdmin();
+    localStorage.removeItem(IK);
+    carregarItens(); // atualiza os itens de checklist já pro app pegar sem precisar clicar em Atualizar
+  } else {
+    statusEl.textContent = `${copiados} de ${paraCopiar.length} itens duplicados -- algum deu erro no meio. Pode tentar de novo, os que já foram copiados não duplicam outra vez.`;
+    carregarItensAdmin();
+  }
+}
+
 function abrirFormItem(){
   editandoItemLinha=null;
   document.getElementById('fi-titulo').textContent='Novo item';
@@ -3067,6 +3159,7 @@ function abrirFormItem(){
   document.getElementById('fi-item').value='';
   document.getElementById('fi-ativo').value='Sim';
   document.getElementById('fi-criar-os').checked=false;
+  document.getElementById('form-duplicar-grupo').style.display='none'; // fecha o outro form se tava aberto
   document.getElementById('form-item').style.display='block';
 }
 
@@ -3078,6 +3171,7 @@ function editarItemApp(it){
   document.getElementById('fi-item').value=it.item;
   document.getElementById('fi-ativo').value=it.ativo;
   document.getElementById('fi-criar-os').checked=!!it.criarOs;
+  document.getElementById('form-duplicar-grupo').style.display='none'; // fecha o outro form se tava aberto
   document.getElementById('form-item').style.display='block';
   document.getElementById('form-item').scrollIntoView({behavior:'smooth'});
 }
