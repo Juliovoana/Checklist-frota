@@ -654,22 +654,33 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 
   <!-- ── CONFIG ── -->
   <div id="s-cfg" class="screen">
+    <div class="cfgs" style="border-bottom:none; padding-bottom:0">
+      <div id="cfg-servidor-bloqueio" style="display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--bg); border:1px solid var(--bd); border-radius:var(--rs); padding:10px 12px; margin-bottom:10px">
+        <span style="font-size:12px; color:var(--tx2); display:flex; align-items:center; gap:6px"><i class="ti ti-lock" style="color:var(--tx3)"></i> Conexão com o servidor — só administradores podem alterar</span>
+        <button class="sbtn" id="btn-desbloquear-cfg" onclick="desbloquearCfgServidor()" style="border:1px solid var(--bd); border-radius:6px; padding:5px 10px; white-space:nowrap; flex-shrink:0"><i class="ti ti-lock-open"></i> Desbloquear</button>
+      </div>
+      <div id="cfg-senha-inline" style="display:none; gap:8px; margin-bottom:10px">
+        <input class="inp" type="password" id="cfg-senha-admin" placeholder="Senha de administração" style="flex:1" onkeydown="if(event.key==='Enter')desbloquearCfgServidor()">
+        <button class="btn-buscar" onclick="desbloquearCfgServidor()"><i class="ti ti-login"></i> Entrar</button>
+      </div>
+      <div id="cfg-erro-senha" style="display:none;color:var(--nk);font-size:12px;margin-bottom:10px"></div>
+    </div>
     <div class="cfgs">
       <div class="lbl">URL do servidor</div>
-      <input class="inp" type="url" id="cfgurl" placeholder="https://script.google.com/macros/s/...">
-      <div class="hint">Cole aqui a URL do Worker ou do servidor</div>
+      <input class="inp" type="url" id="cfgurl" placeholder="https://script.google.com/macros/s/..." disabled>
+      <div class="hint">Cole aqui a URL do Worker ou do servidor. Importante manter visível aqui mesmo bloqueada — pode ser necessário dividir a frota em mais de um servidor no futuro.</div>
     </div>
     <div class="cfgs">
       <div class="lbl">Aba de veículos</div>
-      <input class="inp" type="text" id="cfgtab" value="Veiculos">
+      <input class="inp" type="text" id="cfgtab" value="Veiculos" disabled>
     </div>
     <div class="cfgs">
       <div class="lbl">Aba de checklists</div>
-      <input class="inp" type="text" id="cfgtabck" value="Checklists">
+      <input class="inp" type="text" id="cfgtabck" value="Checklists" disabled>
     </div>
     <div class="cfgs" style="border-bottom:none">
-      <button class="btf" onclick="salvarCfg()"><i class="ti ti-device-floppy"></i> Salvar configuração</button>
-      <button class="bte" id="btntest" onclick="testar()"><i class="ti ti-plug"></i> Testar conexão</button>
+      <button class="btf" id="btnSalvarCfg" onclick="salvarCfg()" disabled><i class="ti ti-device-floppy"></i> Salvar configuração</button>
+      <button class="bte" id="btntest" onclick="testar()" disabled><i class="ti ti-plug"></i> Testar conexão</button>
     </div>
     <div style="padding:10px 16px 0">
       <button class="bte" onclick="carregarItens()" style="margin-top:0">
@@ -830,6 +841,7 @@ function init(){
   document.getElementById('dt').value  = new Date().toISOString().slice(0,10);
   document.getElementById('rdt').value = new Date().toISOString().slice(0,10);
   renderFrota(); renderDash(); updSub(); checkOnline();
+  verificarSessaoConfigServidor();
   detectarUsuarioGoogle();
   carregarMotoristaFixo();
   dadosEmpresaCache = JSON.parse(localStorage.getItem('cv_empresa')||'{}');
@@ -869,7 +881,7 @@ function goTab(id,btn){
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
   document.getElementById('s-'+id).classList.add('on'); btn.classList.add('on');
   if(id==='os') verificarSessaoOS();
-  if(id==='cfg') verificarSessaoEmpresa();
+  if(id==='cfg'){ verificarSessaoEmpresa(); verificarSessaoConfigServidor(); }
   if(id==='rec') atualizarBarraAdminRec();
   if(id==='dash') renderDash();
 }
@@ -1568,6 +1580,7 @@ async function entrarAdminRec(){
       document.getElementById('rec-senha').value='';
       atualizarBarraAdminRec();
       renderDash(); // mostra o botão de editar veículo na lista do Painel
+      verificarSessaoConfigServidor(); // libera a URL do servidor na aba Config
       // Re-renderiza resultados com botões admin se houver busca ativa
       const data = document.getElementById('rdt').value;
       if(data) recuperarChecklist();
@@ -1750,6 +1763,57 @@ function novoChecklist(){
 }
 
 /* ── CONFIG ── */
+// A URL do servidor (e as abas) fica travada por padrão -- um operador
+// não deveria conseguir trocar isso por engano, já que aponta pra
+// planilha/worker certo dessa frota. Continua visível de propósito
+// (diferente da área "Dados da Empresa", que fica escondida): pode
+// precisar dividir a frota em mais de um servidor um dia, e nesse caso
+// é útil já ver qual está configurado antes de decidir mudar. Só
+// desbloqueia com a mesma senha de admin usada no resto do app.
+function verificarSessaoConfigServidor(){
+  const liberado = !!(adminSenha && nivelAcesso==='admin');
+  ['cfgurl','cfgtab','cfgtabck','btnSalvarCfg','btntest'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.disabled=!liberado;
+  });
+  document.getElementById('cfg-servidor-bloqueio').style.display = liberado ? 'none' : 'flex';
+  document.getElementById('cfg-senha-inline').style.display='none';
+  document.getElementById('cfg-erro-senha').style.display='none';
+}
+
+async function desbloquearCfgServidor(){
+  if(adminSenha && nivelAcesso==='admin'){ verificarSessaoConfigServidor(); return; }
+  const campoSenha = document.getElementById('cfg-senha-inline');
+  if(campoSenha.style.display==='none'){
+    campoSenha.style.display='flex';
+    document.getElementById('cfg-senha-admin').focus();
+    return;
+  }
+  const senha = document.getElementById('cfg-senha-admin').value.trim();
+  const erroEl = document.getElementById('cfg-erro-senha');
+  erroEl.style.display='none';
+  if(!senha){ erroEl.textContent='Digite a senha.'; erroEl.style.display='block'; return; }
+  if(!cfg.url){ erroEl.textContent='Não há servidor configurado ainda pra validar a senha.'; erroEl.style.display='block'; return; }
+  if(!navigator.onLine){ erroEl.textContent='Sem internet — não é possível validar a senha.'; erroEl.style.display='block'; return; }
+  try{
+    const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'validarSenhaAdmin', senha})});
+    const d = await r.json();
+    if(d.ok && d.nivel==='admin'){
+      adminSenha = senha;
+      sessionStorage.setItem(ADMIN_K, senha);
+      definirUsuarioSessao(d.usuario, d.nivel);
+      document.getElementById('cfg-senha-admin').value='';
+      verificarSessaoConfigServidor();
+      toast('✓ Configuração do servidor liberada — '+d.usuario);
+    } else if(d.ok){
+      erroEl.textContent='Esta ação exige senha de administração.'; erroEl.style.display='block';
+    } else {
+      erroEl.textContent = d.erro || 'Senha incorreta'; erroEl.style.display='block';
+    }
+  }catch(e){ erroEl.textContent='Erro de conexão'; erroEl.style.display='block'; }
+}
+
 function salvarCfg(){
   const urlDigitada = document.getElementById('cfgurl').value.trim();
   cfg={url: urlDigitada || CFG_PADRAO.url, tab:document.getElementById('cfgtab').value.trim()||'Veiculos',tabCk:document.getElementById('cfgtabck').value.trim()||'Checklists'};
@@ -1978,6 +2042,7 @@ function verificarSessaoAdmin(){
     document.getElementById('admin-painel').style.display='none';
   }
   renderDash(); // mostra/esconde o botão de editar veículo da lista do Painel
+  verificarSessaoConfigServidor(); // libera/trava a URL do servidor na aba Config
 }
 
 async function entrarAdmin(){
@@ -2564,6 +2629,7 @@ async function entrarEmpresa(){
     document.getElementById('emp-login').style.display='none';
     document.getElementById('emp-painel').style.display='block';
     carregarDadosEmpresa();
+    verificarSessaoConfigServidor();
     return;
   }
   const senha = document.getElementById('emp-senha').value.trim();
@@ -2584,6 +2650,7 @@ async function entrarEmpresa(){
       document.getElementById('emp-login').style.display='none';
       document.getElementById('emp-painel').style.display='block';
       carregarDadosEmpresa();
+      verificarSessaoConfigServidor(); // libera a URL do servidor também, é a mesma sessão de admin
       toast('✓ Acesso liberado — '+d.usuario);
     } else if(d.ok){
       erroEl.textContent = 'Esta área exige a senha de administração.';
