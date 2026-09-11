@@ -271,8 +271,8 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
   </div>
 
   <div class="tabs">
-    <button class="tab on"  onclick="goTab('dash',this)"><i class="ti ti-layout-dashboard"></i> Painel</button>
-    <button class="tab"     onclick="goTab('cl',this);if(vSel)novoChecklist()"><i class="ti ti-clipboard-list"></i> Novo</button>
+    <button class="tab on"  onclick="goTab('cl',this);if(vSel)novoChecklist()"><i class="ti ti-clipboard-list"></i> Novo</button>
+    <button class="tab"     onclick="goTab('dash',this)"><i class="ti ti-layout-dashboard"></i> Painel</button>
     <button class="tab"     onclick="goTab('rec',this)"><i class="ti ti-search"></i> Recuperar</button>
     <button class="tab"     onclick="goTab('fr',this)"><i class="ti ti-bus"></i> Frota</button>
     <button class="tab"     onclick="goTab('os',this)"><i class="ti ti-file-invoice"></i> OS</button>
@@ -280,7 +280,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
   </div>
 
   <!-- ── PAINEL (visão geral + abrir veículo com 1 clique) ── -->
-  <div id="s-dash" class="screen on">
+  <div id="s-dash" class="screen">
     <div class="sbar">
       <span style="font-size:12px;color:var(--tx2)" id="dash-info">—</span>
       <button class="sbtn" onclick="sincFrota()"><i class="ti ti-refresh"></i> Atualizar</button>
@@ -297,7 +297,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
   </div>
 
   <!-- ── NOVO CHECKLIST ── -->
-  <div id="s-cl" class="screen">
+  <div id="s-cl" class="screen on">
     <div class="card" style="border:2px solid var(--nv);background:var(--nvl)">
       <div class="lbl" style="color:var(--nv);font-size:13px;display:flex;align-items:center;gap:6px">
         <i class="ti ti-bus"></i> Selecione o veículo para iniciar o checklist
