@@ -952,7 +952,7 @@ function goTab(id,btn){
    ══════════════════════════════════════════════════════════════════ */
 const AJUDA_FROTA = {
   titulo: 'Checklist Frota',
-  ultimaRevisao: '11/09/2026',
+  ultimaRevisao: '12/09/2026',
   secoes: [
     { id: 'geral', titulo: 'Visão geral', corpo: `
       <p>Registra o checklist diário de cada veículo da frota (Van, Micro Ônibus, Utilitário,
@@ -991,11 +991,14 @@ const AJUDA_FROTA = {
         <li><strong>Preencher com último checklist deste veículo</strong> reaproveita os
         mesmos itens já usados na vez anterior, pra ganhar tempo.</li>
         <li>O bloco <strong>Manutenção &amp; Trocas</strong> (quando aparece) permite registrar
-        uma troca junto com o checklist, sem abrir outra tela.</li>
+        uma troca junto com o checklist, sem abrir outra tela — o status (em dia/vencido) agora
+        fica salvo no aparelho e continua aparecendo mesmo sem internet.</li>
         <li><strong>Salvar e enviar</strong> é um botão só — salva e manda pro servidor numa
         ação. Se não tiver internet (ou o envio falhar), os dados ficam salvos só neste
-        aparelho como último recurso — não sincroniza sozinho depois, precisa enviar de novo
-        manualmente quando tiver conexão.</li>
+        aparelho como último recurso — e o app <strong>reenvia sozinho, sem precisar fazer
+        nada</strong>, assim que detectar que a conexão voltou (mesmo que seja só ao reabrir o
+        app depois). O selo "⬤ Online"/"⬤ Offline" no topo mostra quantos checklists ainda
+        estão esperando pra sincronizar (ex: "2 pend.") e some sozinho quando termina.</li>
         <li>Depois de enviar com sucesso, a tela rola até o resumo e o botão fica marcado como
         "Enviado" até você tocar em "Novo checklist" — evita reenvio duplicado sem querer.</li>
       </ul>
