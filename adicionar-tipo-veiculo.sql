@@ -1,0 +1,17 @@
+-- ============================================================
+-- Checklist Frota — categoria do veículo (tipo_veiculo)
+-- Rode no SQL Editor do Supabase deste projeto
+-- (xgxghkksoezmgncpanpy) -- idempotente, pode rodar mais de uma vez.
+--
+-- Separa a categoria ampla do veículo (usada só pra agrupar
+-- visualmente no Painel e na lista Ver Frota -- "Ônibus e Micro
+-- Ônibus", "Vans", "Utilitários", "Buggies & Quadriciclos") do campo
+-- "tipo" já existente, que continua sendo o TIPO DE CHECKLIST (usado
+-- pra casar os itens do checklist com o veículo, ex: "Van", "Micro
+-- Onibus", texto livre). Os dois campos são independentes.
+--
+-- Veículos já cadastrados ficam com tipo_veiculo em branco (aparecem
+-- como "Sem categoria" no Painel/Frota) até alguém editar e escolher
+-- uma categoria pela tela Frota → Gerenciar → Veículos.
+-- ============================================================
+alter table veiculos add column if not exists tipo_veiculo text;

@@ -474,12 +474,24 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
               <div class="man-field"><label>Ano</label><input class="inp" id="fv-ano" placeholder="2024"></div>
             </div>
             <div class="man-field" style="margin-bottom:8px"><label>Modelo</label><input class="inp" id="fv-modelo" placeholder="Sprinter 415"></div>
-            <div class="man-grid" style="margin-bottom:10px">
+            <div class="man-grid" style="margin-bottom:8px">
               <div class="man-field">
-                <label>Tipo</label>
+                <label>Tipo (checklist)</label>
                 <input class="inp" id="fv-tipo" list="lista-tipos-veiculo" placeholder="Ex: Van, Ônibus, Motos, Buggy...">
                 <datalist id="lista-tipos-veiculo"></datalist>
               </div>
+              <div class="man-field">
+                <label>Categoria do veículo</label>
+                <select class="inp" id="fv-categoria">
+                  <option value="">-- sem categoria --</option>
+                  <option value="Ônibus e Micro Ônibus">Ônibus e Micro Ônibus</option>
+                  <option value="Vans">Vans</option>
+                  <option value="Utilitários">Utilitários</option>
+                  <option value="Buggies & Quadriciclos">Buggies &amp; Quadriciclos</option>
+                </select>
+              </div>
+            </div>
+            <div class="man-grid" style="margin-bottom:10px">
               <div class="man-field">
                 <label>Ativo</label>
                 <select class="inp" id="fv-ativo"><option value="Sim">Sim</option><option value="Não">Não</option></select>
@@ -847,6 +859,16 @@ const ITENS = {
 const TPC={'Van':'pv','Micro Onibus':'pm','Utilitario':'pu','Onibus':'pm','Ônibus':'pm','Motos':'po'};
 const TPI={'Van':'ti-bus','Micro Onibus':'ti-bus','Utilitario':'ti-truck','Onibus':'ti-bus','Ônibus':'ti-bus','Motos':'ti-motorbike'};
 
+// Categoria ampla do veículo (tipo_veiculo) -- agrupamento visual no
+// Painel e na lista Ver Frota, separado do "Tipo" (que continua sendo o
+// tipo de CHECKLIST, usado pra casar os itens com o veículo). Lista
+// fechada de propósito (ao contrário do Tipo, que é texto livre) --
+// mesmo espírito do agrupamento por tipo de equipamento do
+// checklist-equipamentos (lá: veículo/gerador/climatizador).
+const CATEGORIAS_VEICULO=['Ônibus e Micro Ônibus','Vans','Utilitários','Buggies & Quadriciclos'];
+const CVI={'Ônibus e Micro Ônibus':'ti-bus','Vans':'ti-car','Utilitários':'ti-truck','Buggies & Quadriciclos':'ti-car-suv'};
+const SEM_CATEGORIA='Sem categoria';
+
 // Lista de tipos sugeridos nos campos de cadastro (veículo/item) --
 // combina uma base fixa com os tipos que já estão em uso na frota, pra
 // sempre sugerir o que já existe. Cadastrar um tipo novo (ex: "Buggy")
@@ -863,12 +885,12 @@ function popularListasTipos(){
   if(dlItem) dlItem.innerHTML=['Todos',...todos].map(t=>`<option value="${escapeAttr(t)}">`).join('');
 }
 const DEMO=[
-  {placa:'ABC-1234',modelo:'Sprinter 415',tipo:'Van',ano:'2022'},
-  {placa:'DEF-5678',modelo:'Sprinter 515',tipo:'Van',ano:'2021'},
-  {placa:'GHI-9012',modelo:'Volare W8',tipo:'Micro Onibus',ano:'2023'},
-  {placa:'JKL-3456',modelo:'Volare A6',tipo:'Micro Onibus',ano:'2020'},
-  {placa:'MNO-7890',modelo:'Fiorino',tipo:'Utilitario',ano:'2022'},
-  {placa:'PQR-1122',modelo:'Kangoo',tipo:'Utilitario',ano:'2021'},
+  {placa:'ABC-1234',modelo:'Sprinter 415',tipo:'Van',ano:'2022',tipo_veiculo:'Vans'},
+  {placa:'DEF-5678',modelo:'Sprinter 515',tipo:'Van',ano:'2021',tipo_veiculo:'Vans'},
+  {placa:'GHI-9012',modelo:'Volare W8',tipo:'Micro Onibus',ano:'2023',tipo_veiculo:'Ônibus e Micro Ônibus'},
+  {placa:'JKL-3456',modelo:'Volare A6',tipo:'Micro Onibus',ano:'2020',tipo_veiculo:'Ônibus e Micro Ônibus'},
+  {placa:'MNO-7890',modelo:'Fiorino',tipo:'Utilitario',ano:'2022',tipo_veiculo:'Utilitários'},
+  {placa:'PQR-1122',modelo:'Kangoo',tipo:'Utilitario',ano:'2021',tipo_veiculo:'Utilitários'},
 ];
 
 const CK='cv_cfg9', FK='cv_fr9', SK='cv_ck9';
@@ -1008,12 +1030,22 @@ const AJUDA_FROTA = {
       foi lançado ou reabrir os dados de um checklist anterior pra edição.</p>
     ` },
     { id: 'fr', titulo: 'Frota', corpo: `
-      <p><strong>Ver frota</strong>: lista de todos os veículos cadastrados, agrupados por tipo.</p>
+      <p><strong>Ver frota</strong> e o <strong>Painel</strong>: veículos agrupados em dois
+      níveis — primeiro pela <strong>Categoria do veículo</strong> (Ônibus e Micro Ônibus,
+      Vans, Utilitários, Buggies &amp; Quadriciclos — quem ainda não tem categoria escolhida
+      aparece em "Sem categoria"), depois pelo <strong>Tipo</strong> dentro de cada categoria.
+      No Painel, tocar num card de Tipo filtra a lista de veículos só pra aquele grupo; tocar
+      em "Total" limpa o filtro.</p>
       <p><strong>Gerenciar</strong> (só Administrador) tem 2 abas:</p>
       <ul>
-        <li><strong>Veículos</strong> — cadastro (placa, modelo, ano, tipo). O campo Tipo é um
-        texto com sugestões, não uma lista fechada — dá pra digitar um tipo novo (Ônibus,
-        Motos, Buggy...) a qualquer momento, sem precisar mexer em código.</li>
+        <li><strong>Veículos</strong> — cadastro (placa, modelo, ano, tipo, categoria).
+        <strong>Tipo (checklist)</strong> é texto com sugestões, não uma lista fechada — dá
+        pra digitar um tipo novo (Ônibus, Motos, Buggy...) a qualquer momento, sem precisar
+        mexer em código; é ele que decide quais itens aparecem no checklist desse veículo.
+        <strong>Categoria do veículo</strong> já é uma lista fechada (as 4 categorias
+        acima) — só existe pra agrupar visualmente o Painel/Ver Frota, não afeta quais itens
+        aparecem no checklist. Um veículo sem categoria escolhida continua funcionando
+        normal, só aparece em "Sem categoria" até alguém editar e escolher uma.</li>
         <li><strong>Itens checklist</strong> — os itens que aparecem no checklist, organizados
         por tipo de veículo e, dentro dele, por grupo/categoria (acordeão recuado e fechado
         por padrão — clique no grupo pra abrir). Cada item pode ser marcado "🚨 Gera OS": se
@@ -2152,13 +2184,30 @@ function renderFrota(){
   if(!frota||!frota.length){list.innerHTML='<div class="empty"><i class="ti ti-bus"></i>Nenhum veículo encontrado</div>';return;}
   st.innerHTML='<span style="color:#16a34a">✓ '+frota.length+' veículos</span>';
   list.innerHTML='';
-  const g={};frota.forEach(v=>{if(!g[v.tipo])g[v.tipo]=[];g[v.tipo].push(v);});
-  Object.keys(g).sort().forEach(tipo=>{
-    const h=document.createElement('div');h.style.cssText='padding:9px 16px;background:var(--bg);border-bottom:1px solid var(--bd);font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em';h.textContent=tipo+' ('+g[tipo].length+')';list.appendChild(h);
-    g[tipo].forEach(v=>{
-      const d=document.createElement('div');d.className='fi';
-      d.innerHTML=`<div class="fiic"><i class="ti ${TPI[v.tipo]||'ti-car'}"></i></div><div><div class="fipl">${v.placa}</div><div class="fisb">${v.modelo} · ${v.ano}</div><span class="pill ${TPC[v.tipo]||'pu'}">${v.tipo}</span></div>`;
-      list.appendChild(d);
+  // Dois níveis: categoria do veículo (tipo_veiculo, agrupamento amplo)
+  // -> tipo (o tipo de checklist já existente, mais granular) -- mesmo
+  // padrão do checklist-equipamentos.
+  const porCategoria={};
+  frota.forEach(v=>{
+    const cat=v.tipo_veiculo||SEM_CATEGORIA;
+    if(!porCategoria[cat]) porCategoria[cat]={};
+    if(!porCategoria[cat][v.tipo]) porCategoria[cat][v.tipo]=[];
+    porCategoria[cat][v.tipo].push(v);
+  });
+  const categoriasPresentes=[...CATEGORIAS_VEICULO.filter(c=>porCategoria[c]), ...(porCategoria[SEM_CATEGORIA]?[SEM_CATEGORIA]:[])];
+  categoriasPresentes.forEach(cat=>{
+    const totalCat=Object.values(porCategoria[cat]).reduce((s,arr)=>s+arr.length,0);
+    const hCat=document.createElement('div');
+    hCat.style.cssText='padding:9px 16px;background:var(--nvl);border-bottom:1px solid var(--bd);font-size:11px;font-weight:700;color:var(--nv);text-transform:uppercase;letter-spacing:.06em';
+    hCat.innerHTML=`<i class="ti ${CVI[cat]||'ti-car'}" style="margin-right:5px"></i>${cat} (${totalCat})`;
+    list.appendChild(hCat);
+    Object.keys(porCategoria[cat]).sort().forEach(tipo=>{
+      const h=document.createElement('div');h.style.cssText='padding:9px 16px 9px 30px;background:var(--bg);border-bottom:1px solid var(--bd);font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em';h.textContent=tipo+' ('+porCategoria[cat][tipo].length+')';list.appendChild(h);
+      porCategoria[cat][tipo].forEach(v=>{
+        const d=document.createElement('div');d.className='fi';
+        d.innerHTML=`<div class="fiic"><i class="ti ${TPI[v.tipo]||'ti-car'}"></i></div><div><div class="fipl">${v.placa}</div><div class="fisb">${v.modelo} · ${v.ano}</div><span class="pill ${TPC[v.tipo]||'pu'}">${v.tipo}</span></div>`;
+        list.appendChild(d);
+      });
     });
   });
 }
@@ -2168,7 +2217,8 @@ function updSub(){ document.getElementById('hsub').textContent=cfg.url?'Conexão
 /* ── PAINEL — visão geral da frota + abrir um veículo com 1 clique
    pra fazer o checklist (mesma lógica de seleção usada na busca da
    aba Novo, só que disparada a partir da lista em vez de digitar) ── */
-let dashFiltroTipo=null; // tipo selecionado ao clicar num card do Painel (null = "Total", sem filtro)
+let dashFiltroCategoria=null; // categoria (tipo_veiculo) selecionada no Painel
+let dashFiltroTipo=null; // tipo (checklist) selecionado dentro da categoria — null+null = "Total", sem filtro
 
 function renderDash(){
   const cards=document.getElementById('dash-cards'), info=document.getElementById('dash-info'), lista=document.getElementById('dash-lista');
@@ -2182,24 +2232,45 @@ function renderDash(){
     ? '<span style="color:#16a34a">✓ '+frota.length+' veículos</span>'
     : frota.length+' veículos · dados de demonstração';
 
-  const porTipo={};
-  frota.forEach(v=>{ porTipo[v.tipo]=(porTipo[v.tipo]||0)+1; });
-  if(dashFiltroTipo && !porTipo[dashFiltroTipo]) dashFiltroTipo=null; // tipo sumiu da frota (ex: sincronizou de novo) — não deixa filtro preso
-
-  const ch=[`<div class="cn dcard${dashFiltroTipo?'':' dcativo'}" data-dc-tipo=""><div class="cnn">${frota.length}</div><div class="cnl">Total</div></div>`];
-  Object.keys(porTipo).sort().forEach(tipo=>{
-    ch.push(`<div class="cn dcard${dashFiltroTipo===tipo?' dcativo':''}" data-dc-tipo="${escapeAttr(tipo)}"><div class="cnn">${porTipo[tipo]}</div><div class="cnl">${tipo}</div></div>`);
+  // Dois níveis de card, igual o painel do checklist-equipamentos:
+  // categoria do veículo (tipo_veiculo, agrupamento amplo) por fora,
+  // tipo de checklist (mais granular, já existia) por dentro.
+  const porCategoria={};
+  frota.forEach(v=>{
+    const cat=v.tipo_veiculo||SEM_CATEGORIA;
+    if(!porCategoria[cat]) porCategoria[cat]={};
+    porCategoria[cat][v.tipo]=(porCategoria[cat][v.tipo]||0)+1;
   });
-  cards.innerHTML=ch.join('');
+  // categoria/tipo sumiu da frota (ex: sincronizou de novo) — não deixa filtro preso
+  if(dashFiltroCategoria && !porCategoria[dashFiltroCategoria]){ dashFiltroCategoria=null; dashFiltroTipo=null; }
+  if(dashFiltroTipo && (!dashFiltroCategoria || !porCategoria[dashFiltroCategoria][dashFiltroTipo])) dashFiltroTipo=null;
+
+  const categoriasPresentes=[...CATEGORIAS_VEICULO.filter(c=>porCategoria[c]), ...(porCategoria[SEM_CATEGORIA]?[SEM_CATEGORIA]:[])];
+
+  const chTotal=`<div class="cn dcard${!dashFiltroCategoria?' dcativo':''}" data-dc-cat="" data-dc-tipo=""><div class="cnn">${frota.length}</div><div class="cnl">Total</div></div>`;
+  cards.innerHTML = chTotal + categoriasPresentes.map(cat=>{
+    const tipos=Object.keys(porCategoria[cat]).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    const totalCat=Object.values(porCategoria[cat]).reduce((s,n)=>s+n,0);
+    return `<div style="width:100%">
+      <div class="sec"><i class="ti ${CVI[cat]||'ti-car'}" style="margin-right:5px"></i>${cat} <span style="color:var(--nv);font-weight:700">(${totalCat})</span></div>
+      <div class="ctr" style="flex-wrap:wrap">
+        ${tipos.map(tipo=>`<div class="cn dcard${dashFiltroCategoria===cat&&dashFiltroTipo===tipo?' dcativo':''}" data-dc-cat="${escapeAttr(cat)}" data-dc-tipo="${escapeAttr(tipo)}"><div class="cnn">${porCategoria[cat][tipo]}</div><div class="cnl">${tipo}</div></div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
   cards.querySelectorAll('[data-dc-tipo]').forEach(c=>{
-    c.addEventListener('click',()=>{ dashFiltroTipo=c.dataset.dcTipo||null; renderDash(); });
+    c.addEventListener('click',()=>{ dashFiltroCategoria=c.dataset.dcCat||null; dashFiltroTipo=c.dataset.dcTipo||null; renderDash(); });
   });
 
   const termo=(document.getElementById('dash-busca').value||'').trim().toLowerCase();
-  let filtrados = dashFiltroTipo ? frota.filter(v=>v.tipo===dashFiltroTipo) : frota;
+  let filtrados = frota;
+  if(dashFiltroCategoria) filtrados = filtrados.filter(v=>(v.tipo_veiculo||SEM_CATEGORIA)===dashFiltroCategoria);
+  if(dashFiltroTipo) filtrados = filtrados.filter(v=>v.tipo===dashFiltroTipo);
   if(termo) filtrados = filtrados.filter(v=>v.placa.toLowerCase().includes(termo)||v.modelo.toLowerCase().includes(termo));
 
-  if(!filtrados.length){ lista.innerHTML='<div class="empty"><i class="ti ti-search-off"></i>Nenhum veículo encontrado'+(dashFiltroTipo?' em "'+dashFiltroTipo+'"':'')+'</div>'; return; }
+  const filtroTxt=[dashFiltroCategoria,dashFiltroTipo].filter(Boolean).join(' · ');
+  if(!filtrados.length){ lista.innerHTML='<div class="empty"><i class="ti ti-search-off"></i>Nenhum veículo encontrado'+(filtroTxt?' em "'+filtroTxt+'"':'')+'</div>'; return; }
 
   const g={}; filtrados.forEach(v=>{ if(!g[v.tipo])g[v.tipo]=[]; g[v.tipo].push(v); });
   const soUmGrupo = Object.keys(g).length===1;
@@ -3244,7 +3315,7 @@ function renderVeiculosAdmin(){
     const inativoStyle = v.ativo.toLowerCase()!=='sim' ? 'opacity:.5' : '';
     d.style.cssText += inativoStyle;
     d.innerHTML=`<div class="fiic"><i class="ti ${TPI[v.tipo]||'ti-car'}"></i></div>
-      <div><div class="fipl">${v.placa}</div><div class="fisb">${v.modelo} · ${v.tipo} · ${v.ano}</div>
+      <div><div class="fipl">${v.placa}</div><div class="fisb">${v.modelo} · ${v.tipo} · ${v.ano}${v.tipo_veiculo?' · '+v.tipo_veiculo:''}</div>
       <span class="pill ${TPC[v.tipo]||'pu'}">${v.ativo.toLowerCase()==='sim'?'Ativo':'Inativo'}</span></div>
       <div class="fi-actions">
         <button class="fi-btn" title="Editar" onclick='editarVeiculoApp(${JSON.stringify(v).replace(/'/g,"&apos;")})'><i class="ti ti-edit"></i></button>
@@ -3260,6 +3331,7 @@ function abrirFormVeiculo(){
   document.getElementById('fv-placa').value='';
   document.getElementById('fv-modelo').value='';
   document.getElementById('fv-tipo').value='Van';
+  document.getElementById('fv-categoria').value='';
   document.getElementById('fv-ano').value='';
   document.getElementById('fv-ativo').value='Sim';
   document.getElementById('form-veiculo').style.display='block';
@@ -3271,6 +3343,7 @@ function editarVeiculoApp(v){
   document.getElementById('fv-placa').value=v.placa;
   document.getElementById('fv-modelo').value=v.modelo;
   document.getElementById('fv-tipo').value=v.tipo;
+  document.getElementById('fv-categoria').value=v.tipo_veiculo||'';
   document.getElementById('fv-ano').value=v.ano;
   document.getElementById('fv-ativo').value=v.ativo;
   document.getElementById('form-veiculo').style.display='block';
@@ -3283,11 +3356,12 @@ async function salvarVeiculoApp(){
   const placa  = document.getElementById('fv-placa').value.trim();
   const modelo = document.getElementById('fv-modelo').value.trim();
   const tipo   = document.getElementById('fv-tipo').value;
+  const tipoVeiculo = document.getElementById('fv-categoria').value || null;
   const ano    = document.getElementById('fv-ano').value.trim();
   const ativo  = document.getElementById('fv-ativo').value;
   if(!placa || !modelo){ toast('Preencha placa e modelo'); return; }
   try{
-    const payload = {action:'salvarVeiculo', senha:adminSenha, placa, modelo, tipo, ano, ativo, usuario:usuarioGoogle};
+    const payload = {action:'salvarVeiculo', senha:adminSenha, placa, modelo, tipo, tipo_veiculo:tipoVeiculo, ano, ativo, usuario:usuarioGoogle};
     if(editandoVeiculoLinha) payload.linha = editandoVeiculoLinha;
     const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload)});
     const d = await r.json();
