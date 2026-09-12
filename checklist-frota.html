@@ -1036,6 +1036,13 @@ const AJUDA_FROTA = {
         <li>Clique numa miniatura de foto pra abrir em tela cheia, direto na página (não abre
         aba nova do navegador) — igual em qualquer outra tela do app que mostra foto.</li>
         <li>Sub-aba <strong>Por Veículo</strong> agrupa o histórico de OS de cada veículo.</li>
+        <li>Ao salvar uma OS (nova ou editada), o app já abre o compartilhamento
+        automaticamente. Todo PDF de OS gerado — visualizar, baixar ou compartilhar —
+        <strong>já sai com o link de aprovação embutido</strong> (caixa azul clara, clicável),
+        pra garantir que ele sempre chegue a quem for aprovar/reprovar, mesmo que o aplicativo
+        usado pra enviar (WhatsApp, por exemplo) não preserve o texto da legenda ao
+        compartilhar um arquivo — problema comum que fazia o link "sumir" ao compartilhar pelo
+        celular.</li>
       </ul>
     ` },
     { id: 'cfg', titulo: 'Config', corpo: `
@@ -2809,7 +2816,38 @@ async function gerarPdfOS(os, modo){
 
   if(os.observacao) linha('Observação', os.observacao);
 
-  y += 6;
+  // ── Link de aprovação embutido no próprio PDF ──────────────────
+  // Antes esse link só ia no texto da legenda do compartilhamento
+  // (modo "share"). Problema: quando se compartilha um ARQUIVO junto
+  // com texto pelo navigator.share, muitos apps de destino no celular
+  // (o WhatsApp é o mais comum) simplesmente ignoram/descartam o texto
+  // da legenda e só entregam o arquivo -- é assim que o link "sumia"
+  // ao compartilhar pelo celular, mesmo o código gerando ele direitinho.
+  // Solução: o link também fica escrito e clicável dentro do PDF, que
+  // sempre chega junto (não depende do app de destino preservar
+  // legenda nenhuma). Gerado em qualquer modo (ver/baixar/compartilhar)
+  // -- gerarTokenAprovacao() reaproveita token pendente já existente da
+  // mesma OS, então não cria token duplicado nem faz sentido esperar só
+  // pelo modo "share". Sem internet (ou se a chamada falhar), retorna
+  // null e o PDF sai igual, só sem essa caixa.
+  const tokenApr = await gerarTokenAprovacao(os.linha);
+  const linkAprovacao = tokenApr
+    ? 'https://www.servirfacil.com.br/aprovacao-os.html?token='+tokenApr
+    : '';
+
+  if(linkAprovacao){
+    y += 4;
+    doc.setFillColor(232,244,255);
+    doc.setDrawColor(...azul);
+    doc.roundedRect(14, y-5.5, 182, 12.5, 1.5, 1.5, 'FD');
+    doc.setTextColor(...azul); doc.setFontSize(9); doc.setFont(undefined,'bold');
+    doc.text('>> TOQUE AQUI PARA APROVAR OU REPROVAR ESTA OS:', 18, y);
+    doc.setFontSize(9); doc.setFont(undefined,'normal');
+    doc.textWithLink(linkAprovacao, 18, y+4.8, {url:linkAprovacao});
+    y += 13;
+  }
+
+  y += 2;
   doc.setDrawColor(220,220,220);
   doc.line(14, y, 90, y);
   doc.line(120, y, 196, y);
@@ -2824,11 +2862,11 @@ async function gerarPdfOS(os, modo){
   const nomeArquivo = 'OS_'+os.numero+'_'+os.veiculo.replace(/[^a-zA-Z0-9]/g,'')+(os.modelo?'_'+os.modelo.replace(/[^a-zA-Z0-9]/g,''):'')+'.pdf';
 
   if(modo==='share'){
-    // Gera token e monta o texto antes de qualquer coisa
-    const tokenApr = await gerarTokenAprovacao(os.linha);
-    const linkApr = tokenApr
-      ? '\n\n👆 *TOQUE AQUI PARA APROVAR OU REPROVAR:*\n'
-        +'https://www.servirfacil.com.br/aprovacao-os.html?token='+tokenApr
+    // O link já foi gerado acima (e já está no PDF) -- só reaproveita
+    // pra também deixar na legenda do WhatsApp, que ainda ajuda quando
+    // o app de destino preserva o texto (nem todos descartam).
+    const linkApr = linkAprovacao
+      ? '\n\n👆 *TOQUE AQUI PARA APROVAR OU REPROVAR:*\n'+linkAprovacao
       : '';
     const valorFmt = os.valor
       ? 'R$ '+Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
