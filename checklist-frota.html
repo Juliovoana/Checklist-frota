@@ -1539,9 +1539,11 @@ function abrirFoto(src){
 }
 function fecharFoto(){ document.getElementById('fmodal').classList.remove('on'); }
 
-/* ── SALVAR LOCAL (só usado como último recurso pelo enviar(), sem
-   internet ou se o envio falhar -- não existe mais botão manual pra
-   isso nem tela de reenvio dos pendentes; é só um backup no aparelho) ── */
+/* ── SALVAR LOCAL (usado como último recurso pelo enviar(), sem
+   internet ou se o envio falhar -- não tem botão manual pra isso nem
+   tela de lista de pendentes; fica guardado em localStorage e é
+   reenviado sozinho por sincronizarPendentes() assim que a internet
+   voltar, ver mais abaixo) ── */
 function salvar(){
   if(!vSel){ toast('Selecione um veículo'); return; }
   const motorista = document.getElementById('mot').value.trim();
@@ -1550,7 +1552,12 @@ function salvar(){
   if(!kmVal){ toast('KM do veículo é obrigatório'); document.getElementById('km').focus(); return; }
   if(!kmValido()){ toast('KM não pode ser menor que o último registrado — verifique'); document.getElementById('km').focus(); return; }
   const saves=JSON.parse(localStorage.getItem(SK)||'[]');
-  const reg={id:Date.now(),placa:vSel.placa,modelo:vSel.modelo,tipo:vSel.tipo,
+  const agora=Date.now();
+  const reg={id:agora,
+    action: modoEdicao ? 'editarChecklist' : 'gravarChecklist',
+    checklistId: checklistRecuperado ? checklistRecuperado.id : agora,
+    abaChecklists: cfg.tabCk||'Checklists',
+    placa:vSel.placa,modelo:vSel.modelo,tipo:vSel.tipo,
     motorista:motorista,
     usuario:usuarioGoogle||'',
     km:kmVal,
@@ -1558,8 +1565,79 @@ function salvar(){
     hora:new Date().toTimeString().slice(0,5),
     itens:JSON.parse(JSON.stringify(est)), manutencao:getPayloadManutencao(), sincronizado:false};
   saves.push(reg); localStorage.setItem(SK,JSON.stringify(saves));
-  toast('✓ Salvo offline — '+saves.filter(x=>!x.sincronizado).length+' pendente(s)');
+  toast('✓ Salvo offline — '+saves.filter(x=>!x.sincronizado).length+' pendente(s). Envia sozinho quando a internet voltar.');
   mostrarResumo(reg, document.getElementById('clbody'));
+  atualizarBadgeConexao();
+}
+
+/* ── REENVIO AUTOMÁTICO DOS PENDENTES ──────────────────────
+   Roda sozinho (chamado por checkOnline(), que já é disparado no
+   init() e nos eventos 'online'/'offline') sempre que detecta que
+   voltou a internet e existe algo em SK ainda não sincronizado.
+   Usa mode:'no-cors' igual o envio ao vivo já usava -- não dá pra
+   ler o status da resposta, então "enviado" aqui significa "não deu
+   erro de rede", mesma limitação que o app já tinha antes. ── */
+let syncPendentesEmAndamento=false;
+
+function contarPendentes(){
+  return JSON.parse(localStorage.getItem(SK)||'[]').filter(x=>!x.sincronizado).length;
+}
+
+function atualizarBadgeConexao(){
+  const b=document.getElementById('sbdg');
+  if(!b) return;
+  const pend=contarPendentes();
+  b.textContent=(navigator.onLine?'⬤ Online':'⬤ Offline')+(pend?' · '+pend+' pend.':'');
+  b.className='bdg '+(navigator.onLine?'bon':'bof');
+}
+
+function montarPayloadEnvio(reg){
+  return {
+    action: reg.action || 'gravarChecklist',
+    id: reg.checklistId!=null ? reg.checklistId : reg.id,
+    placa: reg.placa, modelo: reg.modelo, tipo: reg.tipo,
+    motorista: reg.motorista,
+    usuario: reg.usuario||'',
+    km: reg.km||'',
+    data: reg.data,
+    hora: reg.hora,
+    abaChecklists: reg.abaChecklists||cfg.tabCk||'Checklists',
+    manutencao: reg.manutencao||[],
+    itens: Object.values(reg.itens||{}).map(it=>({
+      linha:      it.linha||null,
+      nome:       it.nome,
+      status:     it.status||'pendente',
+      obs:        it.obs||'',
+      fotoBase64: it.fotoBase64||[],
+      fotos:      it.fotos||[]
+    }))
+  };
+}
+
+async function sincronizarPendentes(){
+  if(syncPendentesEmAndamento || !navigator.onLine || !cfg.url) return;
+  const saves=JSON.parse(localStorage.getItem(SK)||'[]');
+  const pendentes=saves.filter(x=>!x.sincronizado);
+  if(!pendentes.length) return;
+  syncPendentesEmAndamento=true;
+  let enviados=0;
+  for(const reg of pendentes){
+    if(!navigator.onLine) break; // caiu de novo no meio do lote -- para e tenta na próxima
+    try{
+      const payload=montarPayloadEnvio(reg);
+      await fetch(cfg.url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(payload)});
+      reg.sincronizado=true;
+      enviados++;
+      if(payload.manutencao && payload.manutencao.length){
+        fetch(cfg.url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
+          body:JSON.stringify({action:'gravarManutencao',placa:reg.placa,manutencao:payload.manutencao})}).catch(()=>{});
+      }
+    }catch(e){ break; }
+  }
+  localStorage.setItem(SK,JSON.stringify(saves));
+  syncPendentesEmAndamento=false;
+  if(enviados) toast('✓ '+enviados+' checklist'+(enviados>1?'s':'')+' pendente'+(enviados>1?'s':'')+' enviado'+(enviados>1?'s':'')+' automaticamente');
+  atualizarBadgeConexao();
 }
 
 /* ── ENVIAR CHECKLIST ── */
@@ -3418,13 +3496,13 @@ function toast(msg){
 }
 
 function checkOnline(){
-  const b=document.getElementById('sbdg');
-  b.textContent=navigator.onLine?'⬤ Online':'⬤ Offline';
-  b.className='bdg '+(navigator.onLine?'bon':'bof');
+  atualizarBadgeConexao();
+  if(navigator.onLine) sincronizarPendentes();
 }
 
 /* ── MANUTENÇÃO ─────────────────────────────────────────── */
 const MK = 'cv_man10'; // v10 — cache por tipo de veículo // cache tipos de manutenção
+const HK = 'cv_manhist10'; // cache do histórico (última/próxima troca) por placa
 let tiposMan = JSON.parse(localStorage.getItem(MK) || '[]');
 let manEstado = {}; // { tipo: { dataUlt, kmUlt, dataProx, kmProx, obs } }
 
@@ -3467,7 +3545,12 @@ async function carregarTiposManutencao(tipoVeiculo) {
 
 async function carregarHistoricoManutencao(placa) {
   manEstado = {};
-  if (!cfg.url || !navigator.onLine) { renderManItens(placa); return; }
+  const chaveHist = HK + '_' + placa;
+  if (!cfg.url || !navigator.onLine) {
+    manEstado = JSON.parse(localStorage.getItem(chaveHist) || '{}');
+    renderManItens(placa);
+    return;
+  }
   try {
     const r = await fetch(cfg.url + '?action=getHistoricoMan&placa=' + encodeURIComponent(placa));
     const d = await r.json();
@@ -3482,8 +3565,15 @@ async function carregarHistoricoManutencao(placa) {
           linha:    h.linha    || null
         };
       });
+      localStorage.setItem(chaveHist, JSON.stringify(manEstado));
+    } else {
+      // Sem histórico retornado (placa nova, aba vazia etc.) -- mantém
+      // o que já tinha em cache em vez de zerar a tela toda
+      manEstado = JSON.parse(localStorage.getItem(chaveHist) || '{}');
     }
-  } catch(e) { /* segue sem histórico */ }
+  } catch(e) {
+    manEstado = JSON.parse(localStorage.getItem(chaveHist) || '{}');
+  }
   renderManItens(placa);
 }
 
