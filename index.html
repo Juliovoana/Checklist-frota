@@ -3337,10 +3337,14 @@ async function salvarOSApp(){
     if(d.ok){
       toast(d.acao==='criado' ? '✓ OS Nº '+d.numero+' criada' : '✓ OS atualizada');
       fecharFormOS();
-      // Recarrega a lista e abre o PDF automaticamente para visualização
       await carregarOS();
+      // Gerar e compartilhar o PDF agora é opcional -- pergunta antes em
+      // vez de disparar automaticamente o compartilhamento (arquivo +
+      // texto) toda vez que uma OS é salva.
       const osGerada = osCache.find(o=> String(o.numero)===String(d.numero));
-      if(osGerada) gerarPdfOS(osGerada, 'share');
+      if(osGerada && confirm('OS salva. Deseja gerar e compartilhar o PDF agora?')){
+        gerarPdfOS(osGerada, 'share');
+      }
     } else { toast(d.erro || 'Erro ao salvar'); }
   }catch(e){ toast('Erro de conexão'); }
 }
