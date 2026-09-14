@@ -614,17 +614,29 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 
         <div class="man-field" style="margin-bottom:8px;padding:10px 12px;border:2px solid var(--nv);border-radius:var(--rs);background:var(--nvl)">
           <label style="color:var(--nv);font-weight:700;font-size:12px;display:flex;align-items:center;gap:5px"><i class="ti ti-bus"></i> Selecione o veículo</label>
-          <div class="sw" style="margin-top:6px">
-            <i class="ti ti-search sic" style="color:var(--nv)"></i>
-            <input class="inp" id="fos-busca" placeholder="Digite placa ou modelo..." autocomplete="off"
-              style="background:var(--sf);font-weight:500"
-              oninput="filtrarOS()" onfocus="abrirDDOS()" onblur="setTimeout(fecharDDOS,200)">
-            <div class="dd" id="ddos"></div>
+
+          <label style="margin-top:8px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);cursor:pointer">
+            <input type="checkbox" id="fos-sem-veiculo" onchange="toggleOsSemVeiculo(this.checked)" style="width:15px;height:15px">
+            OS sem veículo específico <span style="color:var(--tx3)">(ex: dedetização, manutenção da garagem)</span>
+          </label>
+
+          <div id="fos-bloco-veiculo">
+            <div class="sw" style="margin-top:6px">
+              <i class="ti ti-search sic" style="color:var(--nv)"></i>
+              <input class="inp" id="fos-busca" placeholder="Digite placa ou modelo..." autocomplete="off"
+                style="background:var(--sf);font-weight:500"
+                oninput="filtrarOS()" onfocus="abrirDDOS()" onblur="setTimeout(fecharDDOS,200)">
+              <div class="dd" id="ddos"></div>
+            </div>
+            <div class="vc" id="fos-vc" style="margin-top:8px">
+              <div class="vcic" id="fos-vcic"><i class="ti ti-bus"></i></div>
+              <div style="flex:1"><div class="vcn" id="fos-vcn"></div><div class="vcs" id="fos-vcs"></div><span class="pill" id="fos-vcp"></span></div>
+              <button class="vccl" onclick="limparVeiculoOS()"><i class="ti ti-x"></i></button>
+            </div>
           </div>
-          <div class="vc" id="fos-vc" style="margin-top:8px">
-            <div class="vcic" id="fos-vcic"><i class="ti ti-bus"></i></div>
-            <div style="flex:1"><div class="vcn" id="fos-vcn"></div><div class="vcs" id="fos-vcs"></div><span class="pill" id="fos-vcp"></span></div>
-            <button class="vccl" onclick="limparVeiculoOS()"><i class="ti ti-x"></i></button>
+
+          <div id="fos-bloco-geral" style="display:none;margin-top:6px">
+            <input class="inp" id="fos-desc-geral" placeholder="Ex: Garagem, pátio, toda a frota..." style="background:var(--sf)">
           </div>
         </div>
 
@@ -974,7 +986,7 @@ function goTab(id,btn){
    ══════════════════════════════════════════════════════════════════ */
 const AJUDA_FROTA = {
   titulo: 'Checklist Frota',
-  ultimaRevisao: '12/09/2026',
+  ultimaRevisao: '14/09/2026',
   secoes: [
     { id: 'geral', titulo: 'Visão geral', corpo: `
       <p>Registra o checklist diário de cada veículo da frota (Van, Micro Ônibus, Utilitário,
@@ -1062,6 +1074,10 @@ const AJUDA_FROTA = {
         andamento, Concluída, Cancelada.</li>
         <li><strong>Nova Ordem de Serviço</strong> lança uma OS manual vinculada a um veículo —
         não precisa vir de um checklist.</li>
+        <li>Marcando <strong>"OS sem veículo específico"</strong> no formulário, a busca de
+        veículo vira um campo de descrição livre — use pra serviços que não são de um veículo
+        só, tipo dedetização ou manutenção da garagem/pátio. Essas OS não aparecem no histórico
+        "Por Veículo" de nenhum veículo (já que não pertencem a um).</li>
         <li>Uma OS <strong>Urgente</strong> também pode entrar sozinha aqui, criada
         automaticamente quando um item marcado "Gera OS" é reportado NOK num checklist (ver
         aba Frota) — junto com a(s) foto(s) que o motorista tirou naquele item.</li>
@@ -2442,6 +2458,12 @@ function sairAdmin(){
 
 /* ════════════════ ORDENS DE SERVIÇO ════════════════ */
 let osCache = [];
+// Sentinel gravado em os.veiculo quando a OS não está ligada a um veículo
+// específico (ex: dedetização, manutenção da garagem) — a descrição livre
+// digitada pelo usuário fica em os.modelo, reaproveitando a coluna já
+// existente em vez de criar uma nova.
+const OS_SEM_VEICULO = 'Geral / Sem veículo';
+let osSemVeiculo = false;
 let editandoOSLinha = null;
 let editandoOSNumero = null;
 
@@ -2532,6 +2554,14 @@ function limparFiltrosOS(){
 // fotos do checklist, clique abre no visualizador embutido (fmodal),
 // igual já foi padronizado no checklist-equipamentos -- sem abrir aba
 // nova do navegador
+// Texto de exibição do "veículo" de uma OS — trata o caso sem veículo
+// específico (dedetização, manutenção da garagem etc.), onde a descrição
+// livre digitada pelo usuário fica salva em os.modelo.
+function textoVeiculoOS(os){
+  if(os.veiculo === OS_SEM_VEICULO) return OS_SEM_VEICULO+(os.modelo?' — '+os.modelo:'');
+  return os.veiculo+(os.modelo?' — '+os.modelo:'');
+}
+
 function htmlFotosOS(fotos){
   if(!fotos || !fotos.length) return '';
   return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
@@ -2572,7 +2602,7 @@ function renderOS(){
         <div>
           <span class="os-num">OS Nº ${os.numero}</span>
           <span class="os-data"> · ${os.data}</span>
-          <div class="os-veic">${os.veiculo}${os.modelo?' — '+os.modelo:''}</div>
+          <div class="os-veic">${textoVeiculoOS(os)}</div>
         </div>
 <select class="os-status-sel ${STATUS_CLASS[os.status]||'os-aberta'}"
           onchange="atualizarStatusOS(${os.linha},this.value,this)"
@@ -2826,7 +2856,7 @@ async function gerarPdfOS(os, modo){
   }
 
   duasColunas('Data', os.data, 'Status', os.status);
-  duasColunas('Veículo', os.veiculo+(os.modelo?' — '+os.modelo:''), 'KM', os.km?Number(os.km).toLocaleString('pt-BR')+' km':'—');
+  duasColunas(os.veiculo===OS_SEM_VEICULO?'Local / Ambiente':'Veículo', textoVeiculoOS(os), 'KM', os.km?Number(os.km).toLocaleString('pt-BR')+' km':'—');
   duasColunas('Fornecedor', os.fornecedor, 'Responsável', os.responsavel);
 
   doc.setDrawColor(220,220,220);
@@ -2943,7 +2973,7 @@ async function gerarPdfOS(os, modo){
       ? 'R$ '+Number(os.valor).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
     const textoWpp = '🔧 *ORDEM DE SERVIÇO Nº '+os.numero+'*'
       +'\n━━━━━━━━━━━━━━━━━━━━'
-      +'\n🚗 *Veículo:* '+os.veiculo+(os.modelo?' — '+os.modelo:'')
+      +(os.veiculo===OS_SEM_VEICULO?'\n📍 *Local:* '+textoVeiculoOS(os):'\n🚗 *Veículo:* '+textoVeiculoOS(os))
       +(os.km?'\n📍 *KM:* '+Number(os.km).toLocaleString('pt-BR')+' km':'')
       +'\n🔩 *Serviço:* '+os.servico
       +(os.fornecedor?'\n🏪 *Fornecedor:* '+os.fornecedor:'')
@@ -3107,9 +3137,22 @@ async function salvarDadosEmpresaApp(){
 
 let veiculoSelOS = null;
 
+// Alterna entre o bloco de busca de veículo e o bloco de descrição livre
+// (OS sem veículo específico). Chamada tanto pelo checkbox quanto por
+// abrirFormOS/editarOSApp pra sincronizar a UI com o estado da OS.
+function toggleOsSemVeiculo(marcado){
+  osSemVeiculo = marcado;
+  document.getElementById('fos-sem-veiculo').checked = marcado;
+  document.getElementById('fos-bloco-veiculo').style.display = marcado ? 'none' : '';
+  document.getElementById('fos-bloco-geral').style.display = marcado ? 'block' : 'none';
+  if(marcado) limparVeiculoOS();
+  else document.getElementById('fos-desc-geral').value='';
+}
+
 function abrirFormOS(){
   editandoOSLinha=null; editandoOSNumero=null;
   document.getElementById('fos-titulo').textContent='Nova OS';
+  toggleOsSemVeiculo(false);
   limparVeiculoOS();
   document.getElementById('fos-data').value=new Date().toISOString().slice(0,10);
   document.getElementById('fos-km').value='';
@@ -3212,13 +3255,19 @@ function editarOSApp(os){
   editandoOSLinha = os.linha;
   editandoOSNumero = os.numero;
   document.getElementById('fos-titulo').textContent='Editar OS Nº '+os.numero;
-  const v = frota.find(x=>x.placa===os.veiculo);
-  if(v) selecionarVeiculoOS(v.placa);
-  else {
-    // Veículo pode ter sido desativado depois — mantém placa e modelo salvos na própria OS
-    document.getElementById('fos-busca').value = os.veiculo+(os.modelo?' — '+os.modelo:'');
-    veiculoSelOS = {placa: os.veiculo, modelo: os.modelo||'', tipo:'', ano:''};
-    document.getElementById('fos-vc').className='vc';
+  if(os.veiculo === OS_SEM_VEICULO){
+    toggleOsSemVeiculo(true);
+    document.getElementById('fos-desc-geral').value = os.modelo || '';
+  } else {
+    toggleOsSemVeiculo(false);
+    const v = frota.find(x=>x.placa===os.veiculo);
+    if(v) selecionarVeiculoOS(v.placa);
+    else {
+      // Veículo pode ter sido desativado depois — mantém placa e modelo salvos na própria OS
+      document.getElementById('fos-busca').value = os.veiculo+(os.modelo?' — '+os.modelo:'');
+      veiculoSelOS = {placa: os.veiculo, modelo: os.modelo||'', tipo:'', ano:''};
+      document.getElementById('fos-vc').className='vc';
+    }
   }
   // Converte data dd/MM/yyyy -> yyyy-MM-dd para o input date
   const m = String(os.data).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
@@ -3247,10 +3296,17 @@ function editarOSApp(os){
 function fecharFormOS(){ document.getElementById('form-os').style.display='none'; }
 
 async function salvarOSApp(){
-  const veiculo     = veiculoSelOS ? veiculoSelOS.placa : '';
   const dataInput   = document.getElementById('fos-data').value;
   const servico     = document.getElementById('fos-servico').value.trim();
-  if(!veiculo){ toast('Selecione o veículo'); return; }
+  let veiculo, modelo;
+  if(osSemVeiculo){
+    veiculo = OS_SEM_VEICULO;
+    modelo  = document.getElementById('fos-desc-geral').value.trim();
+  } else {
+    veiculo = veiculoSelOS ? veiculoSelOS.placa : '';
+    modelo  = veiculoSelOS ? (veiculoSelOS.modelo||'') : '';
+    if(!veiculo){ toast('Selecione o veículo'); return; }
+  }
   if(!servico){ toast('Informe o serviço'); return; }
 
   // Converte yyyy-MM-dd -> dd/MM/yyyy para gravar no padrão da planilha
@@ -3263,7 +3319,7 @@ async function salvarOSApp(){
 
   const payload = {
     action:'salvarOS', senha:adminSenha, usuario:usuarioGoogle,
-    veiculo, modelo: veiculoSelOS ? (veiculoSelOS.modelo||'') : '', data:dataFmt,
+    veiculo, modelo, data:dataFmt,
     km:document.getElementById('fos-km').value.trim(),
     fornecedor:document.getElementById('fos-fornecedor').value.trim(),
     servico,
