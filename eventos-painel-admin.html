@@ -194,6 +194,10 @@
   .status-tag.cancelada::before{ background:var(--danger); }
 
   .vazio{ text-align:center; padding:48px 20px; color:var(--muted); font-size:.88rem; }
+  .usuario-papel-row{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:16px; margin-bottom:10px; }
+  .usuario-papel-row .email{ flex:1; min-width:0; font-weight:600; font-size:.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .usuario-papel-row select{ padding:8px 11px; border-radius:8px; border:1.5px solid var(--border); font-size:.82rem; background:var(--surface); color:var(--ink); }
+  .tag-principal{ font-size:.68rem; font-weight:700; color:var(--brand-2); background:var(--brand-soft); padding:3px 9px; border-radius:10px; white-space:nowrap; }
 
   .drawer-overlay{ position:fixed; inset:0; background:rgba(23,30,26,.45); z-index:60; display:none; align-items:stretch; justify-content:flex-end; }
   .drawer-overlay.show{ display:flex; }
@@ -458,6 +462,10 @@
         <button class="nav-item tab-app-btn" data-app-tab="cadastro">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
           <span class="nav-label">Cadastro</span>
+        </button>
+        <button class="nav-item tab-app-btn" data-app-tab="permissoes" id="tabPermissoesEventos" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span class="nav-label">Permissões</span>
         </button>
         <div class="sidebar-spacer"></div>
         <button class="btn-sair" id="btnConvidarColaborador" style="display:none; margin-bottom:8px;">
@@ -755,6 +763,7 @@
                 <div class="filtros-notas" style="justify-content:space-between;">
                   <strong style="font-size:1rem;">Setores</strong>
                   <button class="btn-novo" id="btnNovoSetor">+ Novo setor</button>
+                  <p id="avisoSemPermissaoSetor" style="display:none; font-size:.76rem; color:var(--muted); margin:0;">🔒 Sem permissão pra cadastrar/editar setores.</p>
                 </div>
                 <div class="lista-cadastro" id="listaSetores"></div>
               </div>
@@ -812,6 +821,17 @@
               </div>
               <div class="lista-cadastro" id="listaClientesEntidades"></div>
             </div>
+          </div>
+
+          <!-- ================= PERMISSÕES ================= -->
+          <div class="panel-app" id="app-panel-permissoes">
+            <p style="font-size:.85rem; color:var(--muted); margin-bottom:18px; max-width:560px;">
+              Defina o papel de cada pessoa vinculada à unidade dentro do módulo Eventos. Quem é principal da
+              unidade já tem acesso total por padrão, mesmo sem aparecer selecionado aqui. Quem ainda não tem
+              papel definido também tem acesso total, pra não travar ninguém que já usava o sistema antes desta
+              tela existir — as restrições só valem depois de escolher um papel pra pessoa.
+            </p>
+            <div id="listaUsuariosPapeisEventos"></div>
           </div>
         </main>
       </div>
@@ -955,6 +975,23 @@
       </div>
       <div class="drawer-actions">
         <button class="btn-acao btn-salvar" id="btnSalvarClienteRapido" style="width:100%;">Salvar cliente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= POPUP: CADASTRO RÁPIDO DE CATÁLOGO (Setor, Plano de Contas, Tipo de Evento, Andamento) ================= -->
+  <div class="modal-lista-overlay" id="modalCadastroRapidoCatalogoOverlay" style="z-index:95;">
+    <div class="modal-lista" style="max-width:440px;">
+      <div class="modal-lista-head">
+        <h3 id="crc_titulo">Novo</h3>
+        <button class="drawer-close" id="btnFecharModalCadastroRapidoCatalogo">✕</button>
+      </div>
+      <div class="modal-lista-body" style="padding:20px;">
+        <div id="crc_campos"></div>
+        <p id="crc_status" style="font-size:.82rem; color:var(--danger); margin-top:8px;"></p>
+      </div>
+      <div class="drawer-actions">
+        <button class="btn-acao btn-salvar" id="btnSalvarCadastroRapidoCatalogo" style="width:100%;">Salvar</button>
       </div>
     </div>
   </div>
@@ -1547,7 +1584,7 @@
   // =================================================================
   // TABS DO APP
   // =================================================================
-  const titulosAba = { dashboard: 'Dashboard', eventos: 'Eventos', verba: 'Verba de Operação', captacao: 'Captação', vendas: 'Vendas e Pagamentos', cadastro: 'Cadastro' };
+  const titulosAba = { dashboard: 'Dashboard', eventos: 'Eventos', verba: 'Verba de Operação', captacao: 'Captação', vendas: 'Vendas e Pagamentos', cadastro: 'Cadastro', permissoes: 'Permissões' };
   document.querySelectorAll('.tab-app-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-app-btn').forEach(b => b.classList.remove('active'));
@@ -1611,8 +1648,7 @@
   // =================================================================
   let todosEventos = [];
   let eventoIdAtual = null;
-  let setorSelecionadoEvento = null;
-  let planoContasSelecionadoEvento = null;
+  let seletorSetorEvento = null, seletorPlanoEvento = null, seletorTipoEvento = null, seletorAndamentoEvento = null;
   let todasDespesasDoEvento = [];
   let todasParcelasDoEvento = []; // todas as parcelas de todas as despesas do evento aberto
   let despesaIdAtual = null;
@@ -1682,11 +1718,95 @@
     if(await verificarPendenciaLicenca(agenciaId, 'eventos')) return;
     await carregarPersonalizacao();
     await Promise.all([
-      verificarColunaClientePessoa(), carregarFeriados(), carregarEventos(), carregarSetores(), carregarClientesEventos(), carregarSolicitantes(),
+      verificarColunaClientePessoa(), verificarColunasCatalogoEventos(), carregarFeriados(), carregarEventos(), carregarSetores(), carregarClientesEventos(), carregarSolicitantes(),
       carregarTiposEvento(), carregarStatusCaptacao(), carregarAndamentos(), carregarEmpresasFinanceiras(),
-      carregarClientesEntidades(), carregarCaptacoes(), carregarSetoresUnidade(), carregarFormasPagamento(), carregarPlanosContas()
+      carregarClientesEntidades(), carregarCaptacoes(), carregarSetoresUnidade(), carregarFormasPagamento(), carregarPlanosContas(),
+      carregarPapelEPermissoesEventos(),
     ]);
+    atualizarUiPapelEventos();
     renderDashboard();
+  }
+
+  // =================================================================
+  // PERMISSÕES POR PAPEL (mesmo padrão do Estoque): servir_papeis_usuario
+  // (quem tem qual papel, por unidade — tabela genérica, compartilhada
+  // com Staff/Estoque) + servir_permissoes_papel (matriz modulo/papel/
+  // permissao -> permitido, também genérica, sem unidade_negocio_id —
+  // é a mesma regra pra todas as unidades). Sem papel definido = acesso
+  // total (compatibilidade com quem já usava o módulo antes desta tela
+  // existir); só fica restrito quem recebe um papel explícito aqui.
+  // =================================================================
+  let papelEventosAtual = null; // 'principal' | 'administrador' | 'operador' | null
+  let permissoesEventos = null; // null = sem restrição; senão { [permissao]: true/false }
+
+  async function carregarPapelEPermissoesEventos(){
+    if(ehPrincipalAtual){ papelEventosAtual = 'principal'; permissoesEventos = null; return; }
+    const { data: papel, error } = await sb.rpc('fn_papel_usuario', { p_unidade_negocio_id: agenciaId, p_modulo: 'eventos' });
+    papelEventosAtual = error ? null : (papel || null);
+    // administrador (ou sem papel) = acesso total; só 'operador' (ou outro papel
+    // futuro) de fato consulta a matriz de permissões
+    if(!papelEventosAtual || papelEventosAtual === 'administrador'){ permissoesEventos = null; return; }
+    const { data: linhas } = await sb.from('servir_permissoes_papel').select('permissao, permitido').eq('modulo', 'eventos').eq('papel', papelEventosAtual);
+    permissoesEventos = {};
+    (linhas || []).forEach(l => { permissoesEventos[l.permissao] = l.permitido; });
+  }
+  function temPermissaoEventos(permissao){
+    if(permissoesEventos === null) return true;
+    return !!permissoesEventos[permissao];
+  }
+  const ehAdminOuPrincipalEventos = () => papelEventosAtual === 'principal' || papelEventosAtual === 'administrador';
+
+  function atualizarUiPapelEventos(){
+    document.getElementById('tabPermissoesEventos').style.display = ehAdminOuPrincipalEventos() ? 'flex' : 'none';
+    const podeSetor = temPermissaoEventos('cadastrar_setor');
+    document.getElementById('btnNovoSetor').style.display = podeSetor ? '' : 'none';
+    document.getElementById('avisoSemPermissaoSetor').style.display = podeSetor ? 'none' : '';
+    if(ehAdminOuPrincipalEventos()) carregarUsuariosPapeisEventos();
+  }
+
+  const LABEL_PAPEL_EVENTOS = { administrador: 'Administrador', operador: 'Operador' };
+  async function carregarUsuariosPapeisEventos(){
+    const lista = document.getElementById('listaUsuariosPapeisEventos');
+    lista.innerHTML = '<div class="vazio">Carregando...</div>';
+    const { data: vinculos, error } = await sb.from('servir_unidade_usuarios').select('user_id, eh_principal').eq('unidade_negocio_id', agenciaId);
+    if(error){ lista.innerHTML = `<div class="vazio">Erro ao carregar usuários: ${escaparHtmlVenda(error.message)}</div>`; return; }
+    const { data: papeis } = await sb.from('servir_papeis_usuario').select('user_id, papel').eq('unidade_negocio_id', agenciaId).eq('modulo', 'eventos');
+    const mapaPapeis = {};
+    (papeis || []).forEach(p => { mapaPapeis[p.user_id] = p.papel; });
+    const linhas = [];
+    for(const v of (vinculos || [])){
+      const { data: email } = await sb.rpc('fn_obter_email_usuario', { p_user_id: v.user_id });
+      linhas.push({ user_id: v.user_id, email: email || 'E-mail indisponível', eh_principal: v.eh_principal, papel: mapaPapeis[v.user_id] || null });
+    }
+    if(linhas.length === 0){ lista.innerHTML = '<div class="vazio">Nenhum usuário vinculado a essa unidade.</div>'; return; }
+    lista.innerHTML = linhas.map(u => `
+      <div class="usuario-papel-row" data-user-id="${u.user_id}">
+        <span class="email">${escaparHtmlVenda(u.email)}</span>
+        ${u.eh_principal ? '<span class="tag-principal">Principal</span>' : ''}
+        <select class="select-papel-usuario-eventos" ${u.eh_principal ? 'disabled title="Principal sempre tem acesso completo"' : ''}>
+          <option value="">Sem papel definido (acesso completo, por enquanto)</option>
+          ${Object.entries(LABEL_PAPEL_EVENTOS).map(([valor, rotulo]) => `<option value="${valor}" ${u.papel === valor ? 'selected' : ''}>${rotulo}</option>`).join('')}
+        </select>
+      </div>
+    `).join('');
+    lista.querySelectorAll('.usuario-papel-row').forEach(row => {
+      const select = row.querySelector('.select-papel-usuario-eventos');
+      if(!select || select.disabled) return;
+      select.addEventListener('change', async (e) => {
+        const userId = row.dataset.userId, papel = e.target.value;
+        try{
+          if(!papel){
+            const { error: erroDel } = await sb.from('servir_papeis_usuario').delete().eq('unidade_negocio_id', agenciaId).eq('user_id', userId).eq('modulo', 'eventos');
+            if(erroDel) throw erroDel;
+          } else {
+            const { error: erroUp } = await sb.from('servir_papeis_usuario').upsert({
+              unidade_negocio_id: agenciaId, user_id: userId, modulo: 'eventos', papel
+            }, { onConflict: 'unidade_negocio_id,user_id,modulo' });
+            if(erroUp) throw erroUp;
+          }
+        } catch(erro){ alert('Erro ao salvar papel: ' + erro.message); }
+      });
+    });
   }
 
   function renderDashboard(){
@@ -1809,8 +1929,6 @@
     eventoIdAtual = id;
     const e = id ? todosEventos.find(x => x.id === id) : {};
     if(e.cliente_pessoa_id) await garantirPessoas([e.cliente_pessoa_id]);
-    setorSelecionadoEvento = e.setor_id ? todosSetoresUnidade.find(s => s.id === e.setor_id) || null : null;
-    planoContasSelecionadoEvento = e.plano_contas_id ? todosPlanosContas.find(p => p.id === e.plano_contas_id) || null : null;
 
     // ao criar um evento novo, já sugere o próximo número sequencial
     // (maior número já usado nessa unidade + 1) -- dá pra trocar antes
@@ -1831,21 +1949,14 @@
         </div>
         <div class="field-row">
           <div class="field-group"><label>Solicitante</label><input type="text" id="ev_solicitante" value="${e.solicitante || ''}"></div>
-          <div class="field-group" style="position:relative;">
-            <label>Setor</label>
-            <input type="text" id="ev_setor_busca" placeholder="Buscar setor..." autocomplete="off" value="${setorSelecionadoEvento ? setorSelecionadoEvento.nome : ''}">
-            <div class="lista-sugestoes-autocomplete" id="ev_setor_sugestoes"></div>
-          </div>
+          <div class="field-group"><label>Setor</label><div id="ev_setor_slot"></div></div>
         </div>
-        <div class="field-group" style="position:relative;">
-          <label>Plano de Contas (padrão do evento)</label>
-          <input type="text" id="ev_plano_busca" placeholder="Buscar plano de contas..." autocomplete="off" value="${planoContasSelecionadoEvento ? rotuloPlanoContas(planoContasSelecionadoEvento) : ''}">
-          <div class="lista-sugestoes-autocomplete" id="ev_plano_sugestoes"></div>
-        </div>
+        <div class="field-group"><label>Plano de Contas (padrão do evento)</label><div id="ev_plano_slot"></div></div>
         <div class="field-row">
-          <div class="field-group"><label>Tipo</label><input type="text" id="ev_tipo" value="${e.tipo || ''}" placeholder="Ex: Corporativo"></div>
-          <div class="field-group"><label>Cliente</label><div id="ev_cliente_slot"></div></div>
+          <div class="field-group"><label>Tipo</label><div id="ev_tipo_slot"></div></div>
+          <div class="field-group"><label>Andamento</label><div id="ev_andamento_slot"></div></div>
         </div>
+        <div class="field-group"><label>Cliente</label><div id="ev_cliente_slot"></div></div>
         <div class="field-row">
           <div class="field-group"><label>Local do evento</label><input type="text" id="ev_local_evento" value="${e.local_evento || ''}"></div>
           <div class="field-group"><label>Contato</label><input type="text" id="ev_contato" value="${e.contato || ''}"></div>
@@ -1888,18 +1999,27 @@
       slotClienteEvento.innerHTML = `<input type="text" id="ev_cliente" value="${escaparHtmlVenda(e.cliente || '')}"><p style="font-size:.76rem; color:var(--muted); margin:4px 0 0;">${AVISO_SQL_CLIENTE}</p>`;
     }
 
-    configurarBuscaSetor({
-      inputId: 'ev_setor_busca', sugestoesId: 'ev_setor_sugestoes',
-      aoSelecionar: s => { setorSelecionadoEvento = s; },
-      aoLimpar: () => { setorSelecionadoEvento = null; },
+    seletorSetorEvento = criarSeletorCatalogo(document.getElementById('ev_setor_slot'), {
+      tipoCat: 'setor', selecionado: e.setor_id ? todosSetoresUnidade.find(s => s.id === e.setor_id) || null : null,
     });
-
-    configurarBuscaGenerica({
-      inputId: 'ev_plano_busca', sugestoesId: 'ev_plano_sugestoes',
-      obterLista: () => todosPlanosContas, obterLabel: rotuloPlanoContas,
-      aoSelecionar: p => { planoContasSelecionadoEvento = p; },
-      aoLimpar: () => { planoContasSelecionadoEvento = null; },
+    seletorPlanoEvento = criarSeletorCatalogo(document.getElementById('ev_plano_slot'), {
+      tipoCat: 'planoContas', selecionado: e.plano_contas_id ? todosPlanosContas.find(p => p.id === e.plano_contas_id) || null : null,
     });
+    const tipoAtualEvento = e.tipo_id ? todosTiposEvento.find(t => t.id === e.tipo_id) || null : null;
+    seletorTipoEvento = criarSeletorCatalogo(document.getElementById('ev_tipo_slot'), {
+      tipoCat: 'tipoEvento', selecionado: tipoAtualEvento, textoLegado: !tipoAtualEvento ? (e.tipo || '') : '',
+    });
+    seletorAndamentoEvento = criarSeletorCatalogo(document.getElementById('ev_andamento_slot'), {
+      tipoCat: 'andamento', selecionado: e.andamento_id ? todosAndamentos.find(a => a.id === e.andamento_id) || null : null,
+    });
+    if(!temColunasCatalogoEventos){
+      ['ev_andamento_slot'].forEach(slotId => {
+        const p = document.createElement('p');
+        p.style.cssText = 'font-size:.74rem; color:var(--accent-ink, #8A5E12); margin:4px 0 0;';
+        p.textContent = AVISO_SQL_CATALOGO;
+        document.getElementById(slotId).appendChild(p);
+      });
+    }
 
     if(id){
       document.getElementById('btnAbrirDespesas').addEventListener('click', () => abrirVerbaParaEvento(id));
@@ -1938,6 +2058,9 @@
       clienteTexto = document.getElementById('ev_cliente').value.trim() || null;
     }
 
+    const tipoEscolhido = seletorTipoEvento.obter(), andamentoEscolhido = seletorAndamentoEvento.obter();
+    const eventoOrigem = eventoIdAtual ? todosEventos.find(x => x.id === eventoIdAtual) : null;
+
     const btn = document.getElementById('btnSalvarEvento');
     btn.disabled = true;
     btn.textContent = 'Salvando...';
@@ -1947,9 +2070,10 @@
         nome,
         numero_evento: numeroEvento,
         solicitante: document.getElementById('ev_solicitante').value.trim() || null,
-        setor_id: setorSelecionadoEvento ? setorSelecionadoEvento.id : null,
-        plano_contas_id: planoContasSelecionadoEvento ? planoContasSelecionadoEvento.id : null,
-        tipo: document.getElementById('ev_tipo').value.trim() || null,
+        setor_id: seletorSetorEvento.obter()?.id || null,
+        plano_contas_id: seletorPlanoEvento.obter()?.id || null,
+        // texto livre antigo: mantém o que já estava se ninguém escolheu um tipo da lista
+        tipo: tipoEscolhido ? tipoEscolhido.nome : (eventoOrigem ? eventoOrigem.tipo : null),
         cliente: clienteTexto,
         local_evento: document.getElementById('ev_local_evento').value.trim() || null,
         contato: document.getElementById('ev_contato').value.trim() || null,
@@ -1958,6 +2082,7 @@
         ativo: document.getElementById('ev_ativo').value === 'true',
       };
       if(temColunaClientePessoa) payload.cliente_pessoa_id = clientePessoaId;
+      if(temColunasCatalogoEventos){ payload.tipo_id = tipoEscolhido?.id || null; payload.andamento_id = andamentoEscolhido?.id || null; }
 
       if(eventoIdAtual){
         const { error } = await sb.from('eventos').update(payload).eq('id', eventoIdAtual);
@@ -3123,7 +3248,8 @@
         </div>
         <span class="status-tag ${s.ativo !== false ? 'ativo' : 'inativo'}">${s.ativo !== false ? 'ativo' : 'inativo'}</span>
       `;
-      row.addEventListener('click', () => abrirDrawerCadastro('setor', s.id));
+      if(temPermissaoEventos('cadastrar_setor')) row.addEventListener('click', () => abrirDrawerCadastro('setor', s.id));
+      else row.style.cursor = 'default';
       lista.appendChild(row);
     });
   }
@@ -3207,6 +3333,7 @@
       body.innerHTML = `
         <div class="drawer-section">
           <div class="field-group"><label>Nome do setor</label><input type="text" id="c_nome" value="${s.nome || ''}"></div>
+          <div class="field-group"><label>Código (opcional)</label><input type="text" id="c_codigo" value="${s.codigo || ''}"></div>
           <div class="field-group">
             <label>Status</label>
             <select id="c_ativo"><option value="true" ${s.ativo !== false ? 'selected' : ''}>Ativo</option><option value="false" ${s.ativo === false ? 'selected' : ''}>Inativo</option></select>
@@ -3433,7 +3560,7 @@
   let todasCaptacoes = [];
   let captacaoIdAtual = null;
   let seletorClienteCaptacao = null, textoLegadoClienteCaptacao = '';
-  let planoContasSelecionadoCaptacao = null;
+  let seletorPlanoCaptacao = null, seletorTipoCaptacao = null, seletorAndamentoCaptacao = null, seletorSetorCaptacao = null;
 
   async function carregarCaptacoes(){
     const { data, error } = await buscarTodasLinhas(() => sb.from('eventos_captacoes')
@@ -3500,7 +3627,6 @@
 
   async function abrirModalCaptacao(id){
     captacaoIdAtual = id;
-    planoContasSelecionadoCaptacao = null;
 
     const c = id ? todasCaptacoes.find(x => x.id === id) : {};
     document.getElementById('modalCaptacaoTitulo').textContent = id ? (c.nome || 'Editar captação') : 'Nova captação';
@@ -3511,16 +3637,10 @@
     const pessoaCaptacao = (id && c.cliente_pessoa_id) ? (pessoasPorId[c.cliente_pessoa_id] || null) : null;
     const entidadeLegada = (id && !pessoaCaptacao && c.cliente_entidade_id) ? todosClientesEntidades.find(e => e.id === c.cliente_entidade_id) : null;
     textoLegadoClienteCaptacao = entidadeLegada ? entidadeLegada.nome : '';
-    if(id && c.plano_contas_id){
-      planoContasSelecionadoCaptacao = todosPlanosContas.find(p => p.id === c.plano_contas_id) || null;
-    }
 
-    const optTipos = '<option value="">-</option>' + todosTiposEvento.map(t => `<option value="${t.id}" ${c.tipo_id === t.id ? 'selected' : ''}>${t.nome}</option>`).join('');
     const optStatus = '<option value="">-</option>' + todosStatusCaptacao.map(s => `<option value="${s.id}" ${c.status_id === s.id ? 'selected' : ''}>${s.nome}</option>`).join('');
-    const optAndamento = '<option value="">-</option>' + todosAndamentos.map(a => `<option value="${a.id}" ${c.andamento_id === a.id ? 'selected' : ''}>${a.nome}</option>`).join('');
     const optEmpresa = '<option value="">-</option>' + todasEmpresasFinanceiras.map(e => `<option value="${e.id}" ${c.empresa_financeira_id === e.id ? 'selected' : ''}>${e.nome}</option>`).join('');
-
-    const tipoSelecionado = todosTiposEvento.find(t => t.id === c.tipo_id);
+    const tipoSelecionado = c.tipo_id ? todosTiposEvento.find(t => t.id === c.tipo_id) : null;
     const mostraCasamento = tipoSelecionado ? tipoSelecionado.usa_campos_casamento : false;
 
     document.getElementById('modalCaptacaoBody').innerHTML = `
@@ -3532,18 +3652,17 @@
             <label>Cliente</label>
             <div id="cap_cliente_slot"></div>
           </div>
-          <div class="field-group"><label>Tipo</label><select id="cap_tipo">${optTipos}</select></div>
+          <div class="field-group"><label>Tipo</label><div id="cap_tipo_slot"></div></div>
         </div>
         <div class="field-row">
           <div class="field-group"><label>Status</label><select id="cap_status">${optStatus}</select></div>
-          <div class="field-group"><label>Andamento</label><select id="cap_andamento">${optAndamento}</select></div>
+          <div class="field-group"><label>Andamento</label><div id="cap_andamento_slot"></div></div>
         </div>
-        <div class="field-group"><label>Empresa financeira</label><select id="cap_empresa_financeira">${optEmpresa}</select></div>
-        <div class="field-group" style="position:relative;">
-          <label>Plano de Contas (padrão da captação)</label>
-          <input type="text" id="cap_plano_busca" placeholder="Buscar plano de contas..." autocomplete="off" value="${planoContasSelecionadoCaptacao ? rotuloPlanoContas(planoContasSelecionadoCaptacao) : ''}">
-          <div class="lista-sugestoes-autocomplete" id="cap_plano_sugestoes"></div>
+        <div class="field-row">
+          <div class="field-group"><label>Setor</label><div id="cap_setor_slot"></div></div>
+          <div class="field-group"><label>Empresa financeira</label><select id="cap_empresa_financeira">${optEmpresa}</select></div>
         </div>
+        <div class="field-group"><label>Plano de Contas (padrão da captação)</label><div id="cap_plano_slot"></div></div>
         <div class="field-group"><label>Solicitação (o que foi pedido)</label><input type="text" id="cap_solicitacao" value="${c.solicitacao || ''}"></div>
         <div class="field-row">
           <div class="field-group"><label>Início atendimento</label><input type="date" id="cap_inicio_atend" value="${c.inicio_atend || ''}"></div>
@@ -3590,17 +3709,25 @@
       slotClienteCaptacao.innerHTML = `<p style="font-size:.8rem; color:var(--accent-ink, #8A5E12); margin:0;">${AVISO_SQL_CLIENTE} Cliente atual: ${escaparHtmlVenda(textoLegadoClienteCaptacao || '—')}</p>`;
     }
 
-    configurarBuscaGenerica({
-      inputId: 'cap_plano_busca', sugestoesId: 'cap_plano_sugestoes',
-      obterLista: () => todosPlanosContas, obterLabel: rotuloPlanoContas,
-      aoSelecionar: p => { planoContasSelecionadoCaptacao = p; },
-      aoLimpar: () => { planoContasSelecionadoCaptacao = null; },
+    seletorPlanoCaptacao = criarSeletorCatalogo(document.getElementById('cap_plano_slot'), {
+      tipoCat: 'planoContas', selecionado: c.plano_contas_id ? todosPlanosContas.find(p => p.id === c.plano_contas_id) || null : null,
     });
-
-    document.getElementById('cap_tipo').addEventListener('change', (e) => {
-      const t = todosTiposEvento.find(x => x.id === Number(e.target.value));
-      document.getElementById('cap_bloco_casamento').style.display = (t && t.usa_campos_casamento) ? 'grid' : 'none';
+    seletorTipoCaptacao = criarSeletorCatalogo(document.getElementById('cap_tipo_slot'), {
+      tipoCat: 'tipoEvento', selecionado: c.tipo_id ? todosTiposEvento.find(t => t.id === c.tipo_id) || null : null,
+      aoSelecionar: (t) => { document.getElementById('cap_bloco_casamento').style.display = (t && t.usa_campos_casamento) ? 'grid' : 'none'; },
     });
+    seletorAndamentoCaptacao = criarSeletorCatalogo(document.getElementById('cap_andamento_slot'), {
+      tipoCat: 'andamento', selecionado: c.andamento_id ? todosAndamentos.find(a => a.id === c.andamento_id) || null : null,
+    });
+    seletorSetorCaptacao = criarSeletorCatalogo(document.getElementById('cap_setor_slot'), {
+      tipoCat: 'setor', selecionado: c.setor_id ? todosSetoresUnidade.find(s => s.id === c.setor_id) || null : null,
+    });
+    if(!temColunasCatalogoEventos){
+      const p = document.createElement('p');
+      p.style.cssText = 'font-size:.74rem; color:var(--accent-ink, #8A5E12); margin:4px 0 0;';
+      p.textContent = AVISO_SQL_CATALOGO;
+      document.getElementById('cap_setor_slot').appendChild(p);
+    }
 
     if(id){
       document.getElementById('btnAbrirVendasCaptacao').addEventListener('click', () => {
@@ -3633,11 +3760,11 @@
         unidade_negocio_id: agenciaId,
         nome,
         ...clienteCaptacao,
-        tipo_id: document.getElementById('cap_tipo').value || null,
+        tipo_id: seletorTipoCaptacao.obter()?.id || null,
         status_id: document.getElementById('cap_status').value || null,
-        andamento_id: document.getElementById('cap_andamento').value || null,
+        andamento_id: seletorAndamentoCaptacao.obter()?.id || null,
         empresa_financeira_id: document.getElementById('cap_empresa_financeira').value || null,
-        plano_contas_id: planoContasSelecionadoCaptacao ? planoContasSelecionadoCaptacao.id : null,
+        plano_contas_id: seletorPlanoCaptacao.obter()?.id || null,
         solicitacao: document.getElementById('cap_solicitacao').value.trim() || null,
         inicio_atend: document.getElementById('cap_inicio_atend').value || null,
         dt_limite_atend: document.getElementById('cap_dt_limite_atend').value || null,
@@ -3653,6 +3780,7 @@
         data_fecha: document.getElementById('cap_data_fecha').value || null,
         obs_geral: document.getElementById('cap_obs_geral').value.trim() || null,
       };
+      if(temColunasCatalogoEventos) payload.setor_id = seletorSetorCaptacao.obter()?.id || null;
 
       if(captacaoIdAtual){
         const { error } = await sb.from('eventos_captacoes').update(payload).eq('id', captacaoIdAtual);
@@ -3706,6 +3834,7 @@
         empresa_financeira_id: c.empresa_financeira_id,
         cliente_entidade_id: c.cliente_entidade_id,
         cliente: c.cliente ? c.cliente.nome : null,
+        plano_contas_id: c.plano_contas_id,
         obs_geral: c.obs_geral,
       };
       if(c.cliente_pessoa_id) dadosEvento.cliente_pessoa_id = c.cliente_pessoa_id;
@@ -3714,6 +3843,14 @@
       ['condicao_pagamento', 'pgto_percentual_entrada', 'pgto_dias_antes_entrega', 'orcamento_dados'].forEach(campo => {
         if(campo in c && c[campo] != null) dadosEvento[campo] = c[campo];
       });
+      // setor (novo na captação), tipo e andamento (novos no evento) só se as colunas já existirem
+      if(temColunasCatalogoEventos){
+        dadosEvento.setor_id = c.setor_id || null;
+        dadosEvento.tipo_id = c.tipo_id || null;
+        dadosEvento.andamento_id = c.andamento_id || null;
+        const tipoDaCaptacao = c.tipo_id ? todosTiposEvento.find(t => t.id === c.tipo_id) : null;
+        if(tipoDaCaptacao) dadosEvento.tipo = tipoDaCaptacao.nome;
+      }
       const { data: novoEvento, error } = await sb.from('eventos').insert(dadosEvento).select().single();
       if(error) throw new Error(error.message);
 
@@ -5153,6 +5290,18 @@
     const { error } = await sb.from('eventos_captacoes').select('cliente_pessoa_id').limit(1);
     temColunaClientePessoa = !error;
   }
+  // eventos_captacoes.setor_id e eventos.andamento_id/tipo_id — colunas novas do eventos-catalogos.sql.
+  // Sem elas, os seletores de Setor (na Captação), Andamento (no Evento) e Tipo (no Evento) continuam
+  // aparecendo, mas a escolha não é salva (aviso ao lado do campo).
+  let temColunasCatalogoEventos = true;
+  const AVISO_SQL_CATALOGO = '⚠️ Rode o eventos-catalogos.sql no Supabase para salvar esta escolha.';
+  async function verificarColunasCatalogoEventos(){
+    const [r1, r2] = await Promise.all([
+      sb.from('eventos').select('tipo_id, andamento_id').limit(1),
+      sb.from('eventos_captacoes').select('setor_id').limit(1),
+    ]);
+    temColunasCatalogoEventos = !r1.error && !r2.error;
+  }
   async function garantirPessoas(ids){
     const faltando = [...new Set(ids.filter(id => id != null && !pessoasPorId[id]))];
     if(!faltando.length) return;
@@ -5239,6 +5388,138 @@
     } catch(erro){ st.textContent = 'Erro: ' + erro.message; }
     finally{ btn.disabled = false; }
   });
+
+  // =================================================================
+  // CADASTRO RÁPIDO DE CATÁLOGO — Setor, Plano de Contas, Tipo de Evento,
+  // Andamento. Setor e Plano de Contas são tabelas compartilhadas com os
+  // outros módulos (unidade_setores/unidade_plano_de_contas); Tipo de
+  // Evento e Andamento são só do Eventos (eventos_tipos/eventos_andamentos).
+  // Um só modal genérico, configurado por tipo.
+  // =================================================================
+  const CATALOGOS_RAPIDOS = {
+    setor: {
+      tabela: 'unidade_setores', rotulo: 'setor', campoPrincipal: 'nome',
+      campos: [{ campo: 'codigo', label: 'Código (opcional)' }, { campo: 'nome', label: 'Nome', obrigatorio: true }],
+      lista: () => todosSetoresUnidade, label: s => s.nome, recarregar: carregarSetoresUnidade,
+    },
+    planoContas: {
+      tabela: 'unidade_plano_de_contas', rotulo: 'plano de contas', campoPrincipal: 'descricao',
+      campos: [{ campo: 'codigo', label: 'Código', obrigatorio: true }, { campo: 'descricao', label: 'Descrição', obrigatorio: true }],
+      lista: () => todosPlanosContas, label: rotuloPlanoContas, recarregar: carregarPlanosContas,
+    },
+    tipoEvento: {
+      tabela: 'eventos_tipos', rotulo: 'tipo de evento', campoPrincipal: 'nome',
+      campos: [{ campo: 'nome', label: 'Nome', obrigatorio: true }],
+      lista: () => todosTiposEvento, label: t => t.nome, recarregar: carregarTiposEvento,
+    },
+    andamento: {
+      tabela: 'eventos_andamentos', rotulo: 'andamento', campoPrincipal: 'nome',
+      campos: [{ campo: 'nome', label: 'Nome', obrigatorio: true }],
+      lista: () => todosAndamentos, label: a => a.nome, recarregar: carregarAndamentos,
+    },
+  };
+  let cadastroRapidoCatalogoAtual = null; // { tipoCat, idEmEdicao, callback }
+  function abrirCadastroRapidoCatalogo(tipoCat, { registro, nomeInicial, aoSalvar } = {}){
+    const config = CATALOGOS_RAPIDOS[tipoCat];
+    cadastroRapidoCatalogoAtual = { tipoCat, idEmEdicao: registro ? registro.id : null, callback: aoSalvar || null };
+    $v('crc_titulo').textContent = registro ? `Editar ${config.rotulo}` : `Novo ${config.rotulo}`;
+    $v('crc_campos').innerHTML = config.campos.map(c => `
+      <div class="field-group"><label>${escaparHtmlVenda(c.label)}</label><input type="text" id="crc_campo_${c.campo}"></div>
+    `).join('');
+    config.campos.forEach(c => {
+      const el = $v('crc_campo_' + c.campo);
+      if(registro) el.value = registro[c.campo] ?? '';
+      else if(c.campo === config.campoPrincipal) el.value = nomeInicial || '';
+    });
+    $v('crc_status').textContent = '';
+    $v('modalCadastroRapidoCatalogoOverlay').classList.add('show');
+    $v('crc_campo_' + config.campos[0].campo).focus();
+  }
+  $v('btnFecharModalCadastroRapidoCatalogo').addEventListener('click', () => $v('modalCadastroRapidoCatalogoOverlay').classList.remove('show'));
+  $v('btnSalvarCadastroRapidoCatalogo').addEventListener('click', async () => {
+    if(!cadastroRapidoCatalogoAtual) return;
+    const { tipoCat, idEmEdicao, callback } = cadastroRapidoCatalogoAtual;
+    const config = CATALOGOS_RAPIDOS[tipoCat];
+    const st = $v('crc_status');
+    const payload = {};
+    for(const c of config.campos){
+      const valor = $v('crc_campo_' + c.campo).value.trim();
+      if(c.obrigatorio && !valor){ st.textContent = `Preencha "${c.label}".`; return; }
+      payload[c.campo] = valor || null;
+    }
+    const btn = $v('btnSalvarCadastroRapidoCatalogo');
+    btn.disabled = true; st.textContent = '';
+    try{
+      let data, error;
+      if(idEmEdicao){
+        ({ data, error } = await sb.from(config.tabela).update(payload).eq('id', idEmEdicao).select().single());
+      } else {
+        ({ data, error } = await sb.from(config.tabela).insert({ unidade_negocio_id: agenciaId, ativo: true, ...payload }).select().single());
+      }
+      if(error) throw new Error(error.message);
+      await config.recarregar();
+      $v('modalCadastroRapidoCatalogoOverlay').classList.remove('show');
+      if(callback) await callback(data);
+    } catch(erro){ st.textContent = 'Erro: ' + erro.message; }
+    finally{ btn.disabled = false; }
+  });
+
+  // seletor genérico (busca + "+" cadastro rápido + "✏️" editar) para os 4 catálogos acima —
+  // mesmo espírito visual do criarSeletorCliente, mas sem a linha de info (só nome/rótulo)
+  // permissão que cada catálogo exige pra cadastrar/editar (papel 'operador' pode não ter) —
+  // ver PERMISSÕES POR PAPEL / servir_permissoes_papel
+  const PERMISSAO_POR_CATALOGO = { setor: 'cadastrar_setor', planoContas: 'cadastrar_plano_contas', tipoEvento: 'cadastrar_tipo_evento', andamento: 'cadastrar_andamento' };
+  function criarSeletorCatalogo(container, { tipoCat, selecionado, textoLegado, aoSelecionar, aoEditar }){
+    const config = CATALOGOS_RAPIDOS[tipoCat];
+    const podeCadastrar = temPermissaoEventos(PERMISSAO_POR_CATALOGO[tipoCat]);
+    container.innerHTML = `
+      <div style="display:flex; gap:6px; align-items:flex-start;">
+        <div style="flex:1; position:relative;">
+          <input type="text" class="sc-busca" placeholder="Buscar ${escaparHtmlVenda(config.rotulo)}..." autocomplete="off">
+          <div class="lista-sugestoes-autocomplete sc-sug"></div>
+        </div>
+        ${podeCadastrar ? `
+        <button type="button" class="sc-mais" title="Cadastrar ${escaparHtmlVenda(config.rotulo)}" style="width:38px; height:38px; border-radius:9px; border:none; background:var(--brand-2); color:#fff; font-size:1.15rem; font-weight:700; cursor:pointer; flex-shrink:0;">+</button>
+        <button type="button" class="btn-acao-rapida sc-editar" title="Editar ${escaparHtmlVenda(config.rotulo)}" style="width:38px; height:38px; flex-shrink:0;">✏️</button>
+        ` : `<span title="Sem permissão pra cadastrar/editar ${escaparHtmlVenda(config.rotulo)}" style="width:38px; height:38px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:1.1rem;">🔒</span>`}
+      </div>
+      <div class="sc-info" style="font-size:.76rem; color:var(--muted); margin-top:4px;"></div>`;
+    const busca = container.querySelector('.sc-busca'), sug = container.querySelector('.sc-sug');
+    const info = container.querySelector('.sc-info');
+    const btnMais = container.querySelector('.sc-mais'), btnEditar = container.querySelector('.sc-editar');
+    let atual = selecionado || null;
+    const desenhar = () => {
+      busca.value = atual ? config.label(atual) : '';
+      info.textContent = atual ? '' : (textoLegado ? `Valor atual (sem vínculo com o cadastro): ${textoLegado}` : '');
+      if(btnEditar) btnEditar.style.display = atual ? '' : 'none';
+    };
+    const mostrar = (termo) => {
+      const lista = config.lista();
+      const filtrados = (termo ? lista.filter(x => config.label(x).toLowerCase().includes(termo.toLowerCase())) : lista).slice(0, 30);
+      sug.innerHTML = filtrados.length
+        ? filtrados.map(x => `<div class="sugestao-autocomplete" data-id="${x.id}">${escaparHtmlVenda(config.label(x))}</div>`).join('')
+        : '<div class="sugestao-autocomplete-vazia">Nada encontrado.</div>';
+      sug.classList.add('show');
+      sug.querySelectorAll('[data-id]').forEach(el => el.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        selecionar(lista.find(x => String(x.id) === el.dataset.id));
+      }));
+    };
+    const selecionar = (item) => { atual = item; sug.classList.remove('show'); desenhar(); if(aoSelecionar) aoSelecionar(item); };
+    busca.addEventListener('input', () => {
+      if(atual && busca.value !== config.label(atual)) atual = null;
+      mostrar(busca.value.trim());
+    });
+    busca.addEventListener('focus', () => { if(!busca.value.trim()) mostrar(''); });
+    busca.addEventListener('blur', () => setTimeout(() => sug.classList.remove('show'), 200));
+    if(btnMais) btnMais.addEventListener('click', () => abrirCadastroRapidoCatalogo(tipoCat, { nomeInicial: busca.value.trim(), aoSalvar: selecionar }));
+    if(btnEditar) btnEditar.addEventListener('click', () => {
+      if(!atual) return;
+      abrirCadastroRapidoCatalogo(tipoCat, { registro: atual, aoSalvar: (item) => { selecionar(item); if(aoEditar) aoEditar(item); } });
+    });
+    desenhar();
+    return { obter: () => atual, definir: (item) => { atual = item; desenhar(); } };
+  }
 
   // ---- seletor de cliente reutilizável: busca + "+" (cadastro rápido) + ✏️ (editar) ----
   // opcoes: { pessoa, textoLegado, restaurarNoBlur, aoSelecionar(pessoa), aoEditar(pessoa) }
@@ -5695,6 +5976,7 @@
   }
 
   document.getElementById('btnSalvarCadastro').addEventListener('click', async () => {
+    if(cadastroTipoAtual === 'setor' && !temPermissaoEventos('cadastrar_setor')){ alert('Você não tem permissão pra cadastrar/editar setores.'); return; }
     const nome = document.getElementById('c_nome').value.trim();
     if(!nome){ alert('Informe o nome.'); return; }
 
@@ -5729,6 +6011,9 @@
         };
         if(['cliente', 'solicitante'].includes(cadastroTipoAtual)){
           payload.codigo_externo = document.getElementById('c_codigo_externo').value.trim() || null;
+        }
+        if(cadastroTipoAtual === 'setor'){
+          payload.codigo = document.getElementById('c_codigo').value.trim() || null;
         }
         if(cadastroTipoAtual === 'cliente'){
           payload.contato = document.getElementById('c_contato').value.trim() || null;
