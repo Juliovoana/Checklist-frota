@@ -731,6 +731,14 @@
             <button class="btn btn-azul" id="btnAplicarFiltrosMov">🔍 Buscar</button>
             <button class="btn btn-cinza" id="btnLimparFiltrosMov">Limpar filtros</button>
             <button class="btn btn-cinza" id="btnFiltrarPendentesDestino" style="background:#FBEAE8; color:#C0392B;">🏷️ Itens avulsos</button>
+            <select id="movOrdemCampo" title="Data usada para ordenar a lista" style="margin-left:auto; padding:6px; border:1px solid #ccc; border-radius:4px;">
+                <option value="lancamento">Ordenar por: data/hora do lançamento</option>
+                <option value="nota">Ordenar por: data da nota</option>
+            </select>
+            <select id="movOrdemData" title="Sentido da ordem" style="padding:6px; border:1px solid #ccc; border-radius:4px;">
+                <option value="desc">Mais recentes primeiro</option>
+                <option value="asc">Mais antigas primeiro</option>
+            </select>
         </div>
     </div>
 
@@ -7778,6 +7786,8 @@ document.getElementById('btnLimparFiltrosMov').addEventListener('click', () => {
     buscarPainelMovimentacoes();
 });
 
+['movOrdemData', 'movOrdemCampo'].forEach(id => document.getElementById(id).addEventListener('change', () => buscarPainelMovimentacoes()));
+
 document.getElementById('btnAplicarFiltrosMov').addEventListener('click', () => {
     filtroItensAvulsosAtivo = false;
     document.querySelectorAll('.col-so-avulso').forEach(el => el.style.display = 'none');
@@ -7972,7 +7982,7 @@ async function buscarPainelMovimentacoes() {
     try {
         const dados = await chamarGet('listarMovimentacoesFiltradas', filtros);
         let lista = (dados || []).map(m => ({
-            id: Number(m.id), data: formatarData(m.data), produtoId: m.produto_id != null ? Number(m.produto_id) : null, tipo: m.tipo,
+            id: Number(m.id), data: formatarData(m.data), dataOrdem: String(m.data || ''), produtoId: m.produto_id != null ? Number(m.produto_id) : null, tipo: m.tipo,
             qtd: Number(m.qtd) || 0, valorUnit: Number(m.valor_unit) || 0, tag: m.tag || '', evento: m.evento || '',
             observacao: m.observacao || '', responsavel: m.responsavel || '', projetoId: m.projeto_id || null,
             nfNumero: m.nf_numero || '', fornecedorCnpj: m.fornecedor_cnpj || '', fornecedorNome: m.fornecedor_nome || '',
@@ -7982,6 +7992,41 @@ async function buscarPainelMovimentacoes() {
             setorId: m.setor_id != null ? Number(m.setor_id) : null,
             veiculoId: m.equipamento_veiculo_id != null ? Number(m.equipamento_veiculo_id) : null
         }));
+
+        // ordem da lista: por data/hora do lançamento (padrão) ou pela data
+        // da nota; sentido padrão = mais recentes primeiro. Sempre desempata
+        // pelo id (id maior = lançado depois)
+        const sentidoOrdem = document.getElementById('movOrdemData').value === 'asc' ? 1 : -1;
+        const ordenarPorNota = document.getElementById('movOrdemCampo').value === 'nota';
+        if (ordenarPorNota) {
+            // data da nota = emissão (ou entrada, se não houver) da nota
+            // ligada à movimentação; sem nota, cai na data da própria
+            // movimentação
+            const idsNotas = [...new Set((dados || []).map(m => m.estoque_nota_id).filter(v => v != null))];
+            const dataPorNota = {};
+            for (let i = 0; i < idsNotas.length; i += 200) {
+                const { data: notasLote, error: erroNotas } = await sb.from('estoque_notas').select('id, data_emissao, data_entrada').in('id', idsNotas.slice(i, i + 200));
+                if (erroNotas) throw erroNotas;
+                (notasLote || []).forEach(n => { dataPorNota[n.id] = String(n.data_emissao || n.data_entrada || ''); });
+            }
+            const dadosPorId = {};
+            (dados || []).forEach(m => { dadosPorId[Number(m.id)] = m; });
+            lista.forEach(m => {
+                const bruto = dadosPorId[m.id];
+                m.chaveOrdem = (bruto && dataPorNota[bruto.estoque_nota_id]) || m.dataOrdem;
+            });
+        } else {
+            // data/hora do lançamento: usa a coluna de carimbo de tempo se a
+            // tabela tiver (criado_em/created_at); senão o id, que cresce na
+            // ordem em que os lançamentos foram gravados
+            const dadosPorId = {};
+            (dados || []).forEach(m => { dadosPorId[Number(m.id)] = m; });
+            lista.forEach(m => {
+                const bruto = dadosPorId[m.id] || {};
+                m.chaveOrdem = String(bruto.criado_em || bruto.created_at || '');
+            });
+        }
+        lista.sort((a, b) => sentidoOrdem * (a.chaveOrdem.localeCompare(b.chaveOrdem) || (a.id - b.id)));
 
         // guia de avulsos: mostra TODA linha avulsa, entrada E saída, como
         // duas linhas separadas e sempre visíveis (decisão explícita do
