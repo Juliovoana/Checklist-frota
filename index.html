@@ -239,6 +239,8 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 /* modal foto */
+.os-modal{display:none;position:fixed;inset:0;background:rgba(20,30,50,.55);z-index:90;overflow-y:auto;padding:14px 12px}
+.os-modal-box{max-width:560px;margin:0 auto}
 .fmodal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .fmodal.on{display:flex}
 .fmodal img{max-width:95vw;max-height:80vh;border-radius:8px;object-fit:contain}
@@ -664,7 +666,8 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
         </div>
       </div>
 
-      <div id="form-os" style="display:none" class="card">
+      <div id="form-os" class="os-modal" style="display:none">
+      <div class="card os-modal-box">
         <div class="lbl" id="fos-titulo">Nova OS</div>
 
         <div class="man-field" style="margin-bottom:8px;padding:10px 12px;border:2px solid var(--nv);border-radius:var(--rs);background:var(--nvl)">
@@ -738,10 +741,21 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 
         <div class="man-field" style="margin-bottom:10px"><label>Observação</label><textarea class="man-obs" id="fos-obs" placeholder="Detalhes do serviço, garantia..." style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></textarea></div>
 
+        <!-- Foto evidência (aparece na lista e no PDF da OS) -->
+        <div class="man-field" style="margin-bottom:10px">
+          <label>Foto evidência</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="sbtn" onclick="adicionarFotoOS(true)" style="border:1px solid var(--bd);border-radius:var(--rs);padding:8px 12px"><i class="ti ti-camera"></i> Tirar foto</button>
+            <button type="button" class="sbtn" onclick="adicionarFotoOS(false)" style="border:1px solid var(--bd);border-radius:var(--rs);padding:8px 12px"><i class="ti ti-photo"></i> Galeria</button>
+          </div>
+          <div id="fos-fotos" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+        </div>
+
         <div style="display:flex;gap:8px">
           <button class="btn-buscar" style="flex:1;justify-content:center" onclick="salvarOSApp()"><i class="ti ti-device-floppy"></i> Salvar</button>
           <button class="sbtn" onclick="fecharFormOS()" style="border:1px solid var(--bd);border-radius:var(--rs);padding:0 14px">Cancelar</button>
         </div>
+      </div>
       </div>
 
       <div id="os-list"><div class="empty"><i class="ti ti-file-invoice"></i>Nenhuma OS cadastrada</div></div>
@@ -1093,7 +1107,7 @@ function htmlManutencaoResumo(resumo){
    ══════════════════════════════════════════════════════════════════ */
 const AJUDA_FROTA = {
   titulo: 'Checklist Frota',
-  ultimaRevisao: '24/09/2026',
+  ultimaRevisao: '25/09/2026',
   secoes: [
     { id: 'geral', titulo: 'Visão geral', corpo: `
       <p>Registra o checklist diário de cada veículo da frota (Van, Micro Ônibus, Utilitário,
@@ -1204,7 +1218,12 @@ const AJUDA_FROTA = {
         <li>Lista com busca e filtro por status: <strong>Urgente</strong>, Aberta, Em
         andamento, Concluída, Cancelada.</li>
         <li><strong>Nova Ordem de Serviço</strong> lança uma OS manual vinculada a um veículo —
-        não precisa vir de um checklist.</li>
+        não precisa vir de um checklist. O formulário abre num <strong>popup</strong> (janela
+        por cima da lista); "Cancelar" fecha sem salvar.</li>
+        <li><strong>Foto evidência</strong>: no popup, "Tirar foto" abre a câmera e "Galeria"
+        escolhe uma imagem do aparelho; dá pra anexar várias e remover com o "x". As fotos
+        aparecem na lista da OS e <strong>também no PDF</strong> (1 foto sai grande, 2 ou mais
+        saem lado a lado, em tamanho que dá pra ler nota, peça ou painel).</li>
         <li>Marcando <strong>"OS sem veículo específico"</strong> no formulário, a busca de
         veículo vira um campo de descrição livre — use pra serviços que não são de um veículo
         só, tipo dedetização ou manutenção da garagem/pátio. Essas OS não aparecem no histórico
@@ -2926,6 +2945,27 @@ function renderOSVeiculo(){
    modo: "download" salva o arquivo no dispositivo
          "share"    abre o menu nativo de compartilhamento
                      (WhatsApp, e-mail, etc) quando suportado     */
+// Carrega uma foto pra dentro do PDF: reduz pra no máx. 1200px e devolve JPEG + proporção.
+// Se falhar (CORS, link quebrado), devolve null e o PDF sai sem essa foto.
+function carregarFotoPdf(url){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>{
+      try{
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const max = 1200;
+        if(w > max || h > max){ if(w > h){ h = Math.round(h*max/w); w = max; } else { w = Math.round(w*max/h); h = max; } }
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img,0,0,w,h);
+        resolve({ data: c.toDataURL('image/jpeg', 0.8), w, h });
+      }catch(e){ resolve(null); }
+    };
+    img.onerror = ()=> resolve(null);
+    img.src = url;
+  });
+}
+
 async function gerarPdfOS(os, modo){
   if(typeof jspdf === 'undefined'){ toast('Biblioteca de PDF não carregou — verifique a internet'); return; }
   const { jsPDF } = jspdf;
@@ -3054,6 +3094,40 @@ async function gerarPdfOS(os, modo){
   doc.setFont(undefined,'normal'); doc.setTextColor(20,20,20);
 
   if(os.observacao) linha('Observação', os.observacao);
+
+  // ── Fotos / evidências ──────────────────────────────────────────
+  // Tamanho pensado pra dar pra ler nota/peça/painel: 1 foto = até 130x100 mm;
+  // 2 ou mais = 2 por linha, até 88x80 mm cada. Quebra de página automática.
+  const fotosPdf = [];
+  for(const link of (os.fotos || [])){
+    const f = await carregarFotoPdf(driveThumbUrl(link, 1200));
+    if(f) fotosPdf.push(f);
+  }
+  if(fotosPdf.length){
+    if(y > 250){ doc.addPage(); y = 20; }
+    y += 2;
+    doc.setFontSize(8.5); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+    doc.text('FOTOS / EVIDÊNCIAS', 14, y);
+    y += 5;
+    const unica = fotosPdf.length === 1;
+    const maxW = unica ? 130 : 88, maxH = unica ? 100 : 80;
+    const porLinha = unica ? 1 : 2;
+    for(let i = 0; i < fotosPdf.length; i += porLinha){
+      const grupo = fotosPdf.slice(i, i + porLinha).map(f => {
+        let w = maxW, h = w * f.h / f.w;
+        if(h > maxH){ h = maxH; w = h * f.w / f.h; }
+        return { f, w, h };
+      });
+      const alturaLinha = Math.max(...grupo.map(g => g.h));
+      if(y + alturaLinha > 275){ doc.addPage(); y = 20; }
+      grupo.forEach((g, k) => {
+        doc.addImage(g.f.data, 'JPEG', 14 + k * 94, y, g.w, g.h);
+      });
+      y += alturaLinha + 5;
+    }
+    doc.setFont(undefined,'normal'); doc.setTextColor(20,20,20);
+  }
+  if(y > 245){ doc.addPage(); y = 20; }
 
   // ── Link de aprovação embutido no próprio PDF ──────────────────
   // Antes esse link só ia no texto da legenda do compartilhamento
@@ -3302,10 +3376,47 @@ function abrirFormOS(){
   document.getElementById('fos-obs').value='';
   produtosOSAtual = [];
   renderProdutosOS();
+  fotosOSSalvas = []; fotosOSNovas = []; renderFotosOS();
   document.getElementById('form-os').style.display='block';
-  document.getElementById('form-os').scrollIntoView({behavior:'smooth'});
   // Foco automático no campo de busca de veículo
   setTimeout(()=>document.getElementById('fos-busca').focus(), 350);
+}
+
+/* ── Foto evidência da OS ─────────────────────────────────── */
+let fotosOSSalvas = [];  // links já gravados (Storage/Drive)
+let fotosOSNovas  = [];  // base64 ainda não enviadas
+
+function renderFotosOS(){
+  const row = document.getElementById('fos-fotos'); if(!row) return;
+  row.innerHTML = '';
+  const add = (src, viewSrc, remover)=>{
+    const wrap = document.createElement('div'); wrap.className = 'man-foto-wrap';
+    const img = document.createElement('img'); img.className = 'fth'; img.src = src;
+    img.onclick = ()=> abrirFoto(viewSrc);
+    img.onerror = ()=>{ img.style.display = 'none'; };
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'man-foto-x'; x.title = 'Remover foto';
+    x.innerHTML = '<i class="ti ti-x"></i>';
+    x.onclick = (e)=>{ e.stopPropagation(); remover(); renderFotosOS(); };
+    wrap.appendChild(img); wrap.appendChild(x); row.appendChild(wrap);
+  };
+  fotosOSSalvas.forEach((link,k)=> add(driveThumbUrl(link), driveThumbUrl(link,1200), ()=>{ fotosOSSalvas.splice(k,1); }));
+  fotosOSNovas.forEach((b64,k)=> add(b64, b64, ()=>{ fotosOSNovas.splice(k,1); }));
+}
+
+// camera=true abre a câmera traseira; false abre a galeria. 1000px/0,7 pra dar leitura no PDF
+function adicionarFotoOS(camera){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  if(camera) inp.setAttribute('capture','environment');
+  inp.onchange = e=>{
+    const f = e.target.files[0]; if(!f) return;
+    comprimirImagem(f, 1000, 0.7, blob=>{
+      const r = new FileReader();
+      r.onload = ev=>{ fotosOSNovas.push(ev.target.result); renderFotosOS(); };
+      r.readAsDataURL(blob);
+    });
+  };
+  inp.click();
 }
 
 /* ── Produtos / peças utilizados na OS ────────────────────── */
@@ -3426,9 +3537,9 @@ function editarOSApp(os){
   const maoDeObraOriginal = Math.max(0, (Number(os.valor)||0) - totalProdutosSalvos);
   document.getElementById('fos-valor').value = maoDeObraOriginal || '';
   renderProdutosOS();
+  fotosOSSalvas = (os.fotos || []).slice(); fotosOSNovas = []; renderFotosOS();
 
   document.getElementById('form-os').style.display='block';
-  document.getElementById('form-os').scrollIntoView({behavior:'smooth'});
 }
 
 function fecharFormOS(){ document.getElementById('form-os').style.display='none'; }
@@ -3465,7 +3576,9 @@ async function salvarOSApp(){
     responsavel:document.getElementById('fos-responsavel').value.trim(),
     observacao:document.getElementById('fos-obs').value.trim(),
     status:document.getElementById('fos-status').value,
-    produtos: produtosValidos
+    produtos: produtosValidos,
+    fotos: fotosOSSalvas,          // links que continuam na OS
+    fotoBase64: fotosOSNovas       // fotos novas, o Worker envia pro Storage
   };
   if(editandoOSLinha){ payload.linha = editandoOSLinha; payload.numero = editandoOSNumero; }
 
@@ -3473,7 +3586,8 @@ async function salvarOSApp(){
     const r = await fetch(cfg.url, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload)});
     const d = await r.json();
     if(d.ok){
-      toast(d.acao==='criado' ? '✓ OS Nº '+d.numero+' criada' : '✓ OS atualizada');
+      toast((d.acao==='criado' ? '✓ OS Nº '+d.numero+' criada' : '✓ OS atualizada')
+        + (d.fotosFalharam ? ' — ⚠ '+d.fotosFalharam+' foto(s) não enviada(s)' : ''));
       fecharFormOS();
       await carregarOS();
       // Depois de salvar, já abre o compartilhamento do PDF (WhatsApp) direto, sem
@@ -4304,7 +4418,10 @@ async function salvarManutencaoAgora() {
     });
     try { localStorage.setItem(HK + '_' + vSel.placa, JSON.stringify(manEstado)); } catch (e) {}
     renderManItens(vSel.placa);
-    toast('✓ Manutenção salva (' + lista.length + (lista.length === 1 ? ' item' : ' itens') + ')');
+    toast(d.avisoHistorico
+      ? '⚠ Manutenção salva, mas o histórico NÃO foi registrado — avise o administrador do sistema'
+      : '✓ Manutenção salva (' + lista.length + (lista.length === 1 ? ' item' : ' itens') + ')');
+    if (d.avisoHistorico) console.warn(d.avisoHistorico);
   } catch (e) {
     toast('Erro ao salvar manutenção: ' + (e.message || 'conexão'));
   } finally {
