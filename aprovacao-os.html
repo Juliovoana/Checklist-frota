@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   --azul:#1a3a5c;--azul2:#2d5a8e;--azulc:#e8f0f8;
@@ -123,6 +124,12 @@ hr.div{border:none;border-top:1px solid var(--linha);margin:14px 0}
 .res-titulo{font-size:1rem;font-weight:700;margin-bottom:4px}
 .res-sub{font-size:.8rem;color:var(--texto2)}
 
+.fotos-evid{display:flex;flex-direction:column;gap:10px;margin:4px 0 14px}
+.fotos-evid img{width:100%;max-height:380px;object-fit:contain;background:var(--fundo);border:1px solid var(--linha);border-radius:10px;cursor:pointer}
+.reimp-box{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn-reimp{flex:1;min-width:120px;background:var(--painel);color:var(--azul);border:1.5px solid var(--azul);border-radius:8px;padding:10px;font-size:.84rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-reimp:hover{background:var(--azulc)}
+.btn-reimp:disabled{opacity:.5;cursor:default}
 .empty{text-align:center;padding:40px 20px;color:var(--texto2)}
 .empty-icon{font-size:2rem;margin-bottom:10px}
 .empty-title{font-size:.95rem;font-weight:600;color:var(--texto);margin-bottom:4px}
@@ -452,7 +459,18 @@ function voltarLista(){
 }
 
 // ── Renderiza detalhe ────────────────────────────────────────
+let detalheAtual = null; // { os, aprovacao, token } — usado pela reimpressão do PDF
+
+// Foto do Drive vira miniatura; link do Supabase Storage já é imagem
+function driveThumbUrl(link, tamanho){
+  if(!link) return link;
+  if(link.includes('supabase.co/storage')) return link;
+  const m = link.match(/\/file\/d\/([^\/]+)/) || link.match(/[?&]id=([^&]+)/);
+  return m ? `https://drive.google.com/thumbnail?id=${m[1]}&sz=w${tamanho||300}` : link;
+}
+
 function renderDetalhe(os, aprovacao, token){
+  detalheAtual = { os, aprovacao, token };
   const det = document.getElementById('detalhe-conteudo');
   const valorFmt = v => v ? 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '—';
   const jaRespondida = aprovacao && aprovacao.status !== 'pendente';
@@ -534,13 +552,18 @@ function renderDetalhe(os, aprovacao, token){
       </div>
       <div class="det-campo" style="margin-bottom:12px"><label>Serviço</label><div class="val">${os.servico}</div></div>
       ${os.observacao?`<div class="det-campo" style="margin-bottom:12px"><label>Observação</label><div class="val">${os.observacao}</div></div>`:''}
-      ${os.fotos&&os.fotos.length?`<div class="det-campo" style="margin-bottom:12px"><label>Fotos</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
-          ${os.fotos.map(link=>`<img src="${link}" loading="lazy" onclick="window.open('${link}','_blank')" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--linha);cursor:pointer">`).join('')}
-        </div></div>`:''}
       ${prodHTML}
       <div class="total-row"><span class="total-label">Total da OS</span><span class="total-valor">${valorFmt(os.valor)}</span></div>
+      ${os.fotos&&os.fotos.length?`<div class="det-campo" style="margin-bottom:6px"><label>Fotos / evidências</label></div>
+        <div class="fotos-evid">
+          ${os.fotos.map((link,i)=>`<img src="${driveThumbUrl(link,1200)}" loading="lazy" alt="Foto ${i+1}" onclick="window.open(this.src,'_blank')" onerror="this.outerHTML='<a href=&quot;${link}&quot; target=&quot;_blank&quot; style=&quot;font-size:.82rem&quot;>Abrir foto ${i+1}</a>'">`).join('')}
+        </div>`:''}
       ${acaoHTML}
+      <div class="reimp-box">
+        <button class="btn-reimp" onclick="reimprimirOS('view')">👁 Visualizar PDF</button>
+        <button class="btn-reimp" onclick="reimprimirOS('download')">⬇ Baixar PDF</button>
+        <button class="btn-reimp" onclick="reimprimirOS('share')">📤 Compartilhar</button>
+      </div>
       <!-- Histórico de aprovações -->
       <div id="historico-wrap" style="margin-top:14px">
         <div style="font-size:.72rem;font-weight:700;color:var(--texto2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">
@@ -663,6 +686,263 @@ async function responder(token, status){
     if(btnA) btnA.disabled = false;
     if(btnR) btnR.disabled = false;
   }
+}
+
+// ── Reimpressão da OS (PDF) com as informações da aprovação ───
+let empresaCache = null;
+async function carregarEmpresa(){
+  if(empresaCache) return empresaCache;
+  try{
+    const r = await fetch(WORKER_URL + '?action=getDadosEmpresa');
+    const d = await r.json();
+    empresaCache = d.dados || {};
+  }catch(e){ empresaCache = {}; }
+  return empresaCache;
+}
+
+// carrega uma imagem para o PDF; reduz pra até 1200px e devolve JPEG + proporção (ou null se falhar)
+function carregarFotoPdf(url, comoPng){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>{
+      try{
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const max = 1200;
+        if(w > max || h > max){ if(w > h){ h = Math.round(h*max/w); w = max; } else { w = Math.round(w*max/h); h = max; } }
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        if(!comoPng){ ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h); }
+        ctx.drawImage(img,0,0,w,h);
+        resolve({ data: comoPng ? c.toDataURL('image/png') : c.toDataURL('image/jpeg',0.8), w, h });
+      }catch(e){ resolve(null); }
+    };
+    img.onerror = ()=> resolve(null);
+    img.src = url;
+  });
+}
+
+async function reimprimirOS(modo){
+  if(!detalheAtual) return;
+  if(typeof jspdf === 'undefined'){ alert('Biblioteca de PDF não carregou — verifique a internet.'); return; }
+  const botoes = document.querySelectorAll('.btn-reimp');
+  botoes.forEach(b=>b.disabled = true);
+  try{
+    const { os, aprovacao, token } = detalheAtual;
+    const [empresa, logs] = await Promise.all([carregarEmpresa(), buscarLogs(token)]);
+    await gerarPdfOSAprovacao(os, aprovacao, logs, empresa, modo);
+  }catch(e){
+    alert('Não foi possível gerar o PDF: ' + e.message);
+  }finally{
+    botoes.forEach(b=>b.disabled = false);
+  }
+}
+
+async function buscarLogs(token){
+  try{
+    const r = await fetch(WORKER_URL, {method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({action:'getLogAprovacao', token})});
+    const d = await r.json();
+    return (d.ok && d.logs) ? d.logs : [];
+  }catch(e){ return []; }
+}
+
+async function gerarPdfOSAprovacao(os, aprovacao, logs, empresa, modo){
+  const { jsPDF } = jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  const azul = [26,58,92], cinza = [90,100,120];
+  const moeda = v => 'R$ '+(Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  const temCab = empresa.RazaoSocial || empresa.LogoLink;
+  const alturaTopo = temCab ? 34 : 28;
+  let y;
+
+  // Cabeçalho (mesmo padrão do PDF gerado no app)
+  doc.setFillColor(...azul); doc.rect(0,0,210,alturaTopo,'F');
+  let logoOk = false;
+  if(empresa.LogoLink){
+    const lg = await carregarFotoPdf(driveThumbUrl(empresa.LogoLink), true);
+    if(lg){ doc.addImage(lg.data, 'PNG', 14, 5, 18, 18); logoOk = true; }
+  }
+  const xTitulo = logoOk ? 38 : 14;
+  doc.setTextColor(255,255,255); doc.setFontSize(15); doc.setFont(undefined,'bold');
+  doc.text(empresa.RazaoSocial || 'ORDEM DE SERVIÇO', xTitulo, 13);
+  doc.setFontSize(9); doc.setFont(undefined,'normal');
+  if(empresa.RazaoSocial){
+    const contato = [empresa.CNPJ, empresa.Telefone, empresa.Email].filter(Boolean).join(' · ');
+    if(contato) doc.text(contato, xTitulo, 19);
+    if(empresa.Endereco) doc.text(empresa.Endereco, xTitulo, 24);
+  }
+  doc.setFontSize(13); doc.setFont(undefined,'bold');
+  doc.text('OS Nº '+os.numero, 196, temCab?13:17, {align:'right'});
+  if(temCab){ doc.setFontSize(9); doc.setFont(undefined,'normal'); doc.text('Ordem de Serviço', 196, 19, {align:'right'}); }
+
+  y = alturaTopo + 8;
+  doc.setTextColor(20,20,20);
+  const linha = (label, valor, x=14, largura=182)=>{
+    doc.setFontSize(8.5); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+    doc.text(label.toUpperCase()+':', x, y);
+    const lw = doc.getTextWidth(label.toUpperCase()+':') + 2;
+    doc.setFontSize(10.5); doc.setTextColor(20,20,20); doc.setFont(undefined,'normal');
+    const ls = doc.splitTextToSize(String(valor||'—'), largura - lw);
+    doc.text(ls, x + lw, y);
+    y += Math.max(ls.length*5, 5.5) + 2;
+  };
+  const duas = (l1,v1,l2,v2)=>{ const yi = y; linha(l1,v1,14,86); const y1 = y; y = yi; linha(l2,v2,110,86); y = Math.max(y,y1); };
+  const nova = ()=>{ doc.addPage(); y = 20; };
+
+  const semVeiculo = os.veiculo === 'Geral / Sem veículo';
+  const textoVeic = os.veiculo + (os.modelo ? ' — '+os.modelo : '');
+  duas('Data', os.data, 'Status da OS', os.status);
+  duas(semVeiculo ? 'Local / Ambiente' : 'Veículo', textoVeic, 'KM', os.km ? Number(os.km).toLocaleString('pt-BR')+' km' : '—');
+  duas('Fornecedor', os.fornecedor, 'Responsável', os.responsavel);
+  doc.setDrawColor(220,220,220); doc.line(14,y,196,y); y += 5;
+  linha('Serviço', os.servico);
+
+  // Produtos / peças
+  const produtos = os.produtos || [];
+  const totalProdutos = produtos.reduce((a,p)=> a + (Number(p.subtotal) || (Number(p.quantidade)||0)*(Number(p.valorUnitario)||0)), 0);
+  const maoDeObra = Math.max(0, (Number(os.valor)||0) - totalProdutos);
+  if(produtos.length){
+    y += 1;
+    if(y > 230) nova();
+    doc.setFontSize(8.5); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+    doc.text('PRODUTOS / PEÇAS UTILIZADOS', 14, y); y += 5;
+    doc.setFillColor(245,246,250); doc.rect(14,y-3.5,182,6,'F');
+    doc.setFontSize(8);
+    doc.text('Produto',16,y); doc.text('Qtd',130,y,{align:'right'}); doc.text('Vlr. Unit.',162,y,{align:'right'}); doc.text('Subtotal',194,y,{align:'right'});
+    y += 5.5;
+    doc.setFont(undefined,'normal'); doc.setTextColor(20,20,20); doc.setFontSize(9);
+    produtos.forEach(pr=>{
+      if(y > 270) nova();
+      const sub = Number(pr.subtotal) || (Number(pr.quantidade)||0)*(Number(pr.valorUnitario)||0);
+      doc.text(String(pr.produto||'—'),16,y); doc.text(String(pr.quantidade||0),130,y,{align:'right'});
+      doc.text(moeda(pr.valorUnitario),162,y,{align:'right'}); doc.text(moeda(sub),194,y,{align:'right'});
+      y += 5;
+    });
+    y += 1; doc.setDrawColor(220,220,220); doc.line(14,y,196,y); y += 5;
+    doc.setFontSize(9.5); doc.setTextColor(...cinza);
+    doc.text('Subtotal peças:',140,y); doc.text(moeda(totalProdutos),194,y,{align:'right'}); y += 5;
+    doc.text('Mão de obra:',140,y); doc.text(moeda(maoDeObra),194,y,{align:'right'}); y += 6;
+  } else { y += 1; }
+
+  if(y > 265) nova();
+  doc.setFillColor(...azul); doc.rect(120,y-4,76,9,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(10.5); doc.setFont(undefined,'bold');
+  doc.text('TOTAL:',140,y+1.2); doc.text(moeda(os.valor),194,y+1.2,{align:'right'});
+  y += 11; doc.setFont(undefined,'normal'); doc.setTextColor(20,20,20);
+  if(os.observacao){ if(y > 265) nova(); linha('Observação', os.observacao); }
+
+  // Fotos / evidências (1 foto = grande; 2+ = 2 por linha)
+  const fotos = [];
+  for(const link of (os.fotos || [])){ const f = await carregarFotoPdf(driveThumbUrl(link,1200)); if(f) fotos.push(f); }
+  if(fotos.length){
+    if(y > 250) nova();
+    y += 2;
+    doc.setFontSize(8.5); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+    doc.text('FOTOS / EVIDÊNCIAS', 14, y); y += 5;
+    const unica = fotos.length === 1;
+    const maxW = unica ? 130 : 88, maxH = unica ? 100 : 80, porLinha = unica ? 1 : 2;
+    for(let i = 0; i < fotos.length; i += porLinha){
+      const grupo = fotos.slice(i, i+porLinha).map(f=>{ let w = maxW, h = w*f.h/f.w; if(h > maxH){ h = maxH; w = h*f.w/f.h; } return {f,w,h}; });
+      const alt = Math.max(...grupo.map(g=>g.h));
+      if(y + alt > 275) nova();
+      grupo.forEach((g,k)=> doc.addImage(g.f.data,'JPEG',14+k*94,y,g.w,g.h));
+      y += alt + 5;
+    }
+  }
+
+  // ── Informações da aprovação ────────────────────────────────
+  const stAp = (aprovacao && aprovacao.status) || 'pendente';
+  const stTxt = {aprovado:'APROVADA', reprovado:'REPROVADA', pendente:'AGUARDANDO APROVAÇÃO'}[stAp] || stAp.toUpperCase();
+  const stCor = {aprovado:[21,128,61], reprovado:[220,38,38], pendente:[217,119,6]}[stAp] || cinza;
+  const dtResp = aprovacao && aprovacao.respondido_em ? new Date(aprovacao.respondido_em).toLocaleString('pt-BR') : '';
+  if(y > 225) nova();
+  y += 2;
+  doc.setDrawColor(...stCor); doc.setFillColor(248,250,252);
+  const yBox = y;
+  doc.setFontSize(8.5); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+  doc.text('APROVAÇÃO DA OS', 18, y+1);
+  y += 7;
+  doc.setFontSize(12); doc.setTextColor(...stCor);
+  doc.text(stTxt, 18, y);
+  y += 6;
+  doc.setFont(undefined,'normal'); doc.setTextColor(20,20,20); doc.setFontSize(10);
+  if(aprovacao && aprovacao.aprovador && stAp !== 'pendente'){ doc.text('Por: '+aprovacao.aprovador, 18, y); y += 5; }
+  if(dtResp && stAp !== 'pendente'){ doc.text('Em: '+dtResp, 18, y); y += 5; }
+  if(aprovacao && aprovacao.motivo){
+    const ml = doc.splitTextToSize((stAp==='reprovado' ? 'Motivo: ' : 'Observação: ')+aprovacao.motivo, 172);
+    doc.text(ml, 18, y); y += ml.length*5;
+  }
+  y += 2;
+  doc.roundedRect(14, yBox-5, 182, y-yBox+4, 1.5, 1.5, 'S');
+  y += 8;
+
+  // Histórico de ações da aprovação
+  if(logs && logs.length){
+    if(y > 250) nova();
+    doc.setFontSize(8.5); doc.setTextColor(...cinza); doc.setFont(undefined,'bold');
+    doc.text('HISTÓRICO DE AÇÕES', 14, y); y += 5;
+    const rot = {aprovado:'Aprovado', reprovado:'Reprovado', retornado_pendente:'Retornado a pendente'};
+    doc.setFont(undefined,'normal'); doc.setFontSize(9); doc.setTextColor(20,20,20);
+    logs.forEach(l=>{
+      const txt = `${new Date(l.criado_em).toLocaleString('pt-BR')} — ${rot[l.acao]||l.acao} — ${l.operador||''}` + (l.motivo ? ` — "${l.motivo}"` : '');
+      const ls = doc.splitTextToSize(txt, 182);
+      if(y + ls.length*4.6 > 280) nova();
+      doc.text(ls, 14, y); y += ls.length*4.6 + 1.5;
+    });
+  }
+
+  doc.setFontSize(8); doc.setTextColor(...cinza);
+  const total = doc.getNumberOfPages();
+  for(let i = 1; i <= total; i++){
+    doc.setPage(i);
+    doc.text('Reimpressão gerada em '+new Date().toLocaleString('pt-BR')+' — página '+i+'/'+total, 14, 290);
+  }
+
+  const nomeArq = 'OS_'+os.numero+'_'+String(os.veiculo||'').replace(/[^a-zA-Z0-9]/g,'')+'_aprovacao.pdf';
+  if(modo === 'view'){ window.open(doc.output('bloburl'), '_blank'); return; }
+  if(modo === 'share' && navigator.share && navigator.canShare){
+    try{
+      const file = new File([doc.output('blob')], nomeArq, {type:'application/pdf'});
+      if(navigator.canShare({files:[file]})){
+        const texto = 'OS Nº '+os.numero+' — '+stTxt;
+        // compartilhar arquivo só funciona logo após um toque do usuário; como o PDF demora
+        // (fotos, empresa, histórico), o toque pode ter expirado -> pede um toque novo
+        if(navigator.userActivation && !navigator.userActivation.isActive){ popupCompartilhar(file, texto); return; }
+        try{
+          await navigator.share({files:[file], title:'OS Nº '+os.numero, text:texto});
+          return;
+        }catch(e){
+          if(e.name === 'AbortError') return;
+          if(e.name === 'NotAllowedError'){ popupCompartilhar(file, texto); return; }
+          throw e;
+        }
+      }
+    }catch(e){ if(e.name === 'AbortError') return; }
+  }
+  doc.save(nomeArq);
+}
+
+function popupCompartilhar(file, texto){
+  const antigo = document.getElementById('popup-share'); if(antigo) antigo.remove();
+  const ov = document.createElement('div');
+  ov.id = 'popup-share';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(20,30,50,.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML = `<div style="background:#fff;border-radius:12px;padding:20px;max-width:340px;width:100%;text-align:center">
+    <div style="font-weight:700;margin-bottom:6px">📄 PDF pronto</div>
+    <div style="font-size:.82rem;color:var(--texto2);margin-bottom:14px">Toque em compartilhar para enviar o PDF.</div>
+    <button class="btn-primary" id="pshare-ok" style="margin-bottom:8px">📤 Compartilhar</button>
+    <button class="btn-reimp" id="pshare-baixar" style="width:100%;margin-bottom:8px">⬇ Baixar PDF</button>
+    <button id="pshare-fechar" style="background:none;border:none;color:var(--texto2);cursor:pointer;font-family:inherit;padding:6px">Fechar</button>
+  </div>`;
+  document.body.appendChild(ov);
+  const fechar = ()=> ov.remove();
+  document.getElementById('pshare-fechar').onclick = fechar;
+  document.getElementById('pshare-baixar').onclick = ()=>{ const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); };
+  document.getElementById('pshare-ok').onclick = ()=>{
+    navigator.share({files:[file], title:file.name, text:texto}).then(fechar)
+      .catch(e=>{ if(e.name !== 'AbortError') alert('Não foi possível compartilhar — use "Baixar PDF".'); });
+  };
 }
 
 // ── Init — Supabase Auth cuida da sessão automaticamente ─────

@@ -2967,6 +2967,7 @@ function carregarFotoPdf(url){
 }
 
 async function gerarPdfOS(os, modo){
+  const inicioGeracao = Date.now(); // pra saber se o toque do usuário ainda vale na hora de compartilhar
   if(typeof jspdf === 'undefined'){ toast('Biblioteca de PDF não carregou — verifique a internet'); return; }
   const { jsPDF } = jspdf;
   const doc = new jsPDF({ unit:'mm', format:'a4' });
@@ -3199,8 +3200,23 @@ async function gerarPdfOS(os, modo){
         const blob = doc.output('blob');
         const file = new File([blob], nomeArquivo, {type:'application/pdf'});
         if(navigator.canShare({files:[file]})){
-          await navigator.share({files:[file], title:'OS Nº '+os.numero, text:textoWpp});
-          return;
+          // O navegador só deixa abrir o compartilhamento de ARQUIVO logo depois de um toque do
+          // usuário (a "ativação" vale poucos segundos). Com fotos, o PDF demora mais pra ficar
+          // pronto e o toque já expirou: nesse caso o share falha e o código caía no fallback
+          // (baixa o PDF + abre o WhatsApp só com o texto) -- o arquivo não ia junto.
+          // Solução: se o toque expirou, mostra um botão "Compartilhar" (um toque novo, que vale).
+          const toqueValido = navigator.userActivation
+            ? navigator.userActivation.isActive
+            : (Date.now() - inicioGeracao) < 3000;
+          if(!toqueValido){ mostrarPopupCompartilharOS(file, textoWpp, os.numero); return; }
+          try{
+            await navigator.share({files:[file], title:'OS Nº '+os.numero, text:textoWpp});
+            return;
+          }catch(e){
+            if(e.name==='AbortError') return;
+            if(e.name==='NotAllowedError'){ mostrarPopupCompartilharOS(file, textoWpp, os.numero); return; }
+            throw e;
+          }
         }
       }catch(e){
         if(e.name==='AbortError') return;
@@ -3224,6 +3240,33 @@ async function gerarPdfOS(os, modo){
   // Fallback: navegador sem suporte a compartilhar arquivos, ou modo "download"
   doc.save(nomeArquivo);
   if(modo==='share') toast('Compartilhamento não suportado neste navegador — PDF baixado');
+}
+
+/* ── Popup "PDF pronto": dá um toque novo pra o compartilhamento de arquivo funcionar ── */
+function mostrarPopupCompartilharOS(file, texto, numero){
+  const antigo = document.getElementById('popup-share-os'); if(antigo) antigo.remove();
+  const ov = document.createElement('div');
+  ov.id = 'popup-share-os'; ov.className = 'os-modal'; ov.style.display = 'block'; ov.style.zIndex = '95';
+  ov.innerHTML = `<div class="card os-modal-box" style="margin-top:12vh;text-align:center">
+      <div class="lbl" style="font-size:15px">📄 PDF da OS Nº ${numero} pronto</div>
+      <div style="font-size:12px;color:var(--tx2);margin:6px 0 14px">Toque em compartilhar para enviar o PDF junto com a mensagem.</div>
+      <button class="btn-buscar" id="psos-share" style="width:100%;justify-content:center;margin-bottom:8px"><i class="ti ti-share"></i> Compartilhar</button>
+      <button class="sbtn" id="psos-baixar" style="width:100%;border:1px solid var(--bd);border-radius:var(--rs);padding:10px;margin-bottom:8px"><i class="ti ti-download"></i> Baixar PDF</button>
+      <button class="sbtn" id="psos-fechar" style="width:100%;padding:8px">Fechar</button>
+    </div>`;
+  document.body.appendChild(ov);
+  const fechar = ()=> ov.remove();
+  document.getElementById('psos-fechar').onclick = fechar;
+  document.getElementById('psos-baixar').onclick = ()=>{
+    const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  };
+  // sem nenhum await antes do share: precisa rodar direto no toque
+  document.getElementById('psos-share').onclick = ()=>{
+    navigator.share({files:[file], title:'OS Nº '+numero, text:texto})
+      .then(fechar)
+      .catch(e=>{ if(e.name!=='AbortError') toast('Não foi possível compartilhar — use "Baixar PDF"'); });
+  };
 }
 
 /* ── Gerar token de aprovação para a OS ──────────────────── */
