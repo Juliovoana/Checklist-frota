@@ -344,6 +344,13 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
         <i class="ti ti-search sic"></i>
         <input class="inp" id="dash-busca" placeholder="Buscar por placa ou modelo..." oninput="renderDash()">
       </div>
+      <div style="display:flex;align-items:center;gap:6px;padding-top:8px;font-size:12px;color:var(--tx2)">
+        <span>Ordenar por</span>
+        <select class="inp" id="dash-ordem" style="width:auto;height:30px;padding:2px 8px;font-size:12px" onchange="definirOrdemVeiculos(this.value)">
+          <option value="placa">Placa</option>
+          <option value="modelo">Modelo</option>
+        </select>
+      </div>
     </div>
     <div style="padding:0 16px 4px;font-size:11px;color:var(--tx3)">Toque num veículo pra abrir o checklist dele</div>
     <div id="dash-lista"></div>
@@ -456,6 +463,13 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
       <div class="sbar">
         <span style="font-size:12px;color:var(--tx2)" id="frst">Aguardando configuração</span>
         <button class="sbtn" onclick="sincFrota()"><i class="ti ti-refresh"></i> Atualizar</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:8px 16px 0;font-size:12px;color:var(--tx2)">
+        <span>Ordenar por</span>
+        <select class="inp" id="fr-ordem" style="width:auto;height:30px;padding:2px 8px;font-size:12px" onchange="definirOrdemVeiculos(this.value)">
+          <option value="placa">Placa</option>
+          <option value="modelo">Modelo</option>
+        </select>
       </div>
       <div id="frlist"><div class="empty"><i class="ti ti-bus"></i>Configure a URL na aba Config</div></div>
     </div>
@@ -996,6 +1010,8 @@ function init(){
   document.getElementById('cfgtabck').value = cfg.tabCk ||'Checklists';
   document.getElementById('dt').value  = new Date().toISOString().slice(0,10);
   document.getElementById('rdt').value = new Date().toISOString().slice(0,10);
+  document.getElementById('dash-ordem').value = ordemVeiculosAtual();
+  document.getElementById('fr-ordem').value = ordemVeiculosAtual();
   renderFrota(); renderDash(); updSub(); checkOnline();
   verificarSessaoConfigServidor();
   detectarUsuarioGoogle();
@@ -1107,7 +1123,7 @@ function htmlManutencaoResumo(resumo){
    ══════════════════════════════════════════════════════════════════ */
 const AJUDA_FROTA = {
   titulo: 'Checklist Frota',
-  ultimaRevisao: '25/09/2026',
+  ultimaRevisao: '29/09/2026',
   secoes: [
     { id: 'geral', titulo: 'Visão geral', corpo: `
       <p>Registra o checklist diário de cada veículo da frota (Van, Micro Ônibus, Utilitário,
@@ -1131,6 +1147,9 @@ const AJUDA_FROTA = {
         <li><strong>Cards de resumo</strong> (total + por tipo de veículo) são clicáveis —
         tocar num card filtra a lista abaixo só pro tipo escolhido; tocar em "Total" limpa o
         filtro.</li>
+        <li><strong>"Ordenar por" (Placa / Modelo)</strong>, acima da lista, define a ordem
+        dos veículos dentro de cada grupo — a escolha vale pras duas telas (Painel e Ver
+        Frota, ver seção Frota) e fica lembrada no aparelho.</li>
         <li><strong>Tocar num veículo da lista já abre o checklist dele</strong> na aba Novo,
         pronto pra marcar os itens — sem precisar digitar nada na busca.</li>
         <li>Cada veículo mostra a data, o motorista e o <strong>KM do último checklist</strong>,
@@ -1183,7 +1202,8 @@ const AJUDA_FROTA = {
       Vans, Utilitários, Buggies &amp; Quadriciclos — quem ainda não tem categoria escolhida
       aparece em "Sem categoria"), depois pelo <strong>Tipo</strong> dentro de cada categoria.
       No Painel, tocar num card de Tipo filtra a lista de veículos só pra aquele grupo; tocar
-      em "Total" limpa o filtro.</p>
+      em "Total" limpa o filtro. O seletor <strong>"Ordenar por" (Placa / Modelo)</strong>
+      acima da lista controla a ordem dos veículos dentro de cada grupo, nas duas telas.</p>
       <p><strong>Gerenciar</strong> (só Administrador) tem 3 abas:</p>
       <ul>
         <li><strong>Veículos</strong> — cadastro (placa, modelo, ano, tipo, categoria).
@@ -2345,6 +2365,24 @@ async function sincFrota(){
   }catch(e){toast('Erro ao conectar — usando cache local');}
 }
 
+// ── Ordenar listagem de veículos (Painel + Frota) por Placa ou Modelo ──
+// Preferência compartilhada entre as duas telas (escolher numa reflete na
+// outra) e persistida no navegador, mesmo padrão cv_* já usado no resto do
+// app. Só muda a ORDEM dentro de cada grupo categoria/tipo -- o agrupamento
+// em si continua igual.
+const ORD_VEIC_KEY='cv_ordemveic';
+function ordemVeiculosAtual(){ return localStorage.getItem(ORD_VEIC_KEY)||'placa'; }
+function definirOrdemVeiculos(valor){
+  localStorage.setItem(ORD_VEIC_KEY, valor);
+  const selDash=document.getElementById('dash-ordem'); if(selDash) selDash.value=valor;
+  const selFr=document.getElementById('fr-ordem'); if(selFr) selFr.value=valor;
+  renderDash(); renderFrota();
+}
+function compararVeiculos(a,b){
+  const campo = ordemVeiculosAtual()==='modelo' ? 'modelo' : 'placa';
+  return String(a[campo]||'').localeCompare(String(b[campo]||''),'pt-BR',{numeric:true,sensitivity:'base'});
+}
+
 function renderFrota(){
   popularListasTipos();
   const list=document.getElementById('frlist'),st=document.getElementById('frst');
@@ -2370,7 +2408,7 @@ function renderFrota(){
     list.appendChild(hCat);
     Object.keys(porCategoria[cat]).sort().forEach(tipo=>{
       const h=document.createElement('div');h.style.cssText='padding:9px 16px 9px 30px;background:var(--bg);border-bottom:1px solid var(--bd);font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em';h.textContent=tipo+' ('+porCategoria[cat][tipo].length+')';list.appendChild(h);
-      porCategoria[cat][tipo].forEach(v=>{
+      porCategoria[cat][tipo].sort(compararVeiculos).forEach(v=>{
         const d=document.createElement('div');d.className='fi';
         d.innerHTML=`<div class="fiic"><i class="ti ${TPI[v.tipo]||'ti-car'}"></i></div><div><div class="fipl">${v.placa}</div><div class="fisb">${v.modelo} · ${v.ano}</div><span class="pill ${TPC[v.tipo]||'pu'}">${v.tipo}</span></div>`;
         list.appendChild(d);
@@ -2440,6 +2478,7 @@ function renderDash(){
   if(!filtrados.length){ lista.innerHTML='<div class="empty"><i class="ti ti-search-off"></i>Nenhum veículo encontrado'+(filtroTxt?' em "'+filtroTxt+'"':'')+'</div>'; return; }
 
   const g={}; filtrados.forEach(v=>{ if(!g[v.tipo])g[v.tipo]=[]; g[v.tipo].push(v); });
+  Object.keys(g).forEach(t=>g[t].sort(compararVeiculos));
   const soUmGrupo = Object.keys(g).length===1;
   lista.innerHTML='';
   Object.keys(g).sort().forEach(tipo=>{
@@ -3223,10 +3262,13 @@ async function gerarPdfOS(os, modo){
       }
     }
 
-    // Fallback desktop: baixa o PDF e abre WhatsApp Web com o texto
-    doc.save(nomeArquivo);
-    const urlWpp = 'https://wa.me/?text='+encodeURIComponent(textoWpp);
-    window.open(urlWpp, '_blank');
+    // Fallback desktop: antes baixava o PDF E abria o WhatsApp Web ao mesmo
+    // tempo, sem perguntar -- as duas ações automáticas juntas confundiam o
+    // operador (pedido do usuário, 29/09/2026: "salvar" deve se comportar
+    // como "compartilhar", que é um clique deliberado, não 2 ações sozinhas).
+    // Agora mostra o mesmo tipo de popup já usado no celular (toque
+    // expirado), só que com as ações certas pro desktop.
+    mostrarPopupCompartilharDesktopOS(doc, nomeArquivo, textoWpp, os.numero);
     return;
   }
 
@@ -3266,6 +3308,30 @@ function mostrarPopupCompartilharOS(file, texto, numero){
     navigator.share({files:[file], title:'OS Nº '+numero, text:texto})
       .then(fechar)
       .catch(e=>{ if(e.name!=='AbortError') toast('Não foi possível compartilhar — use "Baixar PDF"'); });
+  };
+}
+
+/* ── Popup "PDF pronto" pro DESKTOP (sem navigator.share de arquivo): baixar
+   e abrir o WhatsApp Web viram 2 botões separados, cada um 1 ação só --
+   antes as duas aconteciam sozinhas, ao mesmo tempo, direto ao salvar a OS
+   (pedido do usuário, 29/09/2026: "salvar" deve se comportar como
+   "compartilhar", que é um clique deliberado, não 2 ações automáticas). ── */
+function mostrarPopupCompartilharDesktopOS(pdfDoc, nomeArquivo, texto, numero){
+  const antigo = document.getElementById('popup-share-os'); if(antigo) antigo.remove();
+  const ov = document.createElement('div');
+  ov.id = 'popup-share-os'; ov.className = 'os-modal'; ov.style.display = 'block'; ov.style.zIndex = '95';
+  ov.innerHTML = `<div class="card os-modal-box" style="margin-top:12vh;text-align:center">
+      <div class="lbl" style="font-size:15px">📄 PDF da OS Nº ${numero} pronto</div>
+      <div style="font-size:12px;color:var(--tx2);margin:6px 0 14px">Baixe o PDF e depois abra o WhatsApp Web -- são 2 passos separados, pra não se perder.</div>
+      <button class="sbtn" id="psosd-baixar" style="width:100%;border:1px solid var(--bd);border-radius:var(--rs);padding:10px;margin-bottom:8px"><i class="ti ti-download"></i> Baixar PDF</button>
+      <button class="btn-buscar" id="psosd-wpp" style="width:100%;justify-content:center;margin-bottom:8px"><i class="ti ti-brand-whatsapp"></i> Abrir WhatsApp Web</button>
+      <button class="sbtn" id="psosd-fechar" style="width:100%;padding:8px">Fechar</button>
+    </div>`;
+  document.body.appendChild(ov);
+  document.getElementById('psosd-fechar').onclick = ()=> ov.remove();
+  document.getElementById('psosd-baixar').onclick = ()=> pdfDoc.save(nomeArquivo);
+  document.getElementById('psosd-wpp').onclick = ()=>{
+    window.open('https://wa.me/?text='+encodeURIComponent(texto), '_blank');
   };
 }
 
