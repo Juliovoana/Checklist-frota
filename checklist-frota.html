@@ -1152,7 +1152,7 @@ function htmlManutencaoResumo(resumo, placaClicavel){
    ══════════════════════════════════════════════════════════════════ */
 const AJUDA_FROTA = {
   titulo: 'Checklist Frota',
-  ultimaRevisao: '15/10/2026',
+  ultimaRevisao: '17/10/2026',
   secoes: [
     { id: 'geral', titulo: 'Visão geral', corpo: `
       <p>Registra o checklist diário de cada veículo da frota (Van, Micro Ônibus, Utilitário,
@@ -1241,7 +1241,7 @@ const AJUDA_FROTA = {
       (vencida) e amarelos (perto de vencer) com o motivo, ou "N em dia" — e o topo do resumo conta quantos
       veículos têm manutenção pendente. Logo abaixo aparecem também as <strong>OS abertas</strong> do veículo
       (Urgente em vermelho; Aberta e Em andamento em amarelo, com o número e o serviço) e o topo conta quantos veículos têm
-      OS aberta. Toque numa <strong>etiqueta de OS</strong> para mudar o status ou informar a realização (“Concluída”), e numa
+      OS aberta. Toque numa <strong>etiqueta de OS</strong> para mudar o status ou informar a realização (“Concluída”) — o popup mostra a <strong>observação</strong> e as <strong>peças/produtos destinados</strong> à OS (com quantidade, valor e total) para você conferir se tudo foi atendido antes de concluir — e numa
       <strong>etiqueta de manutenção</strong> para informar a realização (data, km e próximo vencimento — só o
       administrador, logado na barra acima). Quando não há placa informada, o resumo mostra os botões <strong>Todos / Fizeram / Pendentes</strong> e a contagem “N sem checklist” no topo (toque para ver só os veículos que ainda não fizeram checklist no dia). O botão <strong>PDF do resumo</strong> gera o mesmo resumo da tela (quem fez e quem está sem checklist, com motorista, hora, km, manutenção e OS), respeitando o filtro Todos / Fizeram / Pendentes escolhido. O botão <strong>PDF de pendências</strong> gera o relatório da frota com
       as manutenções vencidas/a vencer e as OS abertas de cada veículo. A manutenção é a situação <em>atual</em> do veículo (calculada com o último
@@ -2213,12 +2213,33 @@ function abrirModalRec(titulo, corpoHtml){
 }
 const STATUS_OS_TODOS=['Urgente','Aberta','Em andamento','Concluída','Cancelada'];
 
+// Observação + peças/produtos destinados à OS: aparecem no popup pra conferir se tudo foi atendido antes de concluir
+function htmlConferenciaOSRec(os){
+  const moeda=v=>'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  const prods=(os.produtos||[]).filter(p=>p&&(p.produto||'').toString().trim());
+  const sub=p=>Number(p.subtotal)||(Number(p.quantidade)||0)*(Number(p.valorUnitario)||0);
+  const totPecas=prods.reduce((t,p)=>t+sub(p),0);
+  const obs=(os.observacao||'').toString().trim();
+  const cx='background:var(--sf);border:1px solid var(--bd);border-radius:var(--rs);padding:8px 10px;margin-bottom:10px';
+  const rot='font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px';
+  const bObs=`<div style="${cx}"><div style="${rot}">Observação</div>${obs?`<div style="font-size:13px;color:var(--tx);white-space:pre-wrap">${escRec(obs)}</div>`:`<div style="font-size:12px;color:var(--tx3)">Sem observação registrada.</div>`}</div>`;
+  const bPecas=`<div style="${cx}"><div style="${rot}">Peças / produtos destinados${prods.length?' ('+prods.length+')':''}</div>`+(prods.length
+    ? `<div style="max-height:30vh;overflow:auto">`+prods.map(p=>`<div style="display:flex;gap:8px;justify-content:space-between;align-items:baseline;font-size:12.5px;padding:4px 0;border-bottom:1px solid var(--bd)">
+        <span style="flex:1;min-width:0;word-break:break-word">${escRec(p.produto)}</span>
+        <span style="white-space:nowrap;color:var(--tx2)">${escRec(p.quantidade||0)} × ${moeda(p.valorUnitario)}</span>
+        <b style="white-space:nowrap">${moeda(sub(p))}</b></div>`).join('')+`</div>
+       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--tx2);padding-top:6px"><span>Total em peças</span><b>${moeda(totPecas)}</b></div>`
+        +(Number(os.valor)?`<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--tx2)"><span>Valor total da OS</span><b>${moeda(os.valor)}</b></div>`:'')
+    : `<div style="font-size:12px;color:#92400e">Nenhuma peça/produto registrado nesta OS.</div>`)+`</div>`;
+  return bObs+bPecas;
+}
 function abrirAcaoOSRec(linha){
   const os=(osCache||[]).find(o=>String(o.linha)===String(linha));
   if(!os){ toast('OS não encontrada — atualize a lista'); return; }
   abrirModalRec(`<i class="ti ti-tool"></i> OS ${escRec(os.numero)} · ${escRec(os.veiculo)}`, `
     <div style="font-size:13px;color:var(--tx);margin-bottom:4px">${escRec(os.servico||'')}</div>
     <div style="font-size:12px;color:var(--tx2);margin-bottom:12px">Aberta em ${escRec(os.data||'')}${os.fornecedor?' · '+escRec(os.fornecedor):''} · status atual: <b>${escRec(os.status)}</b></div>
+    ${htmlConferenciaOSRec(os)}
     <div class="lbl">Status</div>
     <select class="inp" id="rec-os-status" style="margin-bottom:12px">${STATUS_OS_TODOS.map(s2=>`<option value="${s2}"${s2===os.status?' selected':''}>${s2}</option>`).join('')}</select>
     <button class="btn-buscar" id="rec-os-concluir" style="width:100%;justify-content:center;margin-bottom:8px"><i class="ti ti-circle-check"></i> Informar realização — marcar como Concluída</button>
