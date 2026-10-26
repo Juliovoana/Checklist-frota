@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iYmdHcmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0U5RjRFRSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNDREU4RDkiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9Imdsb3ciIGN4PSI3OCUiIGN5PSIxOCUiIHI9IjU1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZmZmZmYiIHN0b3Atb3BhY2l0eT0iMC42Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2ZmZmZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJwYXRoR3JhZCIgeDE9IjAlIiB5MT0iMTAwJSIgeDI9IjEwMCUiIHkyPSIwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNFNTk5MUYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjRjJBOTNCIi8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogIDwvZGVmcz4KCiAgPCEtLSBmdW5kbyBzcXVpcmNsZSB2ZXJkZSBjbGFybyAtLT4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgcng9IjQ2IiBmaWxsPSJ1cmwoI2JnR3JhZCkiLz4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgcng9IjQ2IiBmaWxsPSJ1cmwoI2dsb3cpIi8+CgogIDwhLS0gcm90YSBlc3RpbGl6YWRhIGVtIFM6IHN1Z2VyZSBvIHRyYWpldG8gZG8gdHJhbnNmZXIgY2hlZ2FuZG8gYW8gZGVzdGlubyAtLT4KICA8cGF0aCBkPSJNIDU4IDE1MiBDIDU4IDEyOCwgOTYgMTMyLCA5NiAxMDggQyA5NiA4NCwgNjAgODgsIDYwIDY0IEMgNjAgNDQsIDgyIDM0LCAxMDYgMzQiCiAgICAgICAgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3BhdGhHcmFkKSIgc3Ryb2tlLXdpZHRoPSIxNSIKICAgICAgICBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KCiAgPCEtLSBwb250byBkZSBwYXJ0aWRhIC0tPgogIDxjaXJjbGUgY3g9IjU4IiBjeT0iMTUyIiByPSI4LjUiIGZpbGw9IiMxQjQzMzIiLz4KCiAgPCEtLSBwaW5vIGRlIGNoZWdhZGEgLS0+CiAgPHBhdGggZD0iTTEzMiAyMCBDIDE0NSAyMCAxNTUgMzAgMTU1IDQzIEMgMTU1IDU4IDEzMiA3OCAxMzIgNzggQyAxMzIgNzggMTA5IDU4IDEwOSA0MyBDIDEwOSAzMCAxMTkgMjAgMTMyIDIwIFoiCiAgICAgICAgZmlsbD0iIzFCNDMzMiIvPgogIDxjaXJjbGUgY3g9IjEzMiIgY3k9IjQzIiByPSI5IiBmaWxsPSIjRTlGNEVFIi8+Cjwvc3ZnPgo=">
+<title>Servir — Painel Central</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F7F9; --surface:#FFFFFF; --border:#E8EAED; --ink:#171E1A;
+    --muted:#6B7280; --muted-2:#9AA1A9; --brand:#1B4332; --brand-2:#2D6A4F; --brand-soft:#EAF2EE;
+    --accent:#F2A93B; --accent-ink:#8A5E12; --danger:#C0392B; --danger-soft:#FBEAE8; --success-soft:#E8F3EC;
+    --shadow-sm: 0 1px 2px rgba(23,30,26,.05), 0 1px 3px rgba(23,30,26,.06);
+    --shadow-md: 0 8px 24px -8px rgba(23,30,26,.12);
+    --shadow-lg: 0 24px 48px -16px rgba(23,30,26,.22);
+    --radius: 14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Inter', -apple-system, sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; -webkit-font-smoothing:antialiased; }
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
+  .mono{ font-family:'JetBrains Mono', monospace; font-variant-numeric:tabular-nums; }
+
+  #telaLogin{ min-height:100vh; display:grid; grid-template-columns:1fr 1fr; }
+  @media (max-width:860px){ #telaLogin{ grid-template-columns:1fr; } }
+  .login-visual{
+    background:linear-gradient(155deg, var(--brand) 0%, #143327 100%);
+    color:#fff; display:flex; flex-direction:column; justify-content:space-between;
+    padding:56px 48px; position:relative; overflow:hidden;
+  }
+  @media (max-width:860px){ .login-visual{ display:none; } }
+  .login-visual::after{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(circle at 80% 100%, rgba(242,169,59,.18), transparent 55%);
+  }
+  .login-visual .brand-mark{ font-size:1.3rem; font-weight:700; letter-spacing:-.01em; position:relative; z-index:1; }
+  .login-visual .brand-mark span{ color:var(--accent); }
+  .login-visual .quote{ font-size:1.5rem; font-weight:600; line-height:1.4; max-width:26ch; position:relative; z-index:1; }
+  .login-visual .foot{ font-size:.82rem; color:rgba(255,255,255,.55); position:relative; z-index:1; }
+
+  .login-form-side{ display:flex; align-items:center; justify-content:center; padding:32px; }
+  .login-card{ width:100%; max-width:360px; }
+  .login-card h1{ font-size:1.5rem; font-weight:700; margin-bottom:6px; letter-spacing:-.01em; }
+  .login-card .sub{ color:var(--muted); font-size:.9rem; margin-bottom:28px; }
+  .toggle-auth{ text-align:center; font-size:.85rem; color:var(--muted); margin-top:18px; }
+  .toggle-auth a{ color:var(--brand); font-weight:600; text-decoration:underline; cursor:pointer; }
+  .link-esqueci-senha{ text-align:right; margin-top:-8px; margin-bottom:16px; }
+  .link-esqueci-senha a{ font-size:.8rem; color:var(--brand-2); font-weight:600; text-decoration:none; cursor:pointer; }
+  .link-esqueci-senha a:hover{ text-decoration:underline; }
+  .field-senha-wrap{ position:relative; }
+  .field-senha-wrap input{ padding-right:42px; }
+  .btn-toggle-senha{
+    position:absolute; top:50%; right:6px; transform:translateY(-50%);
+    background:none; border:none; padding:6px; cursor:pointer; color:var(--muted-2);
+    display:flex; align-items:center; justify-content:center; border-radius:6px; transition:color .15s, background .15s;
+  }
+  .btn-toggle-senha:hover{ color:var(--brand-2); background:var(--brand-soft); }
+  .btn-toggle-senha svg{ width:18px; height:18px; }
+  .field-group{ margin-bottom:16px; }
+  .field-group label{ display:block; font-size:.8rem; font-weight:600; color:var(--ink); margin-bottom:6px; }
+  .field-group input, .field-group select{
+    width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid var(--border);
+    font-family:'Inter', sans-serif; font-size:.92rem; background:var(--surface); color:var(--ink);
+    outline:none; transition:border-color .15s, box-shadow .15s;
+  }
+  .field-group input:focus, .field-group select:focus{ border-color:var(--brand-2); box-shadow:0 0 0 3px var(--brand-soft); }
+  .btn-primary{
+    width:100%; background:var(--brand); color:#fff; border:none; font-weight:600; font-size:.92rem;
+    padding:12px; border-radius:10px; cursor:pointer; transition:background .15s, transform .1s;
+  }
+  .btn-primary:hover{ background:#143327; }
+  .btn-primary:active{ transform:scale(.98); }
+  .btn-primary:disabled{ opacity:.5; cursor:not-allowed; }
+  .login-erro{ display:none; margin-top:14px; font-size:.82rem; color:var(--danger); background:var(--danger-soft); border-radius:8px; padding:10px 12px; }
+  .login-erro.show{ display:block; }
+
+  #app{ display:none; }
+
+  .central-header{ background:var(--surface); border-bottom:1px solid var(--border); padding:16px 32px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+  .central-header-brand{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.1rem; color:var(--brand); }
+  .central-header-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .agencia-pill{ font-size:.78rem; color:var(--brand-2); background:var(--brand-soft); padding:6px 12px; border-radius:20px; font-weight:600; }
+  .btn-sair-central{ background:none; border:1.5px solid var(--border); color:var(--muted); font-size:.82rem; font-weight:600; padding:9px 14px; border-radius:9px; cursor:pointer; transition:border-color .15s, color .15s; }
+  .btn-sair-central:hover{ border-color:var(--brand-2); color:var(--brand-2); }
+
+  .central-main{ max-width:1100px; margin:0 auto; padding:36px 24px 60px; }
+  .central-main-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+  .central-main-head h1{ font-size:1.3rem; font-weight:700; letter-spacing:-.01em; }
+  .btn-novo{ background:var(--brand); color:#fff; border:none; font-weight:600; font-size:.85rem; padding:10px 16px; border-radius:9px; cursor:pointer; transition:background .15s; }
+  .btn-novo:hover{ background:#143327; }
+
+  .grid-modulos{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:16px; }
+  .card-modulo{
+    background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px 18px;
+    display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; cursor:pointer;
+    transition:box-shadow .15s, border-color .15s, transform .1s; text-decoration:none; color:inherit; position:relative;
+  }
+  .card-modulo:hover{ box-shadow:var(--shadow-md); border-color:var(--brand-2); transform:translateY(-2px); }
+  .card-modulo .icone-modulo{
+    width:56px; height:56px; border-radius:14px; background:var(--brand-soft); color:var(--brand-2);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .card-modulo .icone-modulo svg{ width:28px; height:28px; }
+  .card-modulo .nome-modulo{ font-weight:600; font-size:.88rem; word-break:break-word; }
+  .card-modulo .btn-editar-modulo{
+    position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:7px; background:var(--bg);
+    border:none; color:var(--muted); display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:0; transition:opacity .15s;
+  }
+  .card-modulo:hover .btn-editar-modulo{ opacity:1; }
+  .card-modulo .btn-editar-modulo:hover{ background:var(--border); }
+  .card-modulo .badge-restrito{ position:absolute; top:8px; left:8px; font-size:.68rem; font-weight:700; background:var(--brand-soft); color:var(--brand-2); border-radius:999px; padding:2px 7px; }
+  .acesso-lista{ border:1px solid var(--border); border-radius:10px; max-height:240px; overflow:auto; margin-top:8px; }
+  .acesso-lista label{ display:flex; align-items:center; gap:8px; padding:8px 10px; font-size:.84rem; border-bottom:1px solid var(--border); cursor:pointer; margin:0; font-weight:500; }
+  .acesso-lista label:last-child{ border-bottom:none; }
+  .acesso-lista label.fixo{ cursor:default; color:var(--muted); }
+  .acesso-lista input{ width:auto; margin:0; }
+  .acesso-lista .tag-principal{ margin-left:auto; font-size:.68rem; font-weight:700; background:var(--brand-soft); color:var(--brand-2); border-radius:999px; padding:2px 8px; }
+  .vazio-modulos{ text-align:center; padding:60px 20px; color:var(--muted); font-size:.9rem; }
+
+  .modal-lista-overlay{ position:fixed; inset:0; background:rgba(23,30,26,.5); z-index:70; display:none; align-items:center; justify-content:center; padding:20px; }
+  .modal-lista-overlay.show{ display:flex; }
+  .seletor-agencia-card{
+    background:var(--surface); width:100%; max-width:400px; border-radius:16px; padding:28px;
+    box-shadow:var(--shadow-lg); text-align:center;
+  }
+  .seletor-agencia-card h3{ font-size:1.2rem; font-weight:700; margin-bottom:8px; }
+  .seletor-agencia-card p{ font-size:.85rem; color:var(--muted); margin-bottom:22px; line-height:1.5; }
+  .lista-seletor-agencia{ display:flex; flex-direction:column; gap:10px; max-height:min(55vh, 460px); overflow-y:auto; padding:2px 6px 2px 2px; }
+  .opcao-agencia{
+    display:flex; align-items:center; padding:14px 16px; border-radius:12px;
+    border:1.5px solid var(--border); background:var(--surface); cursor:pointer; text-align:left;
+    font-size:.95rem; font-weight:600; color:var(--ink); transition:border-color .15s, background .15s;
+  }
+  .opcao-agencia:hover{ border-color:var(--brand-2); background:var(--brand-soft); }
+  .opcao-agencia.selected{ border-color:var(--brand); background:var(--brand-soft); }
+  .codigo-convite-display{
+    font-family:'JetBrains Mono', monospace; font-size:1.6rem; font-weight:700; letter-spacing:.15em;
+    color:var(--brand); background:var(--brand-soft); border:1.5px dashed var(--brand-2);
+    border-radius:12px; padding:16px; text-align:center;
+  }
+
+  .drawer-overlay{ position:fixed; inset:0; background:rgba(23,30,26,.45); z-index:60; display:none; align-items:stretch; justify-content:flex-end; }
+  .drawer-overlay.show{ display:flex; }
+  .drawer{ background:var(--bg); width:100%; max-width:460px; height:100%; overflow-y:auto; box-shadow:var(--shadow-lg); animation:slideIn .25s ease; }
+  @keyframes slideIn{ from{ transform:translateX(24px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+  .drawer-head{
+    background:var(--surface); border-bottom:1px solid var(--border); padding:20px 24px;
+    display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:2;
+  }
+  .drawer-head h2{ font-size:1.05rem; font-weight:700; }
+  .drawer-close{ background:var(--bg); border:none; width:30px; height:30px; border-radius:8px; color:var(--muted); font-size:1.1rem; cursor:pointer; }
+  .drawer-close:hover{ background:var(--border); }
+  .drawer-body{ padding:22px 24px 24px; }
+  .drawer-section{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:14px; }
+  .image-preview-wrap{
+    width:56px; height:56px; border-radius:12px; overflow:hidden; flex-shrink:0;
+    background:var(--bg); border:1.5px dashed var(--border); display:flex; align-items:center; justify-content:center;
+  }
+  .image-preview-wrap img{ width:100%; height:100%; object-fit:cover; }
+  .image-preview-placeholder{ color:var(--muted-2); }
+  .image-preview-placeholder svg{ width:22px; height:22px; }
+  .image-upload-box{ display:flex; align-items:center; gap:12px; }
+  .btn-upload-imagem{
+    background:var(--surface); border:1.5px solid var(--border); color:var(--ink); font-weight:600; font-size:.82rem;
+    padding:9px 14px; border-radius:9px; cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .btn-upload-imagem:hover{ border-color:var(--brand-2); background:var(--brand-soft); }
+  .btn-upload-imagem:disabled{ opacity:.6; cursor:not-allowed; }
+  .drawer-actions{
+    position:sticky; bottom:0; background:var(--surface); border-top:1px solid var(--border);
+    padding:14px 24px; display:flex; gap:8px; flex-wrap:wrap;
+  }
+  .btn-acao{ flex:1; min-width:100px; font-weight:600; font-size:.8rem; padding:11px; border-radius:9px; cursor:pointer; border:none; transition:opacity .15s, background .15s; }
+  .btn-acao:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-salvar{ background:var(--brand); color:#fff; }
+  .btn-salvar:hover:not(:disabled){ background:#143327; }
+
+  #loadingScreen{ position:fixed; inset:0; background:var(--bg); z-index:100; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; }
+  .spinner{ width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--brand); border-radius:50%; animation:spin .8s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+<script>
+/* Aviso padrão quando o banco recusa a ação por falta de permissão (RLS) */
+(function(){
+  var MSG_SEM_PERMISSAO = '🔒 Usuário sem permissão para esta ação. Fale com o administrador da unidade.';
+  var alertOriginal = window.alert.bind(window);
+  window.alert = function(m){
+    if (/row-level security|permission denied/i.test(String(m))) m = MSG_SEM_PERMISSAO;
+    alertOriginal(m);
+  };
+})();
+</script>
+</head>
+<body>
+
+  <div id="telaLogin">
+    <div class="login-visual">
+      <div class="brand-mark" style="display:flex; align-items:center; gap:10px;">
+        <svg width="30" height="30" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+          <defs>
+            <linearGradient id="loginG1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1B4332"/><stop offset="100%" stop-color="#0F2B22"/></linearGradient>
+            <linearGradient id="loginG2" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#E5991F"/><stop offset="100%" stop-color="#F2A93B"/></linearGradient>
+          </defs>
+          <rect width="200" height="200" rx="46" fill="url(#loginG1)"/>
+          <path d="M 58 152 C 58 128, 96 132, 96 108 C 96 84, 60 88, 60 64 C 60 44, 82 34, 106 34" fill="none" stroke="url(#loginG2)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="58" cy="152" r="8.5" fill="#F0F4EE"/>
+          <path d="M132 20 C145 20 155 30 155 43 C155 58 132 78 132 78 C132 78 109 58 109 43 C109 30 119 20 132 20 Z" fill="#F0F4EE"/>
+          <circle cx="132" cy="43" r="9" fill="#1B4332"/>
+        </svg>
+        Servir
+      </div>
+      <div class="quote">Todos os seus módulos, reunidos em um só lugar.</div>
+      <div class="foot">Painel Central Servir</div>
+    </div>
+    <div class="login-form-side">
+      <div class="login-card">
+        <div id="blocoLoginForm">
+          <h1>Bem-vindo de volta</h1>
+          <p class="sub">Entre com sua conta da unidade de negócio.</p>
+          <div class="field-group">
+            <label>E-mail</label>
+            <input type="email" id="loginEmail" placeholder="voce@unidade.com.br">
+          </div>
+          <div class="field-group">
+            <label>Senha</label>
+            <div class="field-senha-wrap">
+              <input type="password" id="loginSenha" placeholder="••••••••">
+              <button type="button" class="btn-toggle-senha" data-target="loginSenha" aria-label="Mostrar senha"></button>
+            </div>
+          </div>
+          <p class="link-esqueci-senha"><a href="#" id="linkEsqueciSenha">Esqueci minha senha</a></p>
+          <button class="btn-primary" id="btnEntrar">Entrar</button>
+          <div class="login-erro" id="loginErro"></div>
+          <p class="toggle-auth">Ainda não tem conta? <a href="#" id="linkIrParaCadastro">Criar unidade</a> · <a href="#" id="linkIrParaConvite">Tenho um convite</a></p>
+        </div>
+
+        <div id="blocoCadastroForm" style="display:none;">
+          <h1>Criar sua conta</h1>
+          <p class="sub">Cadastre sua unidade de negócio na Servir.</p>
+          <div class="field-group">
+            <label>Nome da unidade de negócio</label>
+            <input type="text" id="cadAgenciaNome" placeholder="Ex: Nativa Turismo">
+          </div>
+          <div class="field-group">
+            <label>WhatsApp de contato</label>
+            <input type="tel" id="cadAgenciaWhatsapp" placeholder="(00) 00000-0000" maxlength="15">
+          </div>
+          <div class="field-group">
+            <label>E-mail</label>
+            <input type="email" id="cadEmail" placeholder="seu@email.com">
+          </div>
+          <div class="field-group">
+            <label>Senha</label>
+            <input type="password" id="cadSenha" placeholder="Mínimo 6 caracteres">
+          </div>
+          <div class="field-group">
+            <label>Confirmar senha</label>
+            <input type="password" id="cadSenhaConfirma">
+          </div>
+          <button class="btn-primary" id="btnCriarConta">Criar conta</button>
+          <div class="login-erro" id="cadastroErro"></div>
+          <p class="toggle-auth">Já tem conta? <a href="#" id="linkIrParaLogin">Entrar</a></p>
+        </div>
+
+        <div id="blocoConviteForm" style="display:none;">
+          <h1>Entrar com convite</h1>
+          <p class="sub">Peça o código de convite pra quem já administra a unidade de negócio.</p>
+          <div class="field-group">
+            <label>Código de convite</label>
+            <input type="text" id="convCodigo" placeholder="Ex: A1B2C3D4" style="text-transform:uppercase;">
+          </div>
+          <div class="field-group">
+            <label>E-mail</label>
+            <input type="email" id="convEmail" placeholder="seu@email.com">
+          </div>
+          <div class="field-group">
+            <label>Senha</label>
+            <input type="password" id="convSenha" placeholder="Mínimo 6 caracteres">
+          </div>
+          <div class="field-group">
+            <label>Confirmar senha</label>
+            <input type="password" id="convSenhaConfirma">
+          </div>
+          <button class="btn-primary" id="btnEntrarConvite">Entrar com convite</button>
+          <div class="login-erro" id="conviteErro"></div>
+          <p class="toggle-auth">Já tem conta? <a href="#" id="linkConviteParaLogin">Entrar</a></p>
+        </div>
+
+        <div id="blocoCadastroSucesso" style="display:none; text-align:center;">
+          <h1>Confira seu e-mail</h1>
+          <p class="sub">Enviamos um link de confirmação para <strong id="emailCadastroSucesso"></strong>. Clique nele e depois volte aqui pra entrar normalmente.</p>
+        </div>
+
+        <div id="blocoEsqueciSenha" style="display:none;">
+          <h1>Recuperar senha</h1>
+          <p class="sub">Informe seu e-mail. Enviaremos um link pra você definir uma nova senha.</p>
+          <div class="field-group">
+            <label>E-mail</label>
+            <input type="email" id="recuperarEmail" placeholder="voce@unidade.com.br">
+          </div>
+          <button class="btn-primary" id="btnEnviarRecuperacao">Enviar link de recuperação</button>
+          <div class="login-erro" id="recuperarErro"></div>
+          <p class="toggle-auth">Lembrou a senha? <a href="#" id="linkRecuperarParaLogin">Entrar</a></p>
+        </div>
+
+        <div id="blocoRecuperacaoEnviada" style="display:none; text-align:center;">
+          <h1>Confira seu e-mail</h1>
+          <p class="sub">Enviamos um link de recuperação para <strong id="emailRecuperacaoEnviada"></strong>. Clique nele pra definir uma nova senha.</p>
+          <p class="toggle-auth" style="margin-top:22px;"><a href="#" id="linkRecuperacaoEnviadaParaLogin">Voltar para o login</a></p>
+        </div>
+
+        <div id="blocoRedefinirSenha" style="display:none;">
+          <h1>Defina sua nova senha</h1>
+          <p class="sub">Escolha uma nova senha pra continuar acessando sua conta.</p>
+          <div class="field-group">
+            <label>Nova senha</label>
+            <div class="field-senha-wrap">
+              <input type="password" id="novaSenha" placeholder="Mínimo 6 caracteres">
+              <button type="button" class="btn-toggle-senha" data-target="novaSenha" aria-label="Mostrar senha"></button>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Confirmar nova senha</label>
+            <div class="field-senha-wrap">
+              <input type="password" id="novaSenhaConfirma">
+              <button type="button" class="btn-toggle-senha" data-target="novaSenhaConfirma" aria-label="Mostrar senha"></button>
+            </div>
+          </div>
+          <button class="btn-primary" id="btnSalvarNovaSenha">Salvar nova senha</button>
+          <div class="login-erro" id="redefinirErro"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="loadingScreen" style="display:none;">
+    <div class="spinner"></div>
+    <p style="font-size:.85rem; color:var(--muted);">Carregando painel…</p>
+  </div>
+
+
+  <div id="app">
+    <div class="central-header">
+      <div class="central-header-brand">
+        <svg width="26" height="26" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+          <defs>
+            <linearGradient id="hg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1B4332"/><stop offset="100%" stop-color="#0F2B22"/></linearGradient>
+            <linearGradient id="hg2" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#E5991F"/><stop offset="100%" stop-color="#F2A93B"/></linearGradient>
+          </defs>
+          <rect width="200" height="200" rx="46" fill="url(#hg1)"/>
+          <path d="M 58 152 C 58 128, 96 132, 96 108 C 96 84, 60 88, 60 64 C 60 44, 82 34, 106 34" fill="none" stroke="url(#hg2)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="58" cy="152" r="8.5" fill="#F0F4EE"/>
+          <path d="M132 20 C145 20 155 30 155 43 C155 58 132 78 132 78 C132 78 109 58 109 43 C109 30 119 20 132 20 Z" fill="#F0F4EE"/>
+          <circle cx="132" cy="43" r="9" fill="#1B4332"/>
+        </svg>
+        Servir
+      </div>
+      <div class="central-header-right">
+        <span class="agencia-pill" id="agenciaPill">—</span>
+        <button class="btn-sair-central" id="btnDadosUnidade" style="display:none;">Dados da unidade</button>
+        <button class="btn-sair-central" id="btnConvidarColaborador" style="display:none;">Convidar colaborador</button>
+        <button class="btn-sair-central" id="btnTrocarAgencia" style="display:none;">Trocar unidade</button>
+        <button class="btn-sair-central" id="btnCriarNovaUnidade">+ Criar nova unidade</button>
+        <button class="btn-sair-central" id="btnSair">Sair</button>
+      </div>
+    </div>
+
+    <main class="central-main">
+      <div class="central-main-head">
+        <h1>Seus módulos</h1>
+        <button class="btn-novo" id="btnNovoModulo">+ Adicionar módulo</button>
+      </div>
+      <div class="grid-modulos" id="gridModulos"></div>
+    </main>
+  </div>
+
+  <div class="drawer-overlay" id="drawerModuloOverlay">
+    <div class="drawer">
+      <div class="drawer-head">
+        <h2 id="drawerModuloTitulo">Novo módulo</h2>
+        <button class="drawer-close" id="btnFecharDrawerModulo">✕</button>
+      </div>
+      <div class="drawer-body">
+        <div class="drawer-section" id="d_modelo_secao" style="display:none;">
+          <div class="field-group">
+            <label>Começar de um modelo padrão da Servir</label>
+            <select id="d_modelo"></select>
+            <p style="font-size:.76rem; color:var(--muted); margin-top:6px;">Preenche nome, endereço e ícone. Você ainda pode alterar antes de salvar.</p>
+          </div>
+        </div>
+        <div class="drawer-section">
+          <div class="field-group"><label>Nome</label><input type="text" id="d_nome_modulo" placeholder="Ex: Locadora de Veículos"></div>
+          <div class="field-group"><label>URL</label><input type="text" id="d_url_modulo" placeholder="https://..."></div>
+          <div class="field-group">
+            <label>Ícone</label>
+            <div class="image-upload-box">
+              <div class="image-preview-wrap">
+                <img id="previewIconeModulo" src="" style="display:none;">
+                <div class="image-preview-placeholder" id="placeholderIconeModulo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                </div>
+              </div>
+              <button type="button" class="btn-upload-imagem" id="btnEscolherIconeModulo">Enviar imagem</button>
+              <input type="file" id="d_icone_arquivo" accept="image/*" style="display:none;">
+              <input type="hidden" id="d_icone_url" value="">
+            </div>
+            <p style="font-size:.76rem; color:var(--muted); margin-top:8px;">Se não enviar uma imagem, usa um dos ícones padrão abaixo.</p>
+          </div>
+          <div class="field-group">
+            <label>Ícone padrão (se não enviar imagem)</label>
+            <select id="d_tipo_icone">
+              <option value="locadora">Locadora</option>
+              <option value="receptivo">Receptivo</option>
+              <option value="staff">Staff</option>
+              <option value="eventos">Eventos</option>
+              <option value="lavanderia">Lavanderia</option>
+              <option value="checklist_manutencao">Checklist Manutenção</option>
+              <option value="combustivel">Dashboard Combustível</option>
+              <option value="financeiro">Financeiro</option>
+              <option value="estoque">Estoque</option>
+              <option value="obras">Obras</option>
+              <option value="armarinho">Armarinho e Cosméticos</option>
+              <option value="prontuario">Prontuário Médico</option>
+              <option value="uniformes_epi">Uniformes / EPI</option>
+              <option value="painel_financeiro">Painel financeiro</option>
+              <option value="fechamento_caixas">Fechamento de caixas</option>
+              <option value="extratos_contas">Extratos de contas</option>
+              <option value="analise_cruzada">Análise cruzada</option>
+              <option value="resumo_diario">Resumo diário</option>
+              <option value="parceiros">Parceiros Comerciais</option>
+              <option value="vitrine">Vitrine (TV)</option>
+              <option value="externo">Externo / outro</option>
+            </select>
+          </div>
+        </div>
+        <div class="drawer-section" id="d_acesso_secao" style="display:none;">
+          <div class="field-group">
+            <label>Quem vê este ícone</label>
+            <select id="d_acesso_modo">
+              <option value="todos">Todos os operadores da unidade</option>
+              <option value="selecionados">Só os operadores selecionados</option>
+            </select>
+            <p style="font-size:.76rem; color:var(--muted); margin-top:6px;">O principal da unidade sempre vê todos os ícones. Isto controla o ícone na Central; o acesso dentro de cada módulo segue as regras do próprio módulo.</p>
+            <div class="acesso-lista" id="d_acesso_lista" style="display:none;"></div>
+            <p id="d_acesso_aviso" style="font-size:.78rem; color:var(--danger); margin-top:6px; display:none;"></p>
+          </div>
+        </div>
+      </div>
+      <div class="drawer-actions">
+        <button class="btn-acao" id="btnExcluirModulo" style="background:none; border:1.5px solid var(--danger); color:var(--danger); display:none;">Excluir</button>
+        <button class="btn-acao btn-salvar" id="btnSalvarModulo" style="flex:2;">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-overlay" id="drawerDadosUnidadeOverlay">
+    <div class="drawer">
+      <div class="drawer-head">
+        <h2>Dados da unidade</h2>
+        <button class="drawer-close" id="btnFecharDrawerDadosUnidade">✕</button>
+      </div>
+      <div class="drawer-body">
+        <div class="drawer-section">
+          <div class="field-group"><label>Nome</label><input type="text" id="du_nome"></div>
+          <div class="field-group"><label>Endereço</label><input type="text" id="du_endereco" placeholder="Rua, número, bairro, cidade/UF"></div>
+          <div class="field-group"><label>Telefone</label><input type="text" id="du_telefone" placeholder="(00) 00000-0000"></div>
+          <div class="field-group">
+            <label>Logotipo</label>
+            <div class="image-upload-box">
+              <div class="image-preview-wrap">
+                <img id="previewLogoUnidade" src="" style="display:none;">
+                <div class="image-preview-placeholder" id="placeholderLogoUnidade">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                </div>
+              </div>
+              <button type="button" class="btn-upload-imagem" id="btnEscolherLogoUnidade">Enviar imagem</button>
+              <button type="button" class="btn-upload-imagem" id="btnRemoverLogoUnidade">Remover imagem</button>
+              <input type="file" id="du_logo_arquivo" accept="image/*" style="display:none;">
+              <input type="hidden" id="du_logo_url" value="">
+            </div>
+            <p style="font-size:.76rem; color:var(--muted); margin-top:8px;">Usado no cabeçalho dos relatórios e PDFs gerados pelos módulos.</p>
+          </div>
+          <div class="field-group">
+            <label>Cor principal</label>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="color" id="du_cor_principal" value="#1B4332" style="width:44px; height:38px; padding:2px; border:1px solid var(--border); border-radius:8px; cursor:pointer;">
+              <input type="text" id="du_cor_principal_hex" placeholder="#1B4332" style="flex:1;">
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Imagem de fundo (tela de login)</label>
+            <div class="image-upload-box">
+              <div class="image-preview-wrap">
+                <img id="previewFundoUnidade" src="" style="display:none;">
+                <div class="image-preview-placeholder" id="placeholderFundoUnidade">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                </div>
+              </div>
+              <button type="button" class="btn-upload-imagem" id="btnEscolherFundoUnidade" style="flex:1;">Escolher imagem</button>
+              <button type="button" class="btn-upload-imagem" id="btnRemoverFundoUnidade" style="flex:1;">Remover imagem</button>
+              <input type="file" id="du_fundo_arquivo" accept="image/*" style="display:none;">
+              <input type="hidden" id="du_imagem_fundo_url" value="">
+            </div>
+          </div>
+
+          <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--border);">
+            <label style="font-weight:600;">Chave de IA (Anthropic)</label>
+            <p style="font-size:.78rem; color:var(--muted); margin:2px 0 8px;">Usada nos recursos de IA da plataforma (ex: editar cards por chat). Cada unidade usa e paga a própria chave.</p>
+            <div id="du_ia_status" style="font-size:.8rem; margin-bottom:8px;"></div>
+            <input type="password" id="du_chave_ia" placeholder="sk-ant-...">
+            <button class="btn-acao" id="btnSalvarChaveIA" style="margin-top:8px;">Salvar chave de IA</button>
+            <div id="du_ia_salvo_status" style="font-size:.78rem; margin-top:6px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="drawer-actions">
+        <button class="btn-acao btn-salvar" id="btnSalvarDadosUnidade" style="flex:1;">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-lista-overlay" id="seletorAgenciaOverlay" style="z-index:200;">
+    <div class="seletor-agencia-card">
+      <h3>Escolha a unidade de negócio</h3>
+      <p>Seu login está vinculado a mais de uma unidade de negócio. Selecione com qual você quer trabalhar agora.</p>
+      <div class="lista-seletor-agencia" id="listaSeletorAgencia"></div>
+    </div>
+  </div>
+
+  <div class="modal-lista-overlay" id="criarNovaUnidadeOverlay" style="z-index:200;">
+    <div class="seletor-agencia-card" style="text-align:left;">
+      <h3 style="text-align:center;">Criar nova unidade de negócio</h3>
+      <p style="text-align:center;">Você continua logado com a mesma conta — essa unidade nova fica vinculada a ela, e você vira o principal dela.</p>
+      <div class="field-group">
+        <label>Nome da unidade de negócio</label>
+        <input type="text" id="novaUnidadeNome" placeholder="Ex: Nativa Turismo">
+      </div>
+      <div class="field-group">
+        <label>WhatsApp de contato</label>
+        <input type="tel" id="novaUnidadeWhatsapp" placeholder="(00) 00000-0000" maxlength="15">
+      </div>
+      <div class="login-erro" id="novaUnidadeErro"></div>
+      <button class="btn-primary" id="btnConfirmarNovaUnidade" style="margin-top:6px;">Criar unidade</button>
+      <button id="btnCancelarNovaUnidade" style="margin-top:10px; width:100%; background:none; border:1.5px solid var(--border); color:var(--muted); padding:11px; border-radius:10px; cursor:pointer; font-weight:600; font-size:.85rem;">Cancelar</button>
+    </div>
+  </div>
+
+
+  <div class="modal-lista-overlay" id="modalConviteOverlay">
+    <div class="seletor-agencia-card">
+      <h3>Convidar colaborador</h3>
+      <p>Compartilhe este código com quem você quer convidar. A pessoa deve se cadastrar em "Tenho um convite", na tela de login. Gerar um novo código invalida o anterior.</p>
+      <div class="codigo-convite-display" id="codigoConviteDisplay">— — — —</div>
+      <button class="btn-primary" id="btnCopiarCodigoConvite" style="margin-top:16px;">Copiar código</button>
+      <button id="btnFecharModalConvite" style="margin-top:10px; width:100%; background:none; border:1.5px solid var(--border); color:var(--muted); padding:11px; border-radius:10px; cursor:pointer; font-weight:600; font-size:.85rem;">Fechar</button>
+    </div>
+  </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  // CONFIGURAÇÃO DO SUPABASE (mesmo projeto do formulário público)
+  // =================================================================
+  const SUPABASE_URL = 'https://frzvcrcshkpvjdbbqkhz.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_h-JuDyjYgb5YKGYFRKtLEg_8gnJor9w';
+
+  let sb;
+
+  let agenciaId = null;
+  let agenciaNome = null;
+  let todosModulos = [];
+  let moduloIdAtual = null; // null = criando novo módulo
+
+  // =================================================================
+  // LOGIN
+  // =================================================================
+  const telaLogin = document.getElementById('telaLogin');
+  const loadingScreen = document.getElementById('loadingScreen');
+  const appEl = document.getElementById('app');
+  const loginErro = document.getElementById('loginErro');
+
+  function mostrarErroLogin(msg){
+    loginErro.textContent = msg;
+    loginErro.classList.add('show');
+  }
+
+  async function fazerLogin(){
+    const email = document.getElementById('loginEmail').value.trim();
+    const senha = document.getElementById('loginSenha').value;
+    if(!email || !senha){ mostrarErroLogin('Preencha e-mail e senha.'); return; }
+
+    const btn = document.getElementById('btnEntrar');
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
+    loginErro.classList.remove('show');
+
+    try{
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+      if(error) throw new Error('E-mail ou senha inválidos.');
+
+      await carregarAgenciaDoUsuario(data.user);
+      telaLogin.style.display = 'none';
+      appEl.style.display = 'block';
+      await carregarTudo();
+    } catch(erro){
+      mostrarErroLogin(erro.message);
+    } finally{
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    }
+  }
+
+  let vinculosDoUsuario = [];
+  let ehPrincipalAtual = false;
+
+  // -----------------------------------------------------------------
+  // Cria uma unidade de negócio nova e vincula IMEDIATAMENTE ao user_id
+  // informado como principal — sem depender de metadados pendentes nem
+  // de confirmação de e-mail. Usada tanto por quem já tem conta e está
+  // criando outra unidade, quanto pelo botão "+ Criar nova unidade"
+  // disponível pra quem já está logado no app.
+  // -----------------------------------------------------------------
+  async function criarUnidadeParaUsuario(userId, nome, whatsapp){
+    const { data: novaAgencia, error: erroNovaAgencia } = await sb
+      .from('servir_unidades_negocio')
+      .insert({ nome, whatsapp_contato: (whatsapp || '').replace(/\D/g, ''), ativo: true })
+      .select()
+      .single();
+    if(erroNovaAgencia) throw new Error('Erro ao criar a unidade de negócio: ' + erroNovaAgencia.message);
+
+    const { error: erroVinculo } = await sb.from('servir_unidade_usuarios').insert({
+      unidade_negocio_id: novaAgencia.id,
+      user_id: userId,
+      eh_principal: true
+    });
+    if(erroVinculo) throw new Error('Erro ao vincular sua conta à unidade de negócio: ' + erroVinculo.message);
+
+    return novaAgencia;
+  }
+
+  async function carregarAgenciaDoUsuario(user){
+    const { data: vinculos, error: erroVinculo } = await sb
+      .from('servir_unidade_usuarios')
+      .select('unidade_negocio_id, eh_principal, servir_unidades_negocio ( nome )')
+      .eq('user_id', user.id);
+
+    if(erroVinculo) throw new Error('Erro ao buscar sua unidade de negócio: ' + erroVinculo.message);
+
+    // Primeiro acesso após confirmar o e-mail: ainda não existe vínculo.
+    // Duas possibilidades guardadas nos metadados do usuário:
+    // - agencia_nome_pendente: veio do cadastro "Criar unidade" -> cria a unidade de negócio
+    // - convite_codigo_pendente: veio do cadastro "Tenho um convite" -> só vincula
+    if(!vinculos || vinculos.length === 0){
+      const nomePendente = user.user_metadata?.agencia_nome_pendente;
+      const whatsappPendente = user.user_metadata?.agencia_whatsapp_pendente;
+      const codigoPendente = user.user_metadata?.convite_codigo_pendente;
+
+      if(nomePendente){
+        const { data: novaAgencia, error: erroNovaAgencia } = await sb
+          .from('servir_unidades_negocio')
+          .insert({ nome: nomePendente, whatsapp_contato: (whatsappPendente || '').replace(/\D/g, ''), ativo: true })
+          .select()
+          .single();
+        if(erroNovaAgencia) throw new Error('Erro ao finalizar cadastro da unidade de negócio: ' + erroNovaAgencia.message);
+
+        const { error: erroVinculoNovo } = await sb.from('servir_unidade_usuarios').insert({
+          unidade_negocio_id: novaAgencia.id,
+          user_id: user.id,
+          eh_principal: true
+        });
+        if(erroVinculoNovo) throw new Error('Erro ao vincular sua conta à unidade de negócio: ' + erroVinculoNovo.message);
+
+        agenciaId = novaAgencia.id;
+        agenciaNome = novaAgencia.nome;
+        ehPrincipalAtual = true;
+        vinculosDoUsuario = [{ unidade_negocio_id: novaAgencia.id, eh_principal: true, servir_unidades_negocio: { nome: novaAgencia.nome } }];
+        atualizarUiAgencia();
+        return;
+      }
+
+      if(codigoPendente){
+        const { data: agenciaIdRetornada, error: erroConvite } = await sb.rpc('fn_entrar_com_convite', { p_codigo: codigoPendente });
+        if(erroConvite) throw new Error(erroConvite.message);
+
+        const { data: agenciaInfo, error: erroInfo } = await sb
+          .from('servir_unidades_negocio')
+          .select('nome')
+          .eq('id', agenciaIdRetornada)
+          .single();
+        if(erroInfo) throw new Error(erroInfo.message);
+
+        agenciaId = agenciaIdRetornada;
+        agenciaNome = agenciaInfo.nome;
+        ehPrincipalAtual = false;
+        vinculosDoUsuario = [{ unidade_negocio_id: agenciaIdRetornada, eh_principal: false, servir_unidades_negocio: { nome: agenciaInfo.nome } }];
+        atualizarUiAgencia();
+        return;
+      }
+
+      throw new Error('Este login não está vinculado a nenhuma unidade de negócio ainda.');
+    }
+
+    vinculosDoUsuario = vinculos;
+
+    // só uma unidade de negócio vinculada: segue direto, sem perguntar nada
+    if(vinculos.length === 1){
+      agenciaId = vinculos[0].unidade_negocio_id;
+      agenciaNome = vinculos[0].servir_unidades_negocio.nome;
+      ehPrincipalAtual = !!vinculos[0].eh_principal;
+      atualizarUiAgencia();
+      return;
+    }
+
+    // múltiplas unidades de negócio vinculadas: mostra o seletor e espera a escolha
+    await mostrarSeletorAgencia(vinculos);
+  }
+
+  function mostrarAvisoLicenca(texto){
+    if(!texto) return;
+    if(document.getElementById('avisoPendenciaLicenca')) return;
+    const banner = document.createElement('div');
+    banner.id = 'avisoPendenciaLicenca';
+    banner.style.cssText = 'position:sticky; top:0; z-index:99999; background:#FEF3D8; color:#8A5E12; padding:10px 16px; font-size:.85rem; font-family:Arial,Helvetica,sans-serif; text-align:center; border-bottom:2px solid #F2A93B; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 2px 6px rgba(0,0,0,.08);';
+    const span = document.createElement('span');
+    span.textContent = texto;
+    banner.innerHTML = '⚠️ ';
+    banner.appendChild(span);
+    document.body.prepend(banner);
+  }
+
+  function bloquearAcessoTotal(mensagem){
+    document.body.innerHTML = `
+      <div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; font-family:Arial,Helvetica,sans-serif; background:#F6F7F9;">
+        <div style="background:#fff; border-radius:16px; padding:36px; max-width:440px; text-align:center; box-shadow:0 8px 28px rgba(20,30,50,.1);">
+          <div style="font-size:2.5rem; margin-bottom:12px;">🔒</div>
+          <h2 style="color:#C0392B; margin-bottom:12px; font-size:1.2rem;">Acesso bloqueado</h2>
+          <p style="color:#333; font-size:.92rem; line-height:1.5;">${mensagem}</p>
+        </div>
+      </div>`;
+  }
+
+  async function verificarPendenciaLicenca(unidadeIdAlvo, moduloChave){
+    try{
+      const { data, error } = await sb.rpc('fn_verificar_pendencia_licenca', { p_unidade_negocio_id: unidadeIdAlvo, p_modulo_chave: moduloChave });
+      if(error || !data) return;
+      if(data.bloqueia) bloquearAcessoTotal(data.mensagem);
+      else mostrarAvisoLicenca(data.mensagem);
+    } catch(erro){
+      console.warn('Não consegui checar pendência de licença:', erro.message);
+    }
+  }
+
+  function atualizarUiAgencia(){
+    document.getElementById('agenciaPill').textContent = agenciaNome;
+    document.getElementById('btnTrocarAgencia').style.display = vinculosDoUsuario.length > 1 ? 'flex' : 'none';
+    document.getElementById('btnConvidarColaborador').style.display = ehPrincipalAtual ? 'flex' : 'none';
+    document.getElementById('btnDadosUnidade').style.display = ehPrincipalAtual ? 'flex' : 'none';
+    document.getElementById('btnNovoModulo').style.display = ehPrincipalAtual ? '' : 'none';
+    carregarDadosUnidade(); // aplica cor/fundo/logo da unidade atual automaticamente
+    verificarPendenciaLicenca(agenciaId, 'servir_central');
+  }
+
+  function mostrarSeletorAgencia(vinculos){
+    return new Promise((resolve) => {
+      const lista = document.getElementById('listaSeletorAgencia');
+      lista.innerHTML = '';
+      vinculos.forEach(v => {
+        const btn = document.createElement('button');
+        const eAtual = v.unidade_negocio_id === agenciaId;
+        btn.className = 'opcao-agencia' + (eAtual ? ' selected' : '');
+        btn.innerHTML = `<span class="opcao-agencia-nome">${v.servir_unidades_negocio?.nome || 'Agência sem nome'}</span>`;
+        btn.addEventListener('click', async () => {
+          agenciaId = v.unidade_negocio_id;
+          agenciaNome = v.servir_unidades_negocio?.nome || '';
+          ehPrincipalAtual = !!v.eh_principal;
+          atualizarUiAgencia();
+          document.getElementById('seletorAgenciaOverlay').classList.remove('show');
+          resolve();
+        });
+        lista.appendChild(btn);
+      });
+      document.getElementById('seletorAgenciaOverlay').classList.add('show');
+    });
+  }
+
+  document.getElementById('btnTrocarAgencia').addEventListener('click', async () => {
+    await mostrarSeletorAgencia(vinculosDoUsuario);
+    await carregarTudo();
+  });
+
+  document.getElementById('btnEntrar').addEventListener('click', fazerLogin);
+
+  // -----------------------------------------------------------------
+  // Botão de mostrar/ocultar senha digitada (olho)
+  // -----------------------------------------------------------------
+  const svgOlhoAberto = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const svgOlhoFechado = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+  document.querySelectorAll('.btn-toggle-senha').forEach(btn => {
+    btn.innerHTML = svgOlhoFechado;
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      if(!input) return;
+      const mostrando = input.type === 'text';
+      input.type = mostrando ? 'password' : 'text';
+      btn.innerHTML = mostrando ? svgOlhoFechado : svgOlhoAberto;
+      btn.setAttribute('aria-label', mostrando ? 'Mostrar senha' : 'Ocultar senha');
+    });
+  });
+
+  // =================================================================
+  // ESQUECI MINHA SENHA
+  // =================================================================
+  function mostrarErroRecuperacao(msg){
+    const el = document.getElementById('recuperarErro');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  document.getElementById('linkEsqueciSenha').addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('recuperarEmail').value = document.getElementById('loginEmail').value.trim();
+    blocoLoginForm.style.display = 'none';
+    blocoEsqueciSenha.style.display = 'block';
+  });
+
+  document.getElementById('linkRecuperarParaLogin').addEventListener('click', (e) => {
+    e.preventDefault();
+    blocoEsqueciSenha.style.display = 'none';
+    blocoLoginForm.style.display = 'block';
+  });
+
+  document.getElementById('linkRecuperacaoEnviadaParaLogin').addEventListener('click', (e) => {
+    e.preventDefault();
+    blocoRecuperacaoEnviada.style.display = 'none';
+    blocoLoginForm.style.display = 'block';
+  });
+
+  document.getElementById('btnEnviarRecuperacao').addEventListener('click', async () => {
+    const email = document.getElementById('recuperarEmail').value.trim();
+    document.getElementById('recuperarErro').classList.remove('show');
+    if(!email){ mostrarErroRecuperacao('Informe seu e-mail.'); return; }
+
+    const btn = document.getElementById('btnEnviarRecuperacao');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try{
+      // ao clicar no link do e-mail, o Supabase abre esta mesma página
+      // com uma sessão de recuperação — o listener de onAuthStateChange
+      // abaixo detecta o evento PASSWORD_RECOVERY e mostra o formulário
+      // de nova senha automaticamente.
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.href.split('?')[0].split('#')[0]
+      });
+      if(error) throw new Error(error.message);
+
+      document.getElementById('emailRecuperacaoEnviada').textContent = email;
+      blocoEsqueciSenha.style.display = 'none';
+      blocoRecuperacaoEnviada.style.display = 'block';
+    } catch(erro){
+      mostrarErroRecuperacao(erro.message);
+    } finally{
+      btn.disabled = false;
+      btn.textContent = 'Enviar link de recuperação';
+    }
+  });
+
+  // -----------------------------------------------------------------
+  // DEFINIR NOVA SENHA (após clicar no link recebido por e-mail)
+  // -----------------------------------------------------------------
+  function mostrarErroRedefinir(msg){
+    const el = document.getElementById('redefinirErro');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  document.getElementById('btnSalvarNovaSenha').addEventListener('click', async () => {
+    const novaSenha = document.getElementById('novaSenha').value;
+    const confirma = document.getElementById('novaSenhaConfirma').value;
+    document.getElementById('redefinirErro').classList.remove('show');
+
+    if(novaSenha.length < 6){ mostrarErroRedefinir('A senha precisa ter pelo menos 6 caracteres.'); return; }
+    if(novaSenha !== confirma){ mostrarErroRedefinir('As senhas não coincidem.'); return; }
+
+    const btn = document.getElementById('btnSalvarNovaSenha');
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    try{
+      const { data, error } = await sb.auth.updateUser({ password: novaSenha });
+      if(error) throw new Error(error.message);
+
+      // já existe sessão válida (veio do link de recuperação) — segue
+      // direto pro painel, sem pedir login de novo
+      blocoRedefinirSenha.style.display = 'none';
+      loadingScreen.style.display = 'flex';
+      telaLogin.style.display = 'none';
+      await carregarAgenciaDoUsuario(data.user);
+      appEl.style.display = 'block';
+      await carregarTudo();
+      loadingScreen.style.display = 'none';
+    } catch(erro){
+      mostrarErroRedefinir(erro.message);
+      btn.disabled = false;
+      btn.textContent = 'Salvar nova senha';
+    }
+  });
+
+  // Supabase dispara o evento PASSWORD_RECOVERY quando a página é
+  // aberta a partir do link de recuperação de senha do e-mail.
+  // (o listener é registrado dentro de iniciar(), depois que `sb` existe)
+
+  // =================================================================
+  // TOGGLE: login <-> criar conta
+  // =================================================================
+  const blocoLoginForm = document.getElementById('blocoLoginForm');
+  const blocoCadastroForm = document.getElementById('blocoCadastroForm');
+  const blocoConviteForm = document.getElementById('blocoConviteForm');
+  const blocoCadastroSucesso = document.getElementById('blocoCadastroSucesso');
+  const blocoEsqueciSenha = document.getElementById('blocoEsqueciSenha');
+  const blocoRecuperacaoEnviada = document.getElementById('blocoRecuperacaoEnviada');
+  const blocoRedefinirSenha = document.getElementById('blocoRedefinirSenha');
+
+  document.getElementById('linkIrParaCadastro').addEventListener('click', (e) => {
+    e.preventDefault();
+    blocoLoginForm.style.display = 'none';
+    blocoCadastroForm.style.display = 'block';
+    resetarModoCadastro();
+  });
+  document.getElementById('linkIrParaLogin').addEventListener('click', (e) => {
+    e.preventDefault();
+    blocoCadastroForm.style.display = 'none';
+    blocoLoginForm.style.display = 'block';
+    resetarModoCadastro();
+  });
+  document.getElementById('linkIrParaConvite').addEventListener('click', (e) => {
+    e.preventDefault();
+    blocoLoginForm.style.display = 'none';
+    blocoConviteForm.style.display = 'block';
+    resetarModoConvite();
+  });
+  document.getElementById('linkConviteParaLogin').addEventListener('click', (e) => {
+    e.preventDefault();
+    blocoConviteForm.style.display = 'none';
+    blocoLoginForm.style.display = 'block';
+    resetarModoConvite();
+  });
+
+  document.getElementById('cadAgenciaWhatsapp').addEventListener('input', (e) => {
+    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+    if(v.length > 6) v = `(${v.slice(0,2)}) ${v.slice(2, v.length-4)}-${v.slice(-4)}`;
+    else if(v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+    else if(v.length > 0) v = `(${v}`;
+    e.target.value = v;
+  });
+
+  document.getElementById('novaUnidadeWhatsapp').addEventListener('input', (e) => {
+    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+    if(v.length > 6) v = `(${v.slice(0,2)}) ${v.slice(2, v.length-4)}-${v.slice(-4)}`;
+    else if(v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+    else if(v.length > 0) v = `(${v}`;
+    e.target.value = v;
+  });
+
+  // -----------------------------------------------------------------
+  // Criar nova unidade a partir de dentro do app já logado — sem
+  // signup, sem confirmação de e-mail, a sessão atual já resolve tudo
+  // -----------------------------------------------------------------
+  document.getElementById('btnCriarNovaUnidade').addEventListener('click', () => {
+    document.getElementById('novaUnidadeNome').value = '';
+    document.getElementById('novaUnidadeWhatsapp').value = '';
+    document.getElementById('novaUnidadeErro').classList.remove('show');
+    document.getElementById('criarNovaUnidadeOverlay').classList.add('show');
+  });
+
+  document.getElementById('btnCancelarNovaUnidade').addEventListener('click', () => {
+    document.getElementById('criarNovaUnidadeOverlay').classList.remove('show');
+  });
+
+  document.getElementById('btnConfirmarNovaUnidade').addEventListener('click', async () => {
+    const nome = document.getElementById('novaUnidadeNome').value.trim();
+    const whatsapp = document.getElementById('novaUnidadeWhatsapp').value.trim();
+    const erroEl = document.getElementById('novaUnidadeErro');
+    erroEl.classList.remove('show');
+
+    if(!nome){ erroEl.textContent = 'Informe o nome da unidade.'; erroEl.classList.add('show'); return; }
+    if(!/^\(\d{2}\) \d{4,5}-\d{4}$/.test(whatsapp)){ erroEl.textContent = 'WhatsApp em formato inválido. Use (DD) 9XXXX-XXXX.'; erroEl.classList.add('show'); return; }
+
+    const btn = document.getElementById('btnConfirmarNovaUnidade');
+    btn.disabled = true;
+    btn.textContent = 'Criando...';
+    try{
+      const { data: { user } } = await sb.auth.getUser();
+      if(!user) throw new Error('Sessão expirada — atualize a página e entre de novo.');
+
+      const novaAgencia = await criarUnidadeParaUsuario(user.id, nome, whatsapp);
+
+      document.getElementById('criarNovaUnidadeOverlay').classList.remove('show');
+
+      // troca pra essa unidade recém-criada na hora
+      agenciaId = novaAgencia.id;
+      agenciaNome = novaAgencia.nome;
+      ehPrincipalAtual = true;
+      vinculosDoUsuario = [...vinculosDoUsuario, { unidade_negocio_id: novaAgencia.id, eh_principal: true, servir_unidades_negocio: { nome: novaAgencia.nome } }];
+      atualizarUiAgencia();
+      await carregarTudo();
+    } catch(erro){
+      erroEl.textContent = erro.message;
+      erroEl.classList.add('show');
+    } finally{
+      btn.disabled = false;
+      btn.textContent = 'Criar unidade';
+    }
+  });
+
+  function mostrarErroCadastro(msg){
+    const el = document.getElementById('cadastroErro');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  let modoCadastroExistente = false;
+
+  function ativarModoCadastroExistente(){
+    modoCadastroExistente = true;
+    document.getElementById('cadSenhaConfirma').closest('.field-group').style.display = 'none';
+    document.getElementById('cadSenha').closest('.field-group').querySelector('label').textContent = 'Sua senha atual';
+    document.getElementById('cadSenha').placeholder = 'Digite sua senha existente';
+    document.getElementById('btnCriarConta').textContent = 'Entrar e criar unidade';
+  }
+
+  function resetarModoCadastro(){
+    modoCadastroExistente = false;
+    document.getElementById('cadSenhaConfirma').closest('.field-group').style.display = 'block';
+    document.getElementById('cadSenha').closest('.field-group').querySelector('label').textContent = 'Senha';
+    document.getElementById('cadSenha').placeholder = 'Mínimo 6 caracteres';
+    document.getElementById('btnCriarConta').textContent = 'Criar conta';
+    document.getElementById('cadSenha').value = '';
+    document.getElementById('cadSenhaConfirma').value = '';
+  }
+
+  document.getElementById('btnCriarConta').addEventListener('click', async () => {
+    const nome = document.getElementById('cadAgenciaNome').value.trim();
+    const whatsapp = document.getElementById('cadAgenciaWhatsapp').value.trim();
+    const email = document.getElementById('cadEmail').value.trim();
+    const senha = document.getElementById('cadSenha').value;
+    const confirma = document.getElementById('cadSenhaConfirma').value;
+
+    document.getElementById('cadastroErro').classList.remove('show');
+
+    if(!nome){ mostrarErroCadastro('Informe o nome da unidade de negócio.'); return; }
+    if(!/^\(\d{2}\) \d{4,5}-\d{4}$/.test(whatsapp)){ mostrarErroCadastro('WhatsApp em formato inválido. Use (DD) 9XXXX-XXXX.'); return; }
+    if(!email){ mostrarErroCadastro('Informe seu e-mail.'); return; }
+    if(senha.length < 6){ mostrarErroCadastro('A senha precisa ter pelo menos 6 caracteres.'); return; }
+
+    const btn = document.getElementById('btnCriarConta');
+    btn.disabled = true;
+
+    try{
+      // -----------------------------------------------------------
+      // Caminho 1: e-mail já tem conta na Servir — só loga (com a
+      // senha atual) e cria a unidade na hora, sem passar por
+      // confirmação de e-mail nenhuma
+      // -----------------------------------------------------------
+      if(modoCadastroExistente){
+        btn.textContent = 'Entrando...';
+        const { data: loginData, error: loginError } = await sb.auth.signInWithPassword({ email, password: senha });
+        if(loginError) throw new Error('E-mail ou senha inválidos.');
+
+        const novaAgencia = await criarUnidadeParaUsuario(loginData.user.id, nome, whatsapp);
+
+        telaLogin.style.display = 'none';
+        loadingScreen.style.display = 'flex';
+        agenciaId = novaAgencia.id;
+        agenciaNome = novaAgencia.nome;
+        ehPrincipalAtual = true;
+        appEl.style.display = 'block';
+        await carregarTudo();
+        loadingScreen.style.display = 'none';
+        return;
+      }
+
+      // -----------------------------------------------------------
+      // Caminho 2: pessoa nova — cria conta (o de sempre)
+      // -----------------------------------------------------------
+      if(confirma !== senha){ mostrarErroCadastro('As senhas não coincidem.'); btn.disabled = false; return; }
+
+      btn.textContent = 'Criando conta...';
+      const { data, error } = await sb.auth.signUp({
+        email, password: senha,
+        options: {
+          data: { agencia_nome_pendente: nome, agencia_whatsapp_pendente: whatsapp },
+          emailRedirectTo: window.location.href.split('?')[0]
+        }
+      });
+      if(error) throw new Error(error.message);
+
+      // e-mail já cadastrado: o Supabase "finge" sucesso (por segurança,
+      // não revela se o e-mail existe), mas identities vem vazio nesse caso
+      const jaExistia = data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0;
+      if(jaExistia){
+        ativarModoCadastroExistente();
+        mostrarErroCadastro('Esse e-mail já tem conta na Servir. Confirme sua senha atual pra criar a nova unidade.');
+        return;
+      }
+
+      if(data.session){
+        // confirmação de e-mail desligada no projeto: já pode entrar direto
+        telaLogin.style.display = 'none';
+        loadingScreen.style.display = 'flex';
+        await carregarAgenciaDoUsuario(data.user);
+        appEl.style.display = 'block';
+        await carregarTudo();
+        loadingScreen.style.display = 'none';
+      } else {
+        document.getElementById('emailCadastroSucesso').textContent = email;
+        blocoCadastroForm.style.display = 'none';
+        blocoCadastroSucesso.style.display = 'block';
+      }
+    } catch(erro){
+      mostrarErroCadastro(erro.message);
+    } finally{
+      btn.disabled = false;
+      if(!modoCadastroExistente) btn.textContent = 'Criar conta';
+    }
+  });
+
+  function mostrarErroConvite(msg){
+    const el = document.getElementById('conviteErro');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  let modoConviteExistente = false;
+
+  function ativarModoConviteExistente(){
+    modoConviteExistente = true;
+    const grupoConfirma = document.getElementById('convSenhaConfirma').closest('.field-group');
+    if(grupoConfirma) grupoConfirma.style.display = 'none';
+    const labelSenha = document.getElementById('convSenha').closest('.field-group').querySelector('label');
+    if(labelSenha) labelSenha.textContent = 'Sua senha atual';
+    document.getElementById('convSenha').placeholder = 'Digite sua senha existente';
+    document.getElementById('btnEntrarConvite').textContent = 'Entrar e aplicar convite';
+  }
+
+  function resetarModoConvite(){
+    modoConviteExistente = false;
+    const grupoConfirma = document.getElementById('convSenhaConfirma').closest('.field-group');
+    if(grupoConfirma) grupoConfirma.style.display = 'block';
+    const labelSenha = document.getElementById('convSenha').closest('.field-group').querySelector('label');
+    if(labelSenha) labelSenha.textContent = 'Senha';
+    document.getElementById('convSenha').placeholder = 'Mínimo 6 caracteres';
+    document.getElementById('btnEntrarConvite').textContent = 'Entrar com convite';
+    document.getElementById('convSenha').value = '';
+    document.getElementById('convSenhaConfirma').value = '';
+  }
+
+  document.getElementById('btnEntrarConvite').addEventListener('click', async () => {
+    const codigo = document.getElementById('convCodigo').value.trim().toUpperCase();
+    const email = document.getElementById('convEmail').value.trim();
+    const senha = document.getElementById('convSenha').value;
+    const confirma = document.getElementById('convSenhaConfirma').value;
+
+    document.getElementById('conviteErro').classList.remove('show');
+
+    if(!codigo){ mostrarErroConvite('Informe o código de convite.'); return; }
+    if(!email){ mostrarErroConvite('Informe seu e-mail.'); return; }
+    if(senha.length < 6){ mostrarErroConvite('A senha precisa ter pelo menos 6 caracteres.'); return; }
+
+    const btn = document.getElementById('btnEntrarConvite');
+    btn.disabled = true;
+
+    try{
+      // -----------------------------------------------------------
+      // Caminho 1: e-mail já tem conta na Servir — só loga e afilia
+      // (não cria usuário novo, só insere em servir_unidade_usuarios)
+      // -----------------------------------------------------------
+      if(modoConviteExistente){
+        btn.textContent = 'Entrando...';
+        const { data: loginData, error: loginError } = await sb.auth.signInWithPassword({ email, password: senha });
+        if(loginError) throw new Error('E-mail ou senha inválidos.');
+
+        const { error: erroConvite } = await sb.rpc('fn_entrar_com_convite', { p_codigo: codigo });
+        if(erroConvite) throw new Error(erroConvite.message);
+
+        telaLogin.style.display = 'none';
+        loadingScreen.style.display = 'flex';
+        await carregarAgenciaDoUsuario(loginData.user);
+        appEl.style.display = 'block';
+        await carregarTudo();
+        loadingScreen.style.display = 'none';
+        return;
+      }
+
+      // -----------------------------------------------------------
+      // Caminho 2: pessoa nova — cria conta e aplica o convite no
+      // primeiro login (via metadados), como já funcionava
+      // -----------------------------------------------------------
+      if(confirma !== senha){ mostrarErroConvite('As senhas não coincidem.'); btn.disabled = false; return; }
+
+      btn.textContent = 'Entrando...';
+      const { data, error } = await sb.auth.signUp({
+        email, password: senha,
+        options: {
+          data: { convite_codigo_pendente: codigo },
+          emailRedirectTo: window.location.href.split('?')[0]
+        }
+      });
+      if(error) throw new Error(error.message);
+
+      // e-mail já cadastrado: o Supabase "finge" sucesso (por segurança,
+      // não revela se o e-mail existe), mas identities vem vazio nesse caso
+      const jaExistia = data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0;
+      if(jaExistia){
+        ativarModoConviteExistente();
+        mostrarErroConvite('Esse e-mail já tem conta na Servir. Confirme sua senha atual pra aplicar o convite.');
+        return;
+      }
+
+      if(data.session){
+        telaLogin.style.display = 'none';
+        loadingScreen.style.display = 'flex';
+        await carregarAgenciaDoUsuario(data.user);
+        appEl.style.display = 'block';
+        await carregarTudo();
+        loadingScreen.style.display = 'none';
+      } else {
+        document.getElementById('emailCadastroSucesso').textContent = email;
+        blocoConviteForm.style.display = 'none';
+        blocoCadastroSucesso.style.display = 'block';
+      }
+    } catch(erro){
+      mostrarErroConvite(erro.message);
+    } finally{
+      btn.disabled = false;
+      btn.textContent = modoConviteExistente ? 'Entrar e aplicar convite' : 'Entrar com convite';
+    }
+  });
+
+  // =================================================================
+  // CONVIDAR COLABORADOR (só aparece pro usuário principal da unidade de negócio)
+  // =================================================================
+  document.getElementById('btnConvidarColaborador').addEventListener('click', async () => {
+    const btn = document.getElementById('btnConvidarColaborador');
+    const textoOriginal = btn.innerHTML;
+    btn.disabled = true;
+
+    const { data: codigo, error } = await sb.rpc('fn_gerar_codigo_convite', { p_agencia_id: agenciaId });
+
+    btn.disabled = false;
+    btn.innerHTML = textoOriginal;
+
+    if(error){ alert('Erro ao gerar código: ' + error.message); return; }
+
+    document.getElementById('codigoConviteDisplay').textContent = codigo;
+    document.getElementById('modalConviteOverlay').classList.add('show');
+  });
+
+  document.getElementById('btnCopiarCodigoConvite').addEventListener('click', async () => {
+    const codigo = document.getElementById('codigoConviteDisplay').textContent;
+    try{
+      await navigator.clipboard.writeText(codigo);
+      alert('Código copiado! Envie pra quem você quer convidar.');
+    } catch(erro){
+      prompt('Copie o código manualmente:', codigo);
+    }
+  });
+
+  document.getElementById('btnFecharModalConvite').addEventListener('click', () => {
+    document.getElementById('modalConviteOverlay').classList.remove('show');
+  });
+
+  document.getElementById('loginSenha').addEventListener('keydown', e => { if(e.key === 'Enter') fazerLogin(); });
+
+  document.getElementById('btnSair').addEventListener('click', async () => {
+    await sb.auth.signOut();
+    location.reload();
+  });
+
+  // =================================================================
+
+  // =================================================================
+  // MÓDULOS DA UNIDADE (grid principal do Painel Central)
+  // =================================================================
+  const iconesModulo = {
+    locadora: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm14 0a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM5 17V9l2-4h10l2 4v8"/></svg>',
+    receptivo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>',
+    staff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    eventos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M12 13l1.5 3 3.3.3-2.5 2.2.8 3.3-3.1-1.8-3.1 1.8.8-3.3-2.5-2.2 3.3-.3z"/></svg>',
+    lavanderia: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="18" height="20" rx="2"/><circle cx="12" cy="13" r="5"/><circle cx="6" cy="6" r=".5" fill="currentColor"/><circle cx="9" cy="6" r=".5" fill="currentColor"/></svg>',
+    checklist_manutencao: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M19 4h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1"/><path d="M9 12l2 2 4-4"/></svg>',
+    combustivel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="15" y2="22"/><line x1="4" y1="9" x2="14" y2="9"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0V9.8a2 2 0 0 0-.6-1.4L18 5"/></svg>',
+    financeiro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    estoque: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.73z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+    obras: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/></svg>',
+    armarinho: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
+    prontuario: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
+    uniformes_epi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>',
+    parceiros: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></svg>',
+    vitrine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="m10 8.5 5 2.5-5 2.5z"/></svg>',
+    painel_financeiro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15v3"/><path d="M12 9v9"/><path d="M17 5v13"/></svg>',
+    fechamento_caixas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16.5" r="1.2" fill="currentColor"/></svg>',
+    resumo_diario: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11"/><path d="M10 20V5"/><path d="M15 20V13"/><path d="M20 20V8"/></svg>',
+    analise_cruzada: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg>',
+    extratos_contas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>',
+    externo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+  };
+
+  // -----------------------------------------------------------------
+  // Ícone customizado do módulo: comprime no navegador antes de enviar
+  // -----------------------------------------------------------------
+  function comprimirImagem(arquivo, maxDimensao = 300, qualidade = 0.85){
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(arquivo);
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > maxDimensao || height > maxDimensao){
+          if(width > height){ height = Math.round(height * (maxDimensao / width)); width = maxDimensao; }
+          else { width = Math.round(width * (maxDimensao / height)); height = maxDimensao; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Não foi possível processar a imagem.')), 'image/jpeg', qualidade);
+      };
+      img.onerror = () => reject(new Error('Não foi possível ler o arquivo de imagem.'));
+      img.src = url;
+    });
+  }
+
+  // -----------------------------------------------------------------
+  // DADOS DA UNIDADE (nome, endereço, telefone, logotipo) -- só o
+  // operador principal edita. Usado no cabeçalho de relatórios/PDFs
+  // gerados pelos módulos (Checklist, etc.)
+  // -----------------------------------------------------------------
+  function clarearCor(hex, percentual){
+    hex = (hex || '').replace('#', '');
+    if(hex.length !== 6) return hex;
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const misturar = (canal) => Math.round(canal + (255 - canal) * percentual);
+    return '#' + [misturar(r), misturar(g), misturar(b)].map(v => v.toString(16).padStart(2, '0')).join('');
+  }
+
+  function escurecerCor(hex, percentual){
+    hex = (hex || '').replace('#', '');
+    if(hex.length !== 6) return hex;
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const escurecer = (canal) => Math.round(canal * (1 - percentual));
+    return '#' + [escurecer(r), escurecer(g), escurecer(b)].map(v => v.toString(16).padStart(2, '0')).join('');
+  }
+
+  // a "área visual de marca" do Servir Central é o cabeçalho pós-login
+  // (equivalente ao sidebar escuro do Staff) -- não dá pra usar a tela
+  // de login, porque ali ainda não sabemos qual unidade é
+  function aplicarPersonalizacaoCentral(corPrincipal, imagemFundoUrl){
+    if(corPrincipal){
+      const raiz = document.documentElement.style;
+      raiz.setProperty('--brand', corPrincipal);
+      raiz.setProperty('--brand-2', clarearCor(corPrincipal, 0.2));
+      raiz.setProperty('--brand-soft', clarearCor(corPrincipal, 0.92));
+    }
+    const header = document.querySelector('.central-header');
+    if(header){
+      if(imagemFundoUrl){
+        header.style.backgroundImage = `linear-gradient(rgba(255,255,255,.88), rgba(255,255,255,.88)), url('${imagemFundoUrl}')`;
+        header.style.backgroundSize = 'cover';
+        header.style.backgroundPosition = 'center';
+      } else {
+        header.style.backgroundImage = '';
+      }
+    }
+  }
+
+  async function carregarDadosUnidade(){
+    const { data, error } = await sb.from('servir_unidades_negocio')
+      .select('nome, endereco, telefone, logo_url, cor_principal, imagem_fundo_url').eq('id', agenciaId).single();
+    if(error || !data) return;
+    document.getElementById('du_nome').value = data.nome || '';
+    document.getElementById('du_endereco').value = data.endereco || '';
+    document.getElementById('du_telefone').value = data.telefone || '';
+    document.getElementById('du_logo_url').value = data.logo_url || '';
+    const preview = document.getElementById('previewLogoUnidade');
+    if(data.logo_url){
+      preview.src = data.logo_url;
+      preview.style.display = 'block';
+      document.getElementById('placeholderLogoUnidade').style.display = 'none';
+    } else {
+      preview.style.display = 'none';
+      document.getElementById('placeholderLogoUnidade').style.display = '';
+    }
+
+    if(data.cor_principal){
+      document.getElementById('du_cor_principal').value = data.cor_principal;
+      document.getElementById('du_cor_principal_hex').value = data.cor_principal;
+    }
+    document.getElementById('du_imagem_fundo_url').value = data.imagem_fundo_url || '';
+    const previewFundo = document.getElementById('previewFundoUnidade');
+    if(data.imagem_fundo_url){
+      previewFundo.src = data.imagem_fundo_url;
+      previewFundo.style.display = 'block';
+      document.getElementById('placeholderFundoUnidade').style.display = 'none';
+    } else {
+      previewFundo.style.display = 'none';
+      document.getElementById('placeholderFundoUnidade').style.display = '';
+    }
+    aplicarPersonalizacaoCentral(data.cor_principal, data.imagem_fundo_url);
+
+    document.getElementById('du_chave_ia').value = '';
+    document.getElementById('du_ia_salvo_status').textContent = '';
+    const { data: temChave } = await sb.rpc('fn_tem_chave_ia', { p_unidade_negocio_id: agenciaId });
+    const statusIA = document.getElementById('du_ia_status');
+    statusIA.textContent = temChave ? '✅ Chave configurada' : '⚠️ Nenhuma chave configurada ainda';
+    statusIA.style.color = temChave ? 'var(--brand-2)' : 'var(--accent-ink)';
+  }
+
+  async function enviarLogoUnidade(arquivo){
+    const btn = document.getElementById('btnEscolherLogoUnidade');
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    try{
+      const blobComprimido = await comprimirImagem(arquivo, 400, 0.9);
+      const caminho = `${agenciaId}/logo-${Date.now()}.jpg`;
+
+      const { error: erroUpload } = await sb.storage
+        .from('logos-unidade')
+        .upload(caminho, blobComprimido, { upsert: true, contentType: 'image/jpeg' });
+      if(erroUpload) throw new Error(erroUpload.message);
+
+      const { data } = sb.storage.from('logos-unidade').getPublicUrl(caminho);
+      document.getElementById('du_logo_url').value = data.publicUrl;
+      const preview = document.getElementById('previewLogoUnidade');
+      preview.src = data.publicUrl;
+      preview.style.display = 'block';
+      document.getElementById('placeholderLogoUnidade').style.display = 'none';
+    } catch(erro){
+      alert('Erro ao enviar logotipo: ' + erro.message);
+    } finally{
+      btn.disabled = false;
+      btn.textContent = textoOriginal;
+    }
+  }
+
+  async function enviarFundoUnidade(arquivo){
+    const btn = document.getElementById('btnEscolherFundoUnidade');
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    try{
+      const blobComprimido = await comprimirImagem(arquivo, 1600, 0.75);
+      const caminho = `${agenciaId}/fundo-${Date.now()}.jpg`;
+
+      const { error: erroUpload } = await sb.storage
+        .from('servir-personalizacao')
+        .upload(caminho, blobComprimido, { upsert: true, contentType: 'image/jpeg' });
+      if(erroUpload) throw new Error(erroUpload.message);
+
+      const { data } = sb.storage.from('servir-personalizacao').getPublicUrl(caminho);
+      document.getElementById('du_imagem_fundo_url').value = data.publicUrl;
+      const preview = document.getElementById('previewFundoUnidade');
+      preview.src = data.publicUrl;
+      preview.style.display = 'block';
+      document.getElementById('placeholderFundoUnidade').style.display = 'none';
+    } catch(erro){
+      alert('Erro ao enviar imagem: ' + erro.message);
+    } finally{
+      btn.disabled = false;
+      btn.textContent = textoOriginal;
+    }
+  }
+
+  document.getElementById('du_cor_principal').addEventListener('input', (e) => {
+    document.getElementById('du_cor_principal_hex').value = e.target.value;
+  });
+  document.getElementById('du_cor_principal_hex').addEventListener('input', (e) => {
+    if(/^#[0-9a-fA-F]{6}$/.test(e.target.value)) document.getElementById('du_cor_principal').value = e.target.value;
+  });
+  document.getElementById('btnEscolherFundoUnidade').addEventListener('click', () => document.getElementById('du_fundo_arquivo').click());
+  document.getElementById('du_fundo_arquivo').addEventListener('change', async (e) => {
+    const arquivo = e.target.files[0];
+    if(arquivo) await enviarFundoUnidade(arquivo);
+  });
+  document.getElementById('btnRemoverFundoUnidade').addEventListener('click', () => {
+    document.getElementById('du_imagem_fundo_url').value = '';
+    document.getElementById('previewFundoUnidade').style.display = 'none';
+    document.getElementById('placeholderFundoUnidade').style.display = '';
+  });
+
+  document.getElementById('btnDadosUnidade').addEventListener('click', async () => {
+    await carregarDadosUnidade();
+    document.getElementById('drawerDadosUnidadeOverlay').classList.add('show');
+  });
+  document.getElementById('btnFecharDrawerDadosUnidade').addEventListener('click', () => {
+    document.getElementById('drawerDadosUnidadeOverlay').classList.remove('show');
+  });
+  document.getElementById('btnEscolherLogoUnidade').addEventListener('click', () => document.getElementById('du_logo_arquivo').click());
+  document.getElementById('du_logo_arquivo').addEventListener('change', async (e) => {
+    const arquivo = e.target.files[0];
+    if(arquivo) await enviarLogoUnidade(arquivo);
+  });
+  document.getElementById('btnRemoverLogoUnidade').addEventListener('click', () => {
+    document.getElementById('du_logo_url').value = '';
+    document.getElementById('previewLogoUnidade').style.display = 'none';
+    document.getElementById('placeholderLogoUnidade').style.display = '';
+  });
+
+  document.getElementById('btnSalvarDadosUnidade').addEventListener('click', async () => {
+    const btn = document.getElementById('btnSalvarDadosUnidade');
+    const nome = document.getElementById('du_nome').value.trim();
+    if(!nome){ alert('O nome da unidade não pode ficar em branco.'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+    try{
+      const corHex = document.getElementById('du_cor_principal_hex').value.trim();
+      if(corHex && !/^#[0-9a-fA-F]{6}$/.test(corHex)){ alert('Cor inválida. Use o formato #RRGGBB.'); btn.disabled = false; btn.textContent = 'Salvar'; return; }
+      const payload = {
+        nome,
+        endereco: document.getElementById('du_endereco').value.trim() || null,
+        telefone: document.getElementById('du_telefone').value.trim() || null,
+        logo_url: document.getElementById('du_logo_url').value.trim() || null,
+        cor_principal: corHex || null,
+        imagem_fundo_url: document.getElementById('du_imagem_fundo_url').value.trim() || null
+      };
+      const { error } = await sb.from('servir_unidades_negocio').update(payload).eq('id', agenciaId);
+      if(error) throw new Error(error.message);
+      agenciaNome = nome;
+      document.getElementById('agenciaPill').textContent = agenciaNome;
+      aplicarPersonalizacaoCentral(payload.cor_principal, payload.imagem_fundo_url);
+      alert('Dados da unidade salvos!');
+      document.getElementById('drawerDadosUnidadeOverlay').classList.remove('show');
+    } catch(erro){
+      alert('Erro ao salvar: ' + erro.message);
+    } finally{
+      btn.disabled = false;
+      btn.textContent = 'Salvar';
+    }
+  });
+
+  document.getElementById('btnSalvarChaveIA').addEventListener('click', async () => {
+    const btn = document.getElementById('btnSalvarChaveIA');
+    const statusEl = document.getElementById('du_ia_salvo_status');
+    const chave = document.getElementById('du_chave_ia').value.trim();
+    if(!chave){ statusEl.style.color = 'var(--accent-ink)'; statusEl.textContent = 'Digite a chave antes de salvar.'; return; }
+    btn.disabled = true;
+    try{
+      const { error } = await sb.rpc('fn_definir_chave_ia', { p_unidade_negocio_id: agenciaId, p_chave: chave });
+      if(error) throw new Error(error.message);
+      document.getElementById('du_chave_ia').value = '';
+      document.getElementById('du_ia_status').textContent = '✅ Chave configurada';
+      document.getElementById('du_ia_status').style.color = 'var(--brand-2)';
+      statusEl.style.color = 'var(--brand-2)';
+      statusEl.textContent = '✅ Salvo!';
+    } catch(erro){
+      statusEl.style.color = 'var(--danger)';
+      statusEl.textContent = '⚠️ ' + erro.message;
+    } finally{
+      btn.disabled = false;
+    }
+  });
+
+  async function enviarIconeModulo(arquivo){
+    const btn = document.getElementById('btnEscolherIconeModulo');
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    try{
+      const blobComprimido = await comprimirImagem(arquivo);
+      const caminho = `${agenciaId}/modulos/icone-${Date.now()}.jpg`;
+
+      const { error: erroUpload } = await sb.storage
+        .from('servir-personalizacao')
+        .upload(caminho, blobComprimido, { upsert: true, contentType: 'image/jpeg' });
+      if(erroUpload) throw new Error(erroUpload.message);
+
+      const { data } = sb.storage.from('servir-personalizacao').getPublicUrl(caminho);
+      document.getElementById('d_icone_url').value = data.publicUrl;
+      const preview = document.getElementById('previewIconeModulo');
+      preview.src = data.publicUrl;
+      preview.style.display = 'block';
+      document.getElementById('placeholderIconeModulo').style.display = 'none';
+    } catch(erro){
+      alert('Erro ao enviar imagem: ' + erro.message);
+    } finally{
+      btn.disabled = false;
+      btn.textContent = textoOriginal;
+    }
+  }
+
+  document.getElementById('btnEscolherIconeModulo').addEventListener('click', () => document.getElementById('d_icone_arquivo').click());
+  document.getElementById('d_icone_arquivo').addEventListener('change', async (e) => {
+    const arquivo = e.target.files[0];
+    if(arquivo) await enviarIconeModulo(arquivo);
+  });
+
+  // ---- acesso por operador (servir-central-acesso-modulos.sql) ----
+  let temRestrito = false;                 // a coluna "restrito" existe? (SQL rodado)
+  let atribuicoes = new Map();             // id do módulo (texto) -> Set de user_id com acesso
+  let usuariosUnidadeCache = null;         // { unidade, lista:[{user_id, email, ehPrincipal}] }
+  let selecionadosDrawer = new Set();
+  // modelos padrão da Servir, chamados daqui (a página abre no mesmo endereço da Central)
+  const MODELOS_PADRAO = [
+    { id: 'painel_financeiro', nome: 'Painel financeiro', pagina: 'painel-financeiro.html', icone: 'painel_financeiro' },
+    { id: 'fechamento_caixas', nome: 'Fechamento de caixas', pagina: 'fechamento-caixas.html', icone: 'fechamento_caixas' },
+    { id: 'extratos_contas', nome: 'Extratos de contas', pagina: 'extratos-contas.html', icone: 'extratos_contas' },
+    { id: 'analise_cruzada', nome: 'Análise cruzada', pagina: 'analise-cruzada.html', icone: 'analise_cruzada' },
+    { id: 'resumo_diario', nome: 'Resumo diário', pagina: 'resumo-diario.html', icone: 'resumo_diario' },
+    { id: 'uniformes_epi', nome: 'Uniformes / EPI', pagina: 'staff-uniformes-epi.html', icone: 'uniformes_epi' }
+  ];
+  const urlDoModelo = (m) => new URL(m.pagina, location.href.split('#')[0].split('?')[0]).href;
+  const semBarra = (u) => String(u || '').trim().replace(/\/+$/, '').toLowerCase();
+
+  async function carregarTudo(){
+    const { data, error } = await sb.from('servir_unidade_modulos').select('*').eq('unidade_negocio_id', agenciaId).order('ordem_exibicao', { ascending: true });
+    if(error){ alert('Erro ao carregar módulos: ' + error.message); return; }
+    todosModulos = data || [];
+    if(todosModulos.length) temRestrito = 'restrito' in todosModulos[0];
+    else { const r = await sb.from('servir_unidade_modulos').select('restrito').limit(1); temRestrito = !r.error; }
+    atribuicoes = new Map();
+    if(temRestrito && ehPrincipalAtual){
+      const r = await sb.from('servir_unidade_modulos_usuarios').select('modulo_id, user_id').eq('unidade_negocio_id', agenciaId);
+      if(r.error){ console.warn('Atribuições de módulos indisponíveis:', r.error.message); temRestrito = false; }
+      else (r.data || []).forEach(a => { const k = String(a.modulo_id); if(!atribuicoes.has(k)) atribuicoes.set(k, new Set()); atribuicoes.get(k).add(a.user_id); });
+    }
+    renderGridModulos();
+  }
+
+  async function carregarUsuariosUnidade(){
+    if(usuariosUnidadeCache && usuariosUnidadeCache.unidade === agenciaId) return usuariosUnidadeCache.lista;
+    const { data: vs, error } = await sb.from('servir_unidade_usuarios').select('user_id, eh_principal').eq('unidade_negocio_id', agenciaId);
+    if(error) throw new Error(error.message);
+    const lista = await Promise.all((vs || []).map(async v => {
+      let email = '';
+      try { const r = await sb.rpc('fn_obter_email_usuario', { p_user_id: v.user_id }); email = r.data || ''; } catch(e){ /* mostra o id */ }
+      return { user_id: v.user_id, email: email || ('usuário ' + String(v.user_id).slice(0, 8)), ehPrincipal: !!v.eh_principal };
+    }));
+    lista.sort((a, b) => (b.ehPrincipal - a.ehPrincipal) || a.email.localeCompare(b.email));
+    usuariosUnidadeCache = { unidade: agenciaId, lista };
+    return lista;
+  }
+
+  async function renderListaAcesso(){
+    const box = document.getElementById('d_acesso_lista'), aviso = document.getElementById('d_acesso_aviso');
+    const modo = document.getElementById('d_acesso_modo').value;
+    box.style.display = modo === 'selecionados' ? 'block' : 'none';
+    aviso.style.display = 'none';
+    if(modo !== 'selecionados') return;
+    box.textContent = 'Carregando operadores...';
+    try {
+      const lista = await carregarUsuariosUnidade();
+      box.textContent = '';
+      lista.forEach(u => {
+        const l = document.createElement('label'); const cb = document.createElement('input'); cb.type = 'checkbox';
+        const t = document.createElement('span'); t.textContent = u.email;
+        l.appendChild(cb); l.appendChild(t);
+        if(u.ehPrincipal){ cb.checked = true; cb.disabled = true; l.classList.add('fixo'); const g = document.createElement('span'); g.className = 'tag-principal'; g.textContent = 'principal · sempre vê'; l.appendChild(g); }
+        else { cb.checked = selecionadosDrawer.has(u.user_id); cb.addEventListener('change', () => { if(cb.checked) selecionadosDrawer.add(u.user_id); else selecionadosDrawer.delete(u.user_id); }); }
+        box.appendChild(l);
+      });
+      if(!lista.some(u => !u.ehPrincipal)){ aviso.textContent = 'Esta unidade não tem outros operadores além do principal.'; aviso.style.display = 'block'; }
+    } catch(e){ box.textContent = ''; aviso.textContent = 'Não consegui listar os operadores: ' + e.message; aviso.style.display = 'block'; }
+  }
+  document.getElementById('d_acesso_modo').addEventListener('change', renderListaAcesso);
+
+  document.getElementById('d_modelo').addEventListener('change', (e) => {
+    const m = MODELOS_PADRAO.find(x => x.id === e.target.value); if(!m) return;
+    document.getElementById('d_nome_modulo').value = m.nome;
+    document.getElementById('d_url_modulo').value = urlDoModelo(m);
+    document.getElementById('d_tipo_icone').value = m.icone;
+  });
+
+  async function registrarSentinelaCentral(tipoAcao, descricao){
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      await sb.from('servir_sentinela').insert({ unidade_negocio_id: agenciaId, modulo: 'servir_central', tipo_acao: tipoAcao, descricao, operador: session?.user?.email || null, operador_user_id: session?.user?.id || null });
+    } catch(e){ console.warn('sentinela:', e); }
+  }
+
+  function renderGridModulos(){
+    const grid = document.getElementById('gridModulos');
+    if(todosModulos.length === 0){
+      grid.innerHTML = '<div class="vazio-modulos" style="grid-column:1/-1;">' + (ehPrincipalAtual ? 'Nenhum módulo cadastrado ainda. Clique em "+ Adicionar módulo" pra começar.' : 'Nenhum módulo liberado para o seu usuário. Peça ao principal da unidade.') + '</div>';
+      return;
+    }
+    grid.innerHTML = '';
+    todosModulos.forEach(m => {
+      const a = document.createElement('a');
+      a.className = 'card-modulo';
+      a.href = m.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      const nAtrib = (atribuicoes.get(String(m.id)) || new Set()).size;
+      a.innerHTML = `
+        ${ehPrincipalAtual && m.restrito ? `<span class="badge-restrito" title="Só o principal e ${nAtrib} operador(es) veem este ícone">🔒 ${nAtrib}</span>` : ''}
+        ${ehPrincipalAtual ? `<button type="button" class="btn-editar-modulo" title="Editar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+        </button>` : ''}
+        <div class="icone-modulo">${m.icone_url ? `<img src="${m.icone_url}" alt="" style="width:100%; height:100%; object-fit:cover; border-radius:14px;">` : (iconesModulo[m.tipo_icone] || iconesModulo.externo)}</div>
+        <div class="nome-modulo">${m.nome}</div>
+      `;
+      const btnEd = a.querySelector('.btn-editar-modulo');
+      if(btnEd) btnEd.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        abrirDrawerModulo(m.id);
+      });
+      grid.appendChild(a);
+    });
+  }
+
+  function abrirDrawerModulo(id){
+    moduloIdAtual = id;
+    const m = id ? todosModulos.find(x => x.id === id) : {};
+    document.getElementById('drawerModuloTitulo').textContent = id ? 'Editar módulo' : 'Novo módulo';
+    document.getElementById('d_nome_modulo').value = m.nome || '';
+    document.getElementById('d_url_modulo').value = m.url || '';
+    document.getElementById('d_tipo_icone').value = m.tipo_icone || 'externo';
+    document.getElementById('d_icone_url').value = m.icone_url || '';
+    document.getElementById('btnEscolherIconeModulo').textContent = m.icone_url ? 'Trocar imagem' : 'Enviar imagem';
+    const preview = document.getElementById('previewIconeModulo');
+    if(m.icone_url){
+      preview.src = m.icone_url;
+      preview.style.display = 'block';
+      document.getElementById('placeholderIconeModulo').style.display = 'none';
+    } else {
+      preview.style.display = 'none';
+      document.getElementById('placeholderIconeModulo').style.display = '';
+    }
+    document.getElementById('btnExcluirModulo').style.display = id ? 'block' : 'none';
+    // modelos padrão (só ao criar) e acesso por operador (só principal)
+    document.getElementById('d_modelo_secao').style.display = id ? 'none' : '';
+    if(!id){
+      const sel = document.getElementById('d_modelo');
+      const jaTem = new Set(todosModulos.map(x => semBarra(x.url)));
+      sel.innerHTML = '<option value="">— Módulo livre (preencher à mão) —</option>' + MODELOS_PADRAO.map(x => `<option value="${x.id}">${x.nome}${jaTem.has(semBarra(urlDoModelo(x))) ? ' (já adicionado)' : ''}</option>`).join('');
+      sel.value = '';
+    }
+    document.getElementById('d_acesso_secao').style.display = ehPrincipalAtual && temRestrito ? '' : 'none';
+    selecionadosDrawer = new Set(id ? (atribuicoes.get(String(id)) || []) : []);
+    document.getElementById('d_acesso_modo').value = m.restrito ? 'selecionados' : 'todos';
+    renderListaAcesso();
+    document.getElementById('drawerModuloOverlay').classList.add('show');
+  }
+
+  document.getElementById('btnNovoModulo').addEventListener('click', () => abrirDrawerModulo(null));
+  document.getElementById('btnFecharDrawerModulo').addEventListener('click', () => document.getElementById('drawerModuloOverlay').classList.remove('show'));
+
+  document.getElementById('btnSalvarModulo').addEventListener('click', async () => {
+    const btn = document.getElementById('btnSalvarModulo');
+    const nome = document.getElementById('d_nome_modulo').value.trim();
+    let url = document.getElementById('d_url_modulo').value.trim();
+    const tipoIcone = document.getElementById('d_tipo_icone').value;
+
+    if(!nome){ alert('Informe o nome do módulo.'); return; }
+    if(!url){ alert('Informe a URL do módulo.'); return; }
+    if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+    const controlaAcesso = ehPrincipalAtual && temRestrito;
+    const restrito = controlaAcesso && document.getElementById('d_acesso_modo').value === 'selecionados';
+    if(restrito && selecionadosDrawer.size === 0 && !confirm('Nenhum operador foi marcado: só o principal vai ver este ícone. Continuar?')) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+    try{
+      const payload = { unidade_negocio_id: agenciaId, nome, url, tipo_icone: tipoIcone, icone_url: document.getElementById('d_icone_url').value.trim() || null };
+      if(controlaAcesso) payload.restrito = restrito;
+      const eraRestrito = moduloIdAtual ? !!(todosModulos.find(x => x.id === moduloIdAtual) || {}).restrito : false;
+      let idSalvo = moduloIdAtual;
+      if(moduloIdAtual){
+        const { error } = await sb.from('servir_unidade_modulos').update(payload).eq('id', moduloIdAtual);
+        if(error) throw new Error(error.message);
+      } else {
+        const { data: novo, error } = await sb.from('servir_unidade_modulos').insert(payload).select('id').single();
+        if(error) throw new Error(error.message);
+        idSalvo = novo.id;
+      }
+      if(controlaAcesso){
+        const atual = atribuicoes.get(String(idSalvo)) || new Set();
+        const desejado = restrito ? selecionadosDrawer : new Set();
+        const remover = [...atual].filter(u => !desejado.has(u));
+        const incluir = [...desejado].filter(u => !atual.has(u));
+        try {
+          if(remover.length){ const r = await sb.from('servir_unidade_modulos_usuarios').delete().eq('modulo_id', idSalvo).in('user_id', remover); if(r.error) throw new Error(r.error.message); }
+          if(incluir.length){ const r = await sb.from('servir_unidade_modulos_usuarios').insert(incluir.map(u => ({ modulo_id: idSalvo, user_id: u, unidade_negocio_id: agenciaId }))); if(r.error) throw new Error(r.error.message); }
+        } catch(e2){
+          await carregarTudo();
+          throw new Error('O ícone foi salvo, mas a lista de operadores NÃO foi gravada (' + e2.message + '). Abra o módulo e salve de novo.');
+        }
+        if(remover.length || incluir.length || restrito !== eraRestrito){
+          registrarSentinelaCentral('acesso_icone_alterado', `Ícone "${nome}": ${restrito ? 'restrito a ' + desejado.size + ' operador(es)' : 'liberado a todos os operadores'} (+${incluir.length} / -${remover.length})`);
+        }
+      }
+
+      document.getElementById('drawerModuloOverlay').classList.remove('show');
+      await carregarTudo();
+    } catch(erro){
+      alert('Erro ao salvar: ' + erro.message);
+    } finally{
+      btn.disabled = false;
+      btn.textContent = 'Salvar';
+    }
+  });
+
+  document.getElementById('btnExcluirModulo').addEventListener('click', async () => {
+    if(!moduloIdAtual) return;
+    if(!confirm('Remover este módulo da lista?')) return;
+    const { error } = await sb.from('servir_unidade_modulos').delete().eq('id', moduloIdAtual);
+    if(error){ alert('Erro ao remover: ' + error.message); return; }
+    document.getElementById('drawerModuloOverlay').classList.remove('show');
+    await carregarTudo();
+  });
+
+  async function iniciar(){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    sb.auth.onAuthStateChange((event) => {
+      if(event === 'PASSWORD_RECOVERY'){
+        loadingScreen.style.display = 'none';
+        telaLogin.style.display = 'grid';
+        [blocoLoginForm, blocoCadastroForm, blocoConviteForm, blocoCadastroSucesso, blocoEsqueciSenha, blocoRecuperacaoEnviada]
+          .forEach(b => b.style.display = 'none');
+        blocoRedefinirSenha.style.display = 'block';
+      }
+    });
+
+    const { data: { session } } = await sb.auth.getSession();
+    if(session){
+      loadingScreen.style.display = 'flex';
+      telaLogin.style.display = 'none';
+      try{
+        await carregarAgenciaDoUsuario(session.user);
+        appEl.style.display = 'block';
+        await carregarTudo();
+      } catch(erro){
+        alert(erro.message);
+        await sb.auth.signOut();
+        location.reload();
+        return;
+      }
+      loadingScreen.style.display = 'none';
+    }
+  }
+  iniciar();
+</script>
+</body>
+</html>
