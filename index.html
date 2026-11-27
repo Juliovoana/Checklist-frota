@@ -205,6 +205,7 @@ button,.ddi,.tab,.stab,.fi-btn{cursor:pointer;touch-action:manipulation;-webkit-
 .os-num{font-size:13px;font-weight:700;color:var(--nv)}
 .os-data{font-size:12px;color:var(--tx3)}
 .os-veic{font-size:14px;font-weight:600;color:var(--tx)}
+.os-modelo{display:inline-block;margin-left:6px;padding:1px 9px;border-radius:999px;background:#dbeafe;color:#1e3a8a;font-size:13px;font-weight:700;vertical-align:baseline}
 .os-serv{font-size:13px;color:var(--tx2)}
 .os-meta{display:flex;gap:12px;font-size:12px;color:var(--tx2);flex-wrap:wrap}
 .os-valor{font-weight:600;color:var(--tx)}
@@ -2298,7 +2299,7 @@ function abrirAcaoOSRec(linha){
   const quem=(os.responsavel||'').toString().trim();
   const rotQuem=os.status==='Urgente'?'Motorista que preencheu o checklist':'Responsável';
   const bQuem=quem?`<div style="display:flex;align-items:center;gap:12px;background:#fef3c7;border:1px solid #f59e0b;border-radius:var(--rs);padding:10px 14px;margin-bottom:12px"><i class="ti ti-user-circle" style="font-size:36px;color:#b45309;flex-shrink:0"></i><div style="min-width:0"><div style="font-size:10.5px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em">${rotQuem}</div><div style="font-size:22px;font-weight:800;color:#451a03;line-height:1.15;word-break:break-word">${escRec(quem)}</div></div></div>`:'';
-  abrirModalRec(`<i class="ti ti-tool"></i> OS ${escRec(os.numero)} · ${escRec(os.veiculo)}`, `
+  abrirModalRec(`<i class="ti ti-tool"></i> OS ${escRec(os.numero)} · ${escRec(os.veiculo)}${modeloDaOS(os)?' <span class="os-modelo">'+escRec(modeloDaOS(os))+'</span>':''}`, `
     ${bQuem}
     <div style="font-size:13px;color:var(--tx);margin-bottom:4px">${escRec(os.servico||'')}</div>
     <div style="font-size:12px;color:var(--tx2);margin-bottom:12px">Aberta em ${escRec(os.data||'')}${os.fornecedor?' · '+escRec(os.fornecedor):''} · status atual: <b>${escRec(os.status)}</b></div>
@@ -3458,9 +3459,24 @@ function limparFiltrosOS(){
 // Texto de exibição do "veículo" de uma OS — trata o caso sem veículo
 // específico (dedetização, manutenção da garagem etc.), onde a descrição
 // livre digitada pelo usuário fica salva em os.modelo.
+// modelo da OS: o gravado na própria OS ou, se vier vazio (OS urgente criada pelo checklist grava só a placa), o do cadastro da frota pela placa
+function modeloDaOS(os){
+  if(os.modelo) return String(os.modelo);
+  if(os.veiculo === OS_SEM_VEICULO) return '';
+  const norm=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const v=(frota||[]).find(x=>x && norm(x.placa)===norm(os.veiculo));
+  return v && v.modelo ? String(v.modelo) : '';
+}
 function textoVeiculoOS(os){
-  if(os.veiculo === OS_SEM_VEICULO) return OS_SEM_VEICULO+(os.modelo?' — '+os.modelo:'');
-  return os.veiculo+(os.modelo?' — '+os.modelo:'');
+  const m=modeloDaOS(os);
+  if(os.veiculo === OS_SEM_VEICULO) return OS_SEM_VEICULO+(m?' — '+m:'');
+  return os.veiculo+(m?' — '+m:'');
+}
+// cabeçalho do card da OS: placa e, DESTACADO ao lado, o modelo
+function htmlVeiculoOS(os){
+  if(os.veiculo === OS_SEM_VEICULO) return textoVeiculoOS(os);
+  const m=modeloDaOS(os);
+  return os.veiculo+(m?' <span class="os-modelo">'+m+'</span>':'');
 }
 
 function htmlFotosOS(fotos){
@@ -3503,7 +3519,7 @@ function renderOS(){
         <div>
           <span class="os-num">OS Nº ${os.numero}</span>
           <span class="os-data"> · ${os.data}</span>
-          <div class="os-veic">${textoVeiculoOS(os)}</div>
+          <div class="os-veic">${htmlVeiculoOS(os)}</div>
         </div>
 <select class="os-status-sel ${STATUS_CLASS[os.status]||'os-aberta'}"
           onchange="atualizarStatusOS(${os.linha},this.value,this)"
